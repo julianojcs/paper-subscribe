@@ -1,0 +1,81 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.errorCard {
+  max-width: 500px;
+  width: 100%;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.errorCard h1 {
+  color: #e11d48;
+  margin-bottom: 1.5rem;
+}
+
+.errorMessage {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.linkButton {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.linkButton:hover {
+  background-color: #e5e7eb;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .errorCard {
+    background-color: #1e293b;
+  }
+  
+  .errorCard h1 {
+    color: #fb7185;
+  }
+  
+  .errorMessage {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+  }
+  
+  .linkButton {
+    background-color: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+  }
+  
+  .linkButton:hover {
+    background-color: #475569;
+  }
+}

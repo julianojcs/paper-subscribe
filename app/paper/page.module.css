@@ -1,0 +1,130 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.content {
+  margin-top: 2rem;
+}
+
+.welcome {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.welcome h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.submissionsSection {
+  margin-top: 3rem;
+}
+
+.submissionsSection h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 0.5rem;
+}
+
+.submissionsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.submissionCard {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.submissionCard:hover {
+  transform: translateY(-3px);
+}
+
+.submissionCard h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.submissionDate {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.submissionAuthors {
+  font-size: 0.875rem;
+}
+
+.successMessage {
+  background-color: #c6f6d5;
+  color: #2f855a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.unauthenticatedContent {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.unauthenticatedContent h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.unauthenticatedContent p {
+  margin-bottom: 2rem;
+}
+
+.authLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .submissionCard {
+    background-color: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .submissionDate {
+    color: #ccc;
+  }
+
+  .unauthenticatedContent {
+    background-color: #1a1a1a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .successMessage {
+    background-color: rgba(47, 133, 90, 0.2);
+    color: #68d391;
+  }
+}

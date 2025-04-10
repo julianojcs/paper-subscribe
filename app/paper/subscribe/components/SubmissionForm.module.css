@@ -1,0 +1,87 @@
+.formContainer {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.textareaGroup {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.textareaGroup label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.textareaGroup textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.textareaGroup textarea:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+.errorTextarea {
+  border-color: #f56565;
+}
+
+.errorText {
+  color: #f56565;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.error {
+  background-color: #fed7d7;
+  color: #c53030;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .formContainer {
+    background-color: #1a1a1a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .textareaGroup textarea {
+    background-color: #111;
+    border-color: #333;
+    color: #e2e8f0;
+  }
+
+  .textareaGroup textarea:focus {
+    border-color: #3291ff;
+    box-shadow: 0 0 0 2px rgba(50, 145, 255, 0.1);
+  }
+
+  .error {
+    background-color: rgba(197, 48, 48, 0.2);
+    color: #f56565;
+  }
+}

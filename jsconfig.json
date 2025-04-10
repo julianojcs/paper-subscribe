@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./app/*"]
+    },
+    "jsx": "preserve",
+    "moduleResolution": "node"
+  },
+  "include": ["app/**/*"],
+  "exclude": ["node_modules", ".next"]
+}

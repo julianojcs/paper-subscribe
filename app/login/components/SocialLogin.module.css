@@ -1,0 +1,80 @@
+.container {
+  margin-top: 1.5rem;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+}
+
+.divider span {
+  position: relative;
+  padding: 0 10px;
+  background-color: white;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #333;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.socialButton:hover {
+  background-color: #f7fafc;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .divider::before {
+    background-color: #333;
+  }
+
+  .divider span {
+    background-color: #1a1a1a;
+    color: #ccc;
+  }
+
+  .socialButton {
+    background-color: #1a1a1a;
+    border-color: #333;
+    color: #e2e8f0;
+  }
+
+  .socialButton:hover {
+    background-color: #222;
+  }
+}

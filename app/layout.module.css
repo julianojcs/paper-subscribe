@@ -1,0 +1,8 @@
+.mainContent {
+  /* Espaço adequado para garantir que o conteúdo comece abaixo do header sticky */
+  padding-top: 3rem; /* Espaçamento opcional entre o header e o conteúdo */
+  min-height: calc(100vh - 64px); /* Altura mínima para ocupar a viewport menos a altura do header */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--facebook-clr, #1877f2) transparent;
+}
