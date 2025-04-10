@@ -22,10 +22,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/paper/:path*'],
+  matcher: ['/paper/:path*', '/profile/:path*'],
 };
-
-
-// export const config = {
-//   matcher: ['/login', '/paper/subscribe/:path*'],
-// };
