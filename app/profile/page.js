@@ -5,6 +5,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Input from '../components/ui/Input';
+import PasswordInput from '../components/ui/PasswordInput'; // Importar o componente PasswordInput
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { FaGoogle, FaEnvelope, FaKey } from 'react-icons/fa';
@@ -20,14 +21,12 @@ export default function ProfilePage() {
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
-
-  // Estado adicional para histórico de login
   const [loginHistory, setLoginHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
-
-  // Estados para o modal
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState(null);
+  const [passwordValid, setPasswordValid] = useState(false);
+  const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -36,13 +35,9 @@ export default function ProfilePage() {
       fetchLinkedAccounts();
       fetchLoginHistory();
 
-      // Verificar se há parâmetro newSocialLink na URL ou na sessão
       const token = session?.token;
       if (token?.newSocialLink && token?.provider) {
         setMessage(`Conta ${token.provider.charAt(0).toUpperCase() + token.provider.slice(1)} vinculada com sucesso à sua conta existente.`);
-        
-        // Limpar a flag para não mostrar a mensagem novamente após recarregar
-        // Esta lógica dependeria de como você está gerenciando o estado da sessão
       }
     }
   }, [status, router, session]);
@@ -63,7 +58,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Função para buscar histórico de login
   const fetchLoginHistory = async () => {
     try {
       setHistoryLoading(true);
@@ -83,13 +77,13 @@ export default function ProfilePage() {
   const handleAddPassword = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      setError('As senhas não correspondem');
+    if (!passwordValid) {
+      setError('Sua senha não atende aos requisitos de segurança');
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+    if (!confirmPasswordValid) {
+      setError('As senhas não correspondem');
       return;
     }
 
@@ -98,7 +92,6 @@ export default function ProfilePage() {
     setMessage('');
 
     try {
-      // Usar o email da sessão (já verificado/vinculado)
       const email = session?.user?.email;
 
       const res = await fetch('/api/user/add-password', {
@@ -115,7 +108,7 @@ export default function ProfilePage() {
         setMessage('Senha adicionada com sucesso! Agora você pode fazer login com email e senha.');
         setPassword('');
         setConfirmPassword('');
-        fetchLinkedAccounts(); // Atualizar a lista de contas
+        fetchLinkedAccounts();
       } else {
         setError(data.message || 'Ocorreu um erro ao adicionar senha');
       }
@@ -153,7 +146,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         setMessage(`Método de login removido com sucesso`);
-        fetchLinkedAccounts(); // Atualizar a lista de contas
+        fetchLinkedAccounts();
       } else {
         setError(data.message || 'Ocorreu um erro ao remover método de login');
       }
@@ -166,7 +159,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Função para formatar a data
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -238,7 +230,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Atualizar o texto e layout desta seção */}
       {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
         <div className={styles.addPasswordSection}>
           <h2>Adicionar Login com Email e Senha</h2>
@@ -255,27 +246,43 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Input
+            <PasswordInput
               label="Nova Senha"
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Crie uma senha forte"
               disabled={loading}
+              showValidation={true}
+              minLength={8}
+              requireLowercase={true}
+              requireUppercase={true}
+              requireNumber={true}
+              requireSpecial={true}
+              onValidationChange={(state) => setPasswordValid(state.isValid)}
             />
 
-            <Input
+            <PasswordInput
               label="Confirmar Senha"
               id="confirmPassword"
-              type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirme sua senha"
               disabled={loading}
+              showValidation={true}
+              minLength={8}
+              requireLowercase={true}
+              requireUppercase={true}
+              requireNumber={true}
+              requireSpecial={true}
+              confirmPassword={password}
+              onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
             />
 
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading || !passwordValid || !confirmPasswordValid}
+            >
               {loading ? 'Salvando...' : 'Adicionar Senha'}
             </Button>
           </form>

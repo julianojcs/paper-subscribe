@@ -5,6 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from './LoginForm.module.css';
 import Input from '../../components/ui/Input';
+import PasswordInput from '../../components/ui/PasswordInput'; // Importe o novo componente
 import Button from '../../components/ui/Button';
 
 export default function LoginForm() {
@@ -19,14 +20,9 @@ export default function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // Se o usuário já estiver autenticado, redirecione
-  // useEffect(() => {
-  //   if (status === 'authenticated') {
-  //     console.log("Usuário já autenticado, redirecionando...");
-  //     router.push('/paper');
-  //   }
-  // }, [status, router]);
+  const [passwordValid, setPasswordValid] = useState(true); // Menos restritivo para login
+  const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
+  const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -125,8 +121,37 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    // Limpar erros anteriores
+    setErrors({});
+    setServerError("");
 
+    // Lista para armazenar erros de validação
+    const newErrors = {};
+
+    // Validação básica
+    if (!email) newErrors.email = "Email é obrigatório";
+    if (!password) newErrors.password = "Senha é obrigatória";
+
+    if (!isLogin) {
+      if (!name) newErrors.name = "Nome é obrigatório";
+
+      // A validação detalhada da senha já é feita pelo componente
+      if (!registerPasswordValid) {
+        newErrors.password = "A senha não atende aos requisitos de segurança";
+      }
+
+      if (!confirmPasswordValid) {
+        newErrors.confirmPassword = "As senhas não correspondem";
+      }
+    }
+
+    // Se houver erros, parar aqui
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Continuar com a submissão...
     if (isLogin) {
       await handleLogin(email, password);
     } else {
@@ -194,31 +219,57 @@ export default function LoginForm() {
           disabled={isSubmitting}
         />
 
-        <Input
-          label="Senha"
-          id="password"
-          type="password"
-          placeholder="Sua senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={errors.password}
-          disabled={isSubmitting}
-        />
+        {isLogin ? (
+          // Campo de senha simples para login (sem validação complexa)
+          <PasswordInput
+            label="Senha"
+            id="password"
+            placeholder="Sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            disabled={isSubmitting}
+          />
+        ) : (
+          // Campo de senha com validação para registro
+          <PasswordInput
+            label="Senha"
+            id="password"
+            placeholder="Crie uma senha segura"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            disabled={isSubmitting}
+            showValidation={true}
+            minLength={8}
+            requireLowercase={true}
+            requireUppercase={true}
+            requireNumber={true}
+            requireSpecial={true}
+            onValidationChange={(state) => setRegisterPasswordValid(state.isValid)}
+          />
+        )}
 
         {!isLogin && (
-          <Input
+          <PasswordInput
             label="Confirmar Senha"
             id="confirmPassword"
-            type="password"
             placeholder="Confirme sua senha"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             error={errors.confirmPassword}
             disabled={isSubmitting}
+            showValidation={true}
+            confirmPassword={password}
+            onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
           />
         )}
 
-        <Button type="submit" variant="primary" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting || (!isLogin && (!registerPasswordValid || !confirmPasswordValid))}
+        >
           {isSubmitting ? 'Aguarde...' : isLogin ? 'Entrar' : 'Registrar'}
         </Button>
       </form>

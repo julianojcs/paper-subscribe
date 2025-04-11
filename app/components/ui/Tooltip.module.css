@@ -1,0 +1,60 @@
+.tooltip {
+  position: absolute;
+  z-index: 9999;
+  background-color: #0f172a;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 250px;
+  word-wrap: break-word;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.9);
+  transform-origin: center;
+  animation: tooltipFadeIn 0.2s ease forwards;
+}
+
+@keyframes tooltipFadeIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  background-color: inherit;
+}
+
+/* Arrow positions based on tooltip position */
+.top .arrow {
+  top: 100%;
+}
+
+.bottom .arrow {
+  top: 0;
+}
+
+.left .arrow {
+  left: 100%;
+}
+
+.right .arrow {
+  left: 0;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .tooltip {
+    background-color: #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  }
+}
