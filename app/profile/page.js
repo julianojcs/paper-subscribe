@@ -9,6 +9,7 @@ import PasswordInput from '../components/ui/PasswordInput'; // Importar o compon
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { FaGoogle, FaEnvelope, FaKey } from 'react-icons/fa';
+import LoginHistoryTable from '../components/ui/LoginHistoryTable'; // Importe o novo componente
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -174,199 +175,186 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={styles.container}>
-      <h1>Perfil do Usuário</h1>
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Perfil do Usuário</h1>
+        </header>
 
-      <div className={styles.profileInfo}>
-        <h2>Suas Informações</h2>
-        <p><strong>Nome:</strong> {session?.user?.name || 'Não informado'}</p>
-        <p><strong>Email:</strong> {session?.user?.email}</p>
-      </div>
-
-      {message && <div className={styles.success}>{message}</div>}
-      {error && <div className={styles.error}>{error}</div>}
-
-      <div className={styles.linkedAccounts}>
-        <h2>Métodos de Login</h2>
-
-        {accountsLoading ? (
-          <p>Carregando métodos de login...</p>
-        ) : accounts.length > 0 ? (
-          <ul className={styles.accountsList}>
-            {accounts.map((account, index) => (
-              <li
-                key={index}
-                className={`${styles.accountItem} ${accounts.length === 1 ? styles.singleAccount : ''}`}
-              >
-                <div className={styles.accountInfo}>
-                  <div className={styles.accountIcon}>
-                    {account.type === 'credentials' ? (
-                      <FaKey className={styles.credentialsIcon} />
-                    ) : account.provider === 'google' ? (
-                      <FaGoogle className={styles.googleIcon} />
-                    ) : (
-                      <FaEnvelope className={styles.defaultIcon} />
-                    )}
-                  </div>
-                  <div className={styles.accountName}>
-                    {account.type === 'credentials' ? 'Email e Senha' : 
-                     account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
-                  </div>
-                </div>
-
-                {accounts.length > 1 && (
-                  <button
-                    onClick={() => showRemoveConfirmation(account)}
-                    className={styles.unlinkButton}
-                  >
-                    Remover
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Nenhum método de login configurado</p>
-        )}
-      </div>
-
-      {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
-        <div className={styles.addPasswordSection}>
-          <h2>Adicionar Login com Email e Senha</h2>
-          <p className={styles.sectionDescription}>
-            Atualmente você só pode acessar sua conta usando provedores sociais. 
-            Adicione uma senha para também poder fazer login diretamente com seu email.
-          </p>
-
-          <form onSubmit={handleAddPassword}>
-            <div className={styles.emailDisplay}>
-              <label>Email</label>
-              <div className={styles.emailField}>
-                {session?.user?.email}
-              </div>
-            </div>
-
-            <PasswordInput
-              label="Nova Senha"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Crie uma senha forte"
-              disabled={loading}
-              showValidation={true}
-              minLength={8}
-              requireLowercase={true}
-              requireUppercase={true}
-              requireNumber={true}
-              requireSpecial={true}
-              onValidationChange={(state) => setPasswordValid(state.isValid)}
-            />
-
-            <PasswordInput
-              label="Confirmar Senha"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirme sua senha"
-              disabled={loading}
-              showValidation={true}
-              minLength={8}
-              requireLowercase={true}
-              requireUppercase={true}
-              requireNumber={true}
-              requireSpecial={true}
-              confirmPassword={password}
-              onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
-            />
-
-            <Button
-              type="submit"
-              disabled={loading || !passwordValid || !confirmPasswordValid}
-            >
-              {loading ? 'Salvando...' : 'Adicionar Senha'}
-            </Button>
-          </form>
+        <div className={styles.profileInfo}>
+          <h2>Suas Informações</h2>
+          <p><strong>Nome:</strong> {session?.user?.name || 'Não informado'}</p>
+          <p><strong>Email:</strong> {session?.user?.email}</p>
         </div>
-      )}
 
-      <div className={styles.loginHistory}>
-        <h2>Histórico de Login Recente</h2>
+        {message && <div className={styles.success}>{message}</div>}
+        {error && <div className={styles.error}>{error}</div>}
 
-        {historyLoading ? (
-          <p>Carregando histórico...</p>
-        ) : loginHistory.length > 0 ? (
-          <table className={styles.historyTable}>
-            <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Método</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loginHistory.map((log, index) => (
-                <tr key={index} className={log.success ? styles.successRow : styles.failedRow}>
-                  <td>{formatDate(log.createdAt)}</td>
-                  <td>
-                    {log.loginType === 'credentials' ? 'Email e Senha' : 
-                     log.loginType.charAt(0).toUpperCase() + log.loginType.slice(1)}
-                  </td>
-                  <td>{log.success ? 'Bem-sucedido' : 'Falhou'}</td>
-                </tr>
+        <div className={styles.linkedAccounts}>
+          <h2>Métodos de Login</h2>
+
+          {accountsLoading ? (
+            <p>Carregando métodos de login...</p>
+          ) : accounts.length > 0 ? (
+            <ul className={styles.accountsList}>
+              {accounts.map((account, index) => (
+                <li
+                  key={index}
+                  className={`${styles.accountItem} ${accounts.length === 1 ? styles.singleAccount : ''}`}
+                >
+                  <div className={styles.accountInfo}>
+                    <div className={styles.accountIcon}>
+                      {account.type === 'credentials' ? (
+                        <FaKey className={styles.credentialsIcon} />
+                      ) : account.provider === 'google' ? (
+                        <FaGoogle className={styles.googleIcon} />
+                      ) : (
+                        <FaEnvelope className={styles.defaultIcon} />
+                      )}
+                    </div>
+                    <div className={styles.accountName}>
+                      {account.type === 'credentials' ? 'Email e Senha' : 
+                      account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
+                    </div>
+                  </div>
+
+                  {accounts.length > 1 && (
+                    <button
+                      onClick={() => showRemoveConfirmation(account)}
+                      className={styles.unlinkButton}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </li>
               ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>Nenhum registro de login encontrado</p>
+            </ul>
+          ) : (
+            <p>Nenhum método de login configurado</p>
+          )}
+        </div>
+
+        {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
+          <div className={styles.addPasswordSection}>
+            <h2>Adicionar Login com Email e Senha</h2>
+            <p className={styles.sectionDescription}>
+              Atualmente você só pode acessar sua conta usando provedores sociais. 
+              Adicione uma senha para também poder fazer login diretamente com seu email.
+            </p>
+
+            <form onSubmit={handleAddPassword}>
+              <div className={styles.emailDisplay}>
+                <label>Email</label>
+                <div className={styles.emailField}>
+                  {session?.user?.email}
+                </div>
+              </div>
+
+              <PasswordInput
+                label="Nova Senha"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Crie uma senha forte"
+                disabled={loading}
+                showValidation={true}
+                minLength={8}
+                requireLowercase={true}
+                requireUppercase={true}
+                requireNumber={true}
+                requireSpecial={true}
+                onValidationChange={(state) => setPasswordValid(state.isValid)}
+              />
+
+              <PasswordInput
+                label="Confirmar Senha"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua senha"
+                disabled={loading}
+                showValidation={true}
+                minLength={8}
+                requireLowercase={true}
+                requireUppercase={true}
+                requireNumber={true}
+                requireSpecial={true}
+                confirmPassword={password}
+                onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
+              />
+
+              <Button
+                type="submit"
+                disabled={loading || !passwordValid || !confirmPasswordValid}
+              >
+                {loading ? 'Salvando...' : 'Adicionar Senha'}
+              </Button>
+            </form>
+          </div>
         )}
 
-        <div className={styles.historyFooter}>
-          <Button
-            onClick={() => router.push('/profile/login-history')}
-            type="button"
-            variant="secondary"
-            className={styles.viewMoreButton}
-          >
-            Ver histórico completo
-          </Button>
-        </div>
-      </div>
+        <div className={styles.loginHistory}>
+          <h2>Histórico de Login Recente</h2>
 
-      <Modal
-        isOpen={modalIsOpen}
-        onClose={() => setModalIsOpen(false)}
-        title="Confirmar remoção"
-        actions={
-          <>
+          {historyLoading ? (
+            <p>Carregando histórico...</p>
+          ) : loginHistory.length > 0 ? (
+            <LoginHistoryTable 
+              loginHistory={loginHistory} 
+              compactMode={true} 
+            />
+          ) : (
+            <p>Nenhum registro de login encontrado</p>
+          )}
+
+          <div className={styles.historyFooter}>
             <Button
-              onClick={() => setModalIsOpen(false)}
-              variant="outline"
-              disabled={unlinkLoading}
+              onClick={() => router.push('/profile/login-history')}
+              type="button"
+              variant="secondary"
+              className={styles.viewMoreButton}
             >
-              Cancelar
+              Ver histórico completo
             </Button>
-            <Button
-              onClick={handleUnlinkAccount}
-              variant="danger"
-              disabled={unlinkLoading}
-            >
-              {unlinkLoading ? 'Removendo...' : 'Remover'}
-            </Button>
-          </>
-        }
-      >
-        <p className={styles.confirmationText}>
-          Tem certeza que deseja remover este método de login:
-          <span className={styles.accountHighlight}>
-            {accountToRemove?.type === 'credentials'
-              ? 'Email e Senha'
-              : accountToRemove?.provider?.charAt(0).toUpperCase() + accountToRemove?.provider?.slice(1)}
-          </span>?
-        </p>
-        <p className={styles.warningText}>
-          Se você remover este método, não poderá mais usá-lo para acessar sua conta.
-        </p>
-      </Modal>
+          </div>
+        </div>
+
+        <Modal
+          isOpen={modalIsOpen}
+          onClose={() => setModalIsOpen(false)}
+          title="Confirmar remoção"
+          actions={
+            <>
+              <Button
+                onClick={() => setModalIsOpen(false)}
+                variant="outline"
+                disabled={unlinkLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUnlinkAccount}
+                variant="danger"
+                disabled={unlinkLoading}
+              >
+                {unlinkLoading ? 'Removendo...' : 'Remover'}
+              </Button>
+            </>
+          }
+        >
+          <p className={styles.confirmationText}>
+            Tem certeza que deseja remover este método de login:
+            <span className={styles.accountHighlight}>
+              {accountToRemove?.type === 'credentials'
+                ? 'Email e Senha'
+                : accountToRemove?.provider?.charAt(0).toUpperCase() + accountToRemove?.provider?.slice(1)}
+            </span>?
+          </p>
+          <p className={styles.warningText}>
+            Se você remover este método, não poderá mais usá-lo para acessar sua conta.
+          </p>
+        </Modal>
+      </div>
     </div>
   );
 }

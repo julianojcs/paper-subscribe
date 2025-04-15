@@ -6,7 +6,7 @@
   padding: 2rem;
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
   /* height: calc(100vh - 148px); */
 }
 
@@ -103,9 +103,50 @@
 
 .historyTable th,
 .historyTable td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 15px;
+  text-align: center;
+}
+
+/* Estilizar a coluna de IP para texto monospace e tamanho adequado */
+.historyTable td:nth-child(4) {
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+/* Estilização moderna para a coluna de Data/Hora */
+.historyTable td:first-child {
+  position: relative;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Container para data formatada */
+.dateTimeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.dateValue {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.timeValue {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Limitador de tamanho para userAgent com elipses */
+.userAgentInfo {
+  display: block;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help; /* Mostra cursor de ajuda para indicar que tem tooltip */
 }
 
 .historyTable th {
@@ -124,6 +165,152 @@
 .historyFooter {
   margin-top: 1rem;
   text-align: right;
+}
+
+/* Estilo para o wrapper que contém ícone + texto */
+.iconWithText {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Estilos para os ícones */
+.methodIcon, .statusIcon, .deviceIcon {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.credentialsIcon {
+  color: #6366f1;
+}
+
+.googleIcon {
+  color: #ea4335;
+}
+
+.successIcon {
+  color: #22c55e;
+}
+
+.failedIcon {
+  color: #ef4444;
+}
+
+.androidIcon {
+  color: #3ddc84;
+}
+
+.appleIcon, .macIcon {
+  color: #555555;
+}
+
+.windowsIcon {
+  color: #0078d7;
+}
+
+.linuxIcon {
+  color: #fcc624;
+}
+
+/* Estilo para a célula que contém os ícones de dispositivo */
+.deviceIconsCell {
+  padding: 8px !important;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Container para os ícones de dispositivo */
+.deviceIcons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Estilos para os ícones */
+.deviceIcon {
+  font-size: 1.1rem;
+}
+
+/* Cores para os ícones de sistemas operacionais */
+.windowsIcon {
+  color: #0078d7;
+}
+
+.macIcon, .appleIcon {
+  color: #555555;
+}
+
+.androidIcon {
+  color: #3ddc84;
+}
+
+.linuxIcon {
+  color: #fcc624;
+}
+
+/* Cores para os ícones de dispositivos */
+.desktopIcon {
+  color: #64748b;
+}
+
+.tabletIcon {
+  color: #8b5cf6;
+}
+
+.mobileIcon {
+  color: #06b6d4;
+}
+
+/* Cores para os ícones de navegadores */
+.chromeIcon {
+  color: #4285f4;
+}
+
+.firefoxIcon {
+  color: #ff7139;
+}
+
+.safariIcon {
+  color: #0fb5ee;
+}
+
+.edgeIcon {
+  color: #0078d7;
+}
+
+.operaIcon {
+  color: #ff1b2d;
+}
+
+/* Estilização moderna para a coluna de IP */
+.ipContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  /* background-color: #f1f5f9; */
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: fit-content;
+  margin: 0 auto;
+  transition: background-color 0.2s;
+}
+
+.ipContainer:hover {
+  background-color: #e2e8f0;
+}
+
+.ipValue {
+  font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.85rem;
+  color: #475569;
+  letter-spacing: -0.5px;
+}
+
+.ipIcon {
+  color: #94a3b8;
+  font-size: 0.9rem;
 }
 
 /* Adaptação para Media Queries no arquivo específico */
@@ -164,6 +351,29 @@
   .failedRow {
     background-color: rgba(239, 68, 68, 0.1);
   }
+  .dateValue {
+    color: #cbd5e1;
+  }
+  
+  .timeValue {
+    color: #94a3b8;
+  }
+  
+  .ipContainer {
+    background-color: #334155;
+  }
+  
+  .ipContainer:hover {
+    background-color: #475569;
+  }
+  
+  .ipValue {
+    color: #cbd5e1;
+  }
+  
+  .ipIcon {
+    color: #94a3b8;
+  }
 }
 
 /* Adaptação para Mobile */
@@ -183,5 +393,102 @@
   .pageInfo {
     font-size: 0.875rem;
     padding: 0.25rem;
+  }
+
+  .historyTable th:nth-child(4),
+  .historyTable td:nth-child(4) {
+    display: none;
+  }
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .historyTable {
+    font-size: 0.9rem;
+  }
+  
+  .historyTable th,
+  .historyTable td {
+    padding: 8px;
+  }
+  
+  /* Em telas pequenas, esconder algumas colunas menos importantes */
+  .historyTable th:nth-child(5),
+  .historyTable td:nth-child(5) {
+    display: none;
+  }
+
+  .deviceIcons {
+    gap: 5px;
+  }
+}
+
+/* Em telas pequenas, mostrar apenas os ícones */
+@media (max-width: 640px) {
+  .textValue {
+    display: none;
+  }
+  
+  .iconWithText {
+    justify-content: center;
+  }
+  
+  .methodIcon, .statusIcon, .deviceIcon {
+    font-size: 1.2rem;
+  }
+
+  .deviceIcon {
+    font-size: 1rem;
+  }
+}
+
+/* Para telas ainda menores, simplificar ainda mais */
+@media (max-width: 360px) {
+  .historyTable th:nth-child(1),
+  .historyTable td:nth-child(1) {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Adicione estas regras para melhorar a visualização em mobile */
+
+@media (max-width: 767px) {
+  .container {
+    margin: 1rem auto;
+    padding: 1rem;
+  }
+  
+  .container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .header {
+    margin-bottom: 1rem;
+  }
+  
+  .loginHistory {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+  }
+  
+  .paginationContainer {
+    margin-top: 1rem;
+  }
+  
+  .pagination {
+    gap: 0.5rem;
+  }
+  
+  .pageInfo {
+    padding: 0.3rem;
+    font-size: 0.85rem;
+  }
+  
+  .emptyState {
+    padding: 1.5rem 0;
+    font-size: 0.9rem;
   }
 }

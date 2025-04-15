@@ -1,10 +1,163 @@
-.page {
-  max-width: 1200px;
+/* Layout principal */
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+  background-color: #f8fafc;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 800px;
+  width: 100%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.header {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   padding: 2rem;
+  text-align: center;
 }
 
-.main {
-
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Conteúdo */
+.content {
+  padding: 2.5rem 2rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #334155;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.sectionDescription {
+  color: #64748b;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* Conteúdo autenticado */
+.authenticatedContent, .unauthenticatedContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome {
+  margin-bottom: 2rem;
+}
+
+/* Ações e botões */
+.actions, .authLinks {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mainButton {
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.05rem;
+}
+
+.secondaryButton {
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.05rem;
+}
+
+/* Responsividade */
+@media (max-width: 767px) {
+  .pageWrapper {
+    padding: 1rem 0.75rem;
+  }
+  
+  .container {
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+  
+  .header {
+    border-radius: 8px;
+    padding: 1.75rem 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .content {
+    padding: 1.75rem 1.5rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.35rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .sectionDescription {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .actions, .authLinks {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .mainButton, .secondaryButton {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 374px) {
+  .pageWrapper {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .content {
+    padding: 1.5rem 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+  
+  .sectionDescription {
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+}

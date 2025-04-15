@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from './LoginForm.module.css';
 import Input from '../../components/ui/Input';
 import PasswordInput from '../../components/ui/PasswordInput'; // Importe o novo componente
 import Button from '../../components/ui/Button';
+import { useDataContext } from '../../../context/DataContext';
 
 export default function LoginForm() {
   const { data: session, status } = useSession();
@@ -23,26 +24,7 @@ export default function LoginForm() {
   const [passwordValid, setPasswordValid] = useState(true); // Menos restritivo para login
   const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!email) newErrors.email = 'Email é obrigatório';
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email inválido';
-
-    if (!password) newErrors.password = 'Senha é obrigatória';
-    else if (password.length < 6) newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
-
-    if (!isLogin) {
-      if (!name) newErrors.name = 'Nome é obrigatório';
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'As senhas não correspondem';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const { ip, userAgent } = useDataContext();
 
   const handleLogin = async (email, password) => {
     setIsSubmitting(true);
@@ -53,6 +35,8 @@ export default function LoginForm() {
         redirect: false,
         email,
         password,
+        clientIp: ip,
+        clientUserAgent: userAgent
       });
 
       if (result?.error) {
@@ -62,7 +46,7 @@ export default function LoginForm() {
 
       // Verificar se o login foi bem-sucedido
       if (result?.ok) {
-        router.push('/paper');
+        router.push('/');
       } else {
         setServerError('Erro ao iniciar sessão');
       }

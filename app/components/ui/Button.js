@@ -1,21 +1,27 @@
+import React from 'react';
 import styles from './Button.module.css';
 
-export default function Button({ children, onClick, type = 'button', variant = 'primary' }) {
-  const variantClasses = {
-    primary: styles.primary,
-    secondary: styles.secondary,
-    outline: styles.outline,
-    danger: styles.danger, // Adicione esta linha
-    // outras variantes...
-  };
-
+const Button = ({ 
+  children, 
+  onClick, 
+  type = 'button', 
+  variant = 'primary',
+  disabled = false,
+  fullWidth = false,
+  className = '', 
+  ...props 
+}) => {
   return (
     <button
-      className={`${styles.button} ${variantClasses[variant]}`}
-      onClick={onClick}
       type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${styles.button} ${styles[variant]} ${fullWidth ? styles.fullWidth : ''} ${className}`}
+      {...props}
     >
       {children}
     </button>
   );
-}
+};
+
+export default Button;

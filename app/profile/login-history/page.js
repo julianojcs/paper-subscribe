@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css'; // Usar o arquivo CSS local
+import styles from './page.module.css';
 import Button from '../../components/ui/Button';
+import Tooltip from '../../components/ui/Tooltip'; // Importe o componente Tooltip
+import LoginHistoryTable from '../../components/ui/LoginHistoryTable';
+
 
 export default function LoginHistoryPage() {
   const { data: session, status } = useSession();
@@ -43,15 +46,42 @@ export default function LoginHistoryPage() {
     }
   };
   
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('pt-BR', { 
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Função para formatar a data de forma mais elegante
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return (
+      <div className={styles.dateTimeContainer}>
+        <span className={styles.dateValue}>{`${day}/${month}/${year}`}</span>
+        <span className={styles.timeValue}>{`${hours}:${minutes}`}</span>
+      </div>
+    );
+  }
+
+  // Adicione esta função para formatar o IP
+  function formatIP(ip) {
+    if (!ip || ip === 'unknown') return 'Desconhecido';
+    
+    // Para IPs IPv4, adicione formatação
+    const ipv4Pattern = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+    if (ipv4Pattern.test(ip)) {
+      // Retorne os primeiros dígitos e some pontos para privacidade parcial
+      // Por exemplo 192.168.1.1 -> 192.168.1.*
+      const parts = ip.split('.');
+      if (parts.length === 4) {
+        return `${parts[0]}.${parts[1]}.${parts[2]}.*`;
+      }
+    }
+    
+    return ip;
+  }
   
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -85,29 +115,11 @@ export default function LoginHistoryPage() {
           <div className={styles.loading}>Carregando histórico...</div>
         ) : loginHistory.length > 0 ? (
           <>
-            <table className={styles.historyTable}>
-              <thead>
-                <tr>
-                  <th>Data/Hora</th>
-                  <th>Método</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loginHistory.map((log, index) => (
-                  <tr key={index} className={log.success ? styles.successRow : styles.failedRow}>
-                    <td>{formatDate(log.createdAt)}</td>
-                    <td>
-                      {log.loginType === 'credentials' ? 'Email e Senha' : 
-                      log.loginType.charAt(0).toUpperCase() + log.loginType.slice(1)}
-                    </td>
-                    <td>{log.success ? 'Bem-sucedido' : 'Falhou'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <LoginHistoryTable 
+              loginHistory={loginHistory} 
+              compactMode={false} 
+            />
             
-            {/* Exibir a paginação apenas se houver mais de uma página */}
             {totalPages > 1 && (
               <div className={styles.paginationContainer}>
                 <div className={styles.pagination}>

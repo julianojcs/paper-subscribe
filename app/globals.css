@@ -14,7 +14,11 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  overflow-y: scroll;
   scroll-padding-top: 64px; /* Isso ajuda com links de âncora */
+  scrollbar-width: thin;
+  scrollbar-color: var(--facebook-clr, #1877f2) transparent;
+  background-color: #f9fafb;
 }
 
 body {
@@ -49,5 +53,153 @@ main,
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
+  }
+}
+
+/* Adicione estas regras ao seu arquivo CSS global para melhorar a responsividade geral */
+
+@media (max-width: 767px) {
+  html {
+    font-size: 15px; /* Reduz ligeiramente o tamanho base da fonte */
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Ajuste global para controles de formulário */
+  input, button, select, textarea {
+    font-size: 16px; /* Evita zoom automático em iOS */
+  }
+  
+  /* Tamanhos comuns de tipografia */
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .paperPage {
+    padding: 1rem 0;
+  }
+  
+  .sectionTitle {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .sectionDescription {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  
+  /* Classes utilitárias para espaçamento */
+  .mt-md {
+    margin-top: 0.75rem !important;
+  }
+  
+  .mb-md {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .py-md {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  
+  .px-md {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  /* Containers */
+  .contentContainer {
+    padding: 0.75rem;
+  }
+  
+  .container {
+    padding: 1rem !important;
+    margin: 1rem auto !important;
+  }
+  
+  /* Grids responsivos */
+  .gridContainer {
+    gap: 0.75rem;
+  }
+  
+  /* Espaçamento */
+  .section {
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+  }
+  
+  /* Inputs e Forms */
+  input, select, textarea, button {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Classes utilitárias */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .mobile-center {
+    text-align: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* Para dispositivos muito pequenos */
+@media (max-width: 374px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .paperPage {
+    padding: 0.75rem 0;
+  }
+  
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+  
+  .contentContainer {
+    padding: 0.6rem;
+  }
+  
+  .container {
+    padding: 0.75rem !important;
+  }
+  
+  .buttonFull {
+    width: 100%;
+  }
+  
+  h1 {
+    font-size: 1.3rem !important;
+  }
+  
+  input, select, textarea, button {
+    font-size: 0.85rem !important;
   }
 }

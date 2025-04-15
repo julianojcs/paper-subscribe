@@ -3,8 +3,25 @@
 import { signIn } from 'next-auth/react';
 import styles from './SocialLogin.module.css';
 import Image from 'next/image';
+import { useDataContext } from '../../../context/DataContext';
 
 export default function SocialLogin() {
+  const { ip, userAgent } = useDataContext();
+
+  const handleSocialLogin = (provider) => {
+    // Salvar no sessionStorage antes do redirecionamento
+    sessionStorage.setItem('auth_metadata', JSON.stringify({
+      provider: provider.charAt(0).toUpperCase() + provider.slice(1),
+      ip,
+      userAgent,
+      timestamp: new Date().getTime()
+    }));
+
+    // Iniciar login social
+    signIn(provider, {
+      callbackUrl: '/'
+    });
+  };
   return (
     <div className={styles.container}>
       <div className={styles.divider}>
@@ -13,7 +30,7 @@ export default function SocialLogin() {
 
       <div className={styles.buttons}>
         <button
-          onClick={() => signIn('google', { callbackUrl: '/paper' })}
+          onClick={() => handleSocialLogin('google')}
           className={styles.socialButton}
         >
           <div className={styles.icon}>

@@ -1,0 +1,253 @@
+/* Estilos para a tabela */
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.historyTable th,
+.historyTable td {
+  padding: 10px 15px;
+  text-align: center;
+}
+
+.historyTable th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  position: relative;
+}
+
+/* Estilizando linhas de sucesso e falha */
+.successRow {
+  background-color: #f0fdf4;
+}
+
+.successRow:hover {
+  background-color: #dcfce7;
+}
+
+.failedRow {
+  background-color: #fef2f2;
+}
+
+.failedRow:hover {
+  background-color: #fee2e2;
+}
+
+/* Células de ícones */
+.iconCell {
+  text-align: center;
+}
+
+/* Estilos para ícones */
+.methodIcon, .statusIcon, .deviceIcon {
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* Cores para ícones */
+.credentialsIcon {
+  color: #6366f1;
+}
+
+.googleIcon {
+  color: #ea4335;
+}
+
+.successIcon {
+  color: #22c55e;
+}
+
+.failedIcon {
+  color: #ef4444;
+}
+
+/* Estilização da data/hora */
+.dateTimeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.dateValue {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.timeValue {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Estilização do IP */
+.ipContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #f1f5f9;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: fit-content;
+  margin: 0 auto;
+  transition: background-color 0.2s;
+}
+
+.ipContainer:hover {
+  background-color: #e2e8f0;
+}
+
+.ipValue {
+  font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.85rem;
+  color: #475569;
+  letter-spacing: -0.5px;
+}
+
+.ipIcon {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* Células de dispositivos */
+.deviceIconsCell {
+  padding: 8px !important;
+  white-space: nowrap;
+}
+
+.deviceIcons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .historyTable {
+    font-size: 0.85rem;
+  }
+  
+  .historyTable th,
+  .historyTable td {
+    padding: 8px;
+  }
+  
+  .deviceIcons {
+    gap: 5px;
+  }
+}
+
+/* Responsividade para colunas específicas */
+@media (max-width: 767px) {
+  /* Esconder colunas responsivas em modo mobile */
+  .responsiveColumn {
+    display: none;
+  }
+  
+  .historyTable {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  
+  .historyTable th,
+  .historyTable td {
+    padding: 6px 8px;
+  }
+  
+  /* Ajuste fino para o container de data/hora */
+  .dateTimeContainer {
+    gap: 1px;
+  }
+  
+  .dateValue {
+    font-size: 0.75rem;
+  }
+  
+  .timeValue {
+    font-size: 0.7rem;
+  }
+  
+  /* Aumentar tamanho dos ícones para melhor toque */
+  .methodIcon, .statusIcon, .deviceIcon {
+    font-size: 1.1rem;
+  }
+  
+  /* Otimizar container de IP */
+  .ipContainer {
+    padding: 3px 6px;
+  }
+  
+  .ipValue {
+    font-size: 0.75rem;
+  }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 374px) {
+  .historyTable th,
+  .historyTable td {
+    padding: 4px 6px;
+  }
+  
+  .dateValue {
+    font-size: 0.7rem;
+  }
+  
+  .timeValue {
+    font-size: 0.65rem;
+  }
+}
+
+/* Para tabela em modo compacto (como na página de perfil) */
+.compactTable th,
+.compactTable td {
+  padding: 8px 10px;
+  font-size: 0.9em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .historyTable th {
+    background-color: #1e293b;
+  }
+  
+  .successRow {
+    background-color: rgba(34, 197, 94, 0.1);
+  }
+  
+  .successRow:hover {
+    background-color: rgba(34, 197, 94, 0.15);
+  }
+  
+  .failedRow {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  .failedRow:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+  
+  .dateValue {
+    color: #cbd5e1;
+  }
+  
+  .timeValue {
+    color: #94a3b8;
+  }
+  
+  .ipContainer {
+    background-color: #334155;
+  }
+  
+  .ipContainer:hover {
+    background-color: #475569;
+  }
+  
+  .ipValue {
+    color: #cbd5e1;
+  }
+}

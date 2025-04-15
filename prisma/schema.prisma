@@ -50,7 +50,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   loginLogs     LoginLog[]
-  submissions   Submission[]
+  papers        Paper[]
 }
 
 model VerificationToken {
@@ -73,16 +73,36 @@ model LoginLog {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Submission {
-  id          String   @id @default(cuid())
-  title       String
-  abstract    String   @db.Text
-  authors     String
-  keywords    String
-  status    String   @default("pending") // pending, accepted, rejected
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
+model Paper {
+  id              String    @id @default(cuid())
+  title           String
+  authors         String
+  abstract        String    @db.Text
+  keywords        String
+  fileUrl         String
+  fileName        String
+  fileStoragePath String    // pasta/caminho no Firebase
+  fileSize        Int
+  status          String    @default("pending")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history         PaperHistory[]
+
+  @@index([userId])
+}
+
+model PaperHistory {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  status     String
+  comment    String   @db.Text
+  reviewerId String?  // ID do revisor, se aplicável
+
+  paperId    String
+  paper      Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([paperId])
 }

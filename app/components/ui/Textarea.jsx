@@ -1,13 +1,13 @@
 import React from 'react';
-import styles from './Input.module.css';
+import styles from './Textarea.module.css';
 
-const Input = ({
+const Textarea = ({
   label,
   id,
-  type = 'text',
   value,
   onChange,
   placeholder,
+  rows = 4,
   required = false,
   error,
   helpText,
@@ -20,13 +20,13 @@ const Input = ({
           {label} {required && <span className={styles.required}>*</span>}
         </label>
       )}
-      <input
+      <textarea
         id={id}
-        type={type}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`${styles.input} ${error ? styles.error : ''}`}
+        className={`${styles.textarea} ${error ? styles.error : ''}`}
+        rows={rows}
         required={required}
         {...props}
       />
@@ -36,4 +36,4 @@ const Input = ({
   );
 };
 
-export default Input;
+export default Textarea;

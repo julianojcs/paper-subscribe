@@ -1,17 +1,38 @@
-.container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Layout principal - consistente com a página inicial */
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+  background-color: #f8fafc;
+  padding: 2rem 1rem;
 }
 
-.container h1 {
+.container {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.header {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  padding: 2rem;
   text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 28px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .profileInfo {
@@ -297,7 +318,6 @@
   margin: 0 auto;
 }
 
-/* Adicione estes estilos para a exibição do email */
 .emailDisplay {
   margin-bottom: 16px;
 }
@@ -318,13 +338,11 @@
   font-size: 0.95rem;
 }
 
-/* Adicione este estilo para o ícone no botão */
 .buttonIcon {
   margin-right: 8px;
   font-size: 18px;
 }
 
-/* Adicione estes estilos para o texto de confirmação */
 .confirmationText {
   font-size: 1rem;
   margin-bottom: 12px;
@@ -460,7 +478,7 @@
 }
 
 /* Responsivity */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .container {
     margin: 20px;
     padding: 15px;
@@ -468,5 +486,122 @@
   
   .profileInfo, .linkedAccounts, .addPasswordSection, .linkProviders {
     padding: 15px;
+  }
+} */
+
+@media (max-width: 767px) {
+  /* Ajustes gerais do container */
+  .container {
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+  
+  /* Títulos */
+  .container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .container h2 {
+    font-size: 1.2rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header {
+    border-radius: 8px;
+    padding: 1.75rem 1.5rem;
+  }
+
+  /* Informações do perfil */
+  .profileInfo {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .profileInfo p {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Seções */
+  .linkedAccounts, .addPasswordSection, .loginHistory {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+  }
+  
+  /* Lista de contas */
+  .accountsList {
+    gap: 0.5rem;
+  }
+  
+  .accountItem {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .accountIcon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .accountName {
+    font-size: 0.9rem;
+  }
+  
+  .unlinkButton {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Seção de senha */
+  .sectionDescription {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .emailDisplay {
+    margin-bottom: 0.75rem;
+  }
+  
+  .emailDisplay label {
+    font-size: 0.85rem;
+  }
+  
+  .emailField {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  /* Botões e footer */
+  .historyFooter {
+    margin-top: 0.75rem;
+  }
+  
+  /* Mensagens */
+  .success, .error {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 374px) {
+  .container {
+    padding: 0.75rem;
+    margin: 0.5rem auto;
+  }
+  
+  .container h1 {
+    font-size: 1.3rem;
+  }
+  
+  .container h2 {
+    font-size: 1.1rem;
+  }
+  
+  .accountIcon {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 }
