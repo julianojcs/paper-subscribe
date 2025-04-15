@@ -211,6 +211,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 180px; /* Ajuste conforme o layout */
+  display: inline-block;
+  cursor: help;
 }
 
 .paperAbstract {
@@ -394,6 +397,10 @@
   
   .loadingContainer, .emptyState {
     padding: 2rem 1rem;
+  }
+  
+  .metaItem .metaText {
+    max-width: 140px;
   }
 }
 

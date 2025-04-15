@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './paper.module.css';
 import Button from '../components/ui/Button';
 import { FaFileAlt, FaCalendarAlt, FaUsers, FaHistory } from 'react-icons/fa';
+import Tooltip from '../components/ui/Tooltip';
 
 // Componente que usa searchParams
 function PaperPageContent() {
@@ -133,9 +134,19 @@ function PaperPageContent() {
 
                           <div className={styles.metaItem}>
                             <FaUsers className={styles.metaIcon} />
-                            <span className={styles.metaText}>
-                              {paper.authors || 'Sem autores informados'}
-                            </span>
+                            <Tooltip
+                              content={paper.authors || 'Sem autores informados'}
+                              position="top"
+                              delay={300}
+                              arrow={true}
+                            >
+                              <span
+                                className={styles.metaText}
+                                aria-label={`Autores: ${paper.authors || 'Sem autores informados'}`}
+                              >
+                                {paper.authors || 'Sem autores informados'}
+                              </span>
+                            </Tooltip>
                           </div>
 
                           {paper.updatedAt && (
