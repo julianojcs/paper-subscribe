@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import styles from './page.module.css';
+import styles from './paper.module.css';
 import Button from '../components/ui/Button';
 import { FaFileAlt, FaCalendarAlt, FaUsers, FaHistory } from 'react-icons/fa';
 
-export default function PaperPage() {
+// Componente que usa searchParams
+function PaperPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -206,5 +207,14 @@ export default function PaperPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Componente principal com Suspense
+export default function PaperPage() {
+  return (
+    <Suspense fallback={<div className={styles.loading}>Carregando...</div>}>
+      <PaperPageContent />
+    </Suspense>
   );
 }

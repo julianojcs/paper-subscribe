@@ -1,44 +1,67 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import styles from './page.module.css';
+import styles from './error.module.css';
 import Button from '../../components/ui/Button';
 
-export default function AuthErrorPage() {
+// Componente interno que usa useSearchParams
+function ErrorContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  
   const error = searchParams.get('error');
-  
+  const router = useRouter();
+
   // Mapear códigos de erro para mensagens amigáveis
-  const errorMessages = {
-    'EmailMismatch': 'O email da conta Google não corresponde ao email da sua conta atual. Por favor, use a mesma conta de email.',
-    'AccessDenied': 'Acesso negado. Você cancelou a autenticação ou não tem permissão para acessar esta conta.',
-    'Default': 'Ocorreu um erro durante a autenticação. Por favor, tente novamente.'
+  const getErrorMessage = (errorCode) => {
+    const errorMessages = {
+      'AccessDenied': 'Acesso negado. Você não tem permissão para acessar esta página.',
+      'CredentialsSignin': 'Falha na autenticação. Verifique seu email e senha.',
+      'OAuthSignin': 'Ocorreu um erro ao tentar entrar com o provedor de autenticação.',
+      'OAuthCallback': 'Ocorreu um erro ao processar a resposta do provedor de autenticação.',
+      'OAuthCreateAccount': 'Não foi possível criar uma conta usando o provedor de autenticação.',
+      'EmailCreateAccount': 'Não foi possível criar uma conta usando o e-mail fornecido.',
+      'Callback': 'Ocorreu um erro durante o processo de autenticação.',
+      'OAuthAccountNotLinked': 'Este e-mail já está associado a uma conta existente. Faça login usando o método original.',
+      'default': 'Ocorreu um erro durante a autenticação. Por favor, tente novamente.',
+    };
+
+    return errorMessages[errorCode] || errorMessages.default;
   };
-  
-  const errorMessage = errorMessages[error] || errorMessages.Default;
-  
+
   return (
-    <div className={styles.container}>
+    <div className={styles.errorContainer}>
       <div className={styles.errorCard}>
-        <h1>Erro de Autenticação</h1>
-        
+        <h1 className={styles.errorTitle}>Erro de Autenticação</h1>
         <div className={styles.errorMessage}>
-          {errorMessage}
+          {getErrorMessage(error)}
         </div>
-        
         <div className={styles.actions}>
-          <Button onClick={() => router.push('/profile')}>
-            Voltar ao Perfil
+          <Button
+            variant="primary"
+            onClick={() => router.push('/login')}
+            className={styles.actionButton}
+          >
+            Voltar para Login
           </Button>
-          <Link href="/login" className={styles.linkButton}>
-            Ir para Login
-          </Link>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/')}
+            className={styles.actionButton}
+          >
+            Página Inicial
+          </Button>
         </div>
       </div>
     </div>
+  );
+}
+
+// Componente principal com Suspense
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div className={styles.loading}>Carregando...</div>}>
+      <ErrorContent />
+    </Suspense>
   );
 }
