@@ -1,5 +1,5 @@
 .container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -96,7 +96,6 @@
 
 .backButton {
   margin-bottom: 1rem;
-  padding: 0;
   color: #3498db;
 }
 
@@ -180,6 +179,10 @@
 .metaItem {
   display: flex;
   flex-direction: column;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
 }
 
 .metaHeader {
@@ -212,7 +215,7 @@
 
 /* Container específico para palavras-chave */
 .keywordsContainer {
-  border-top: 1px solid #e9ecef;
+  /* border-top: 1px solid #e9ecef; */
   padding-top: 1.5rem;
 }
 
@@ -421,4 +424,33 @@
 /* Utilitário para formatação de datas */
 .formatDate {
   white-space: nowrap;
+}
+
+/* Meta container */
+.metaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.metaDatesRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .metaDatesRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .metaItem {
+    margin-bottom: 0.75rem;
+  }
 }

@@ -12,7 +12,7 @@ export default function LoginPage() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1>Envio de Tranalho Científico</h1>
+        <h1>Envio de Trabalho Científico</h1>
         <h2>Login ou Registro</h2>
         {error && <p className={styles.error}>{error}</p>}
 

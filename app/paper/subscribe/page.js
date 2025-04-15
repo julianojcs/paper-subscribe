@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
+import styles from './subscribe.module.css';
 import Button from '../../components/ui/Button';
 import { FaUpload, FaInfoCircle, FaExclamationTriangle } from 'react-icons/fa';
 

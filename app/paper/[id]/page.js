@@ -173,9 +173,9 @@ export default function PaperDetailPage() {
 
         <div className={styles.paperContent}>
           <div className={styles.paperMeta}>
-            <div className={styles.metaGrid}>
-              {/* Autores */}
-              <div className={styles.metaItem}>
+            <div className={styles.metaContainer}>
+              {/* Autores - Ocupa linha inteira */}
+              <div className={`${styles.metaItem} ${styles.fullWidth}`}>
                 <div className={styles.metaHeader}>
                   <FaUsers className={styles.metaIcon} />
                   <span className={styles.metaLabel}>Autores</span>
@@ -185,29 +185,31 @@ export default function PaperDetailPage() {
                 </div>
               </div>
 
-              {/* Data de submissão */}
-              <div className={styles.metaItem}>
-                <div className={styles.metaHeader}>
-                  <FaCalendarAlt className={styles.metaIcon} />
-                  <span className={styles.metaLabel}>Data de submissão</span>
-                </div>
-                <div className={styles.metaContent}>
-                  {formatDate(paper.createdAt)}
-                </div>
-              </div>
-
-              {/* Última atualização - só mostra se diferente da criação */}
-              {paper.updatedAt && paper.updatedAt !== paper.createdAt && (
+              <div className={styles.metaDatesRow}>
+                {/* Data de submissão */}
                 <div className={styles.metaItem}>
                   <div className={styles.metaHeader}>
-                    <FaHistory className={styles.metaIcon} />
-                    <span className={styles.metaLabel}>Última atualização</span>
+                    <FaCalendarAlt className={styles.metaIcon} />
+                    <span className={styles.metaLabel}>Data de submissão</span>
                   </div>
                   <div className={styles.metaContent}>
-                    {formatDate(paper.updatedAt)}
+                    {formatDate(paper.createdAt)}
                   </div>
                 </div>
-              )}
+
+                {/* Última atualização - só mostra se diferente da criação */}
+                {paper.updatedAt && paper.updatedAt !== paper.createdAt && (
+                  <div className={styles.metaItem}>
+                    <div className={styles.metaHeader}>
+                      <FaHistory className={styles.metaIcon} />
+                      <span className={styles.metaLabel}>Última atualização</span>
+                    </div>
+                    <div className={styles.metaContent}>
+                      {formatDate(paper.updatedAt)}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Palavras-chave em uma linha separada para ter mais espaço */}
