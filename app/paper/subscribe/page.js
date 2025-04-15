@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './subscribe.module.css';
 import Button from '../../components/ui/Button';
+import TrashIcon from '../../components/ui/TrashIcon';
 import { FaUpload, FaInfoCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 export default function SubmitPaperPage() {
@@ -18,27 +19,46 @@ export default function SubmitPaperPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
+  // Função para trigger do input file
+  const triggerFileInput = (e) => {
+    // Não cancelar o evento se o clique veio do botão de remover
+    if (e.target.closest(`.${styles.removeFileButton}`)) {
+      return;
+    }
+
+    // Se houver arquivo e o clique não veio do botão de remover, abrir o seletor
+    fileInputRef.current.click();
+  };
+
+  // Função para lidar com a mudança de arquivo
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+    if (selectedFile) {
+      // Validar tipo do arquivo
+      if (selectedFile.type !== 'application/pdf') {
+        setFieldErrors((prev) => ({ ...prev, file: 'Apenas arquivos PDF são permitidos' }));
+        return;
+      }
 
-    // Verificar se é um PDF
-    if (selectedFile.type !== 'application/pdf') {
-      setError('O arquivo deve estar em formato PDF.');
-      setFile(null);
-      return;
+      // Validar tamanho do arquivo (10MB)
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setFieldErrors((prev) => ({ ...prev, file: 'O arquivo não pode exceder 10MB' }));
+        return;
+      }
+
+      setFile(selectedFile);
+      setFieldErrors((prev) => ({ ...prev, file: null }));
     }
+  };
 
-    // Verificar tamanho máximo (10 MB)
-    const maxSize = 10 * 1024 * 1024;  // 10MB em bytes
-    if (selectedFile.size > maxSize) {
-      setError('O arquivo não deve exceder 10MB.');
-      setFile(null);
-      return;
+  // Função para remover o arquivo selecionado com stopPropagation
+  const handleRemoveFile = (e) => {
+    e.stopPropagation(); // Impede que o click propague para o container
+    setFile(null);
+    // Resetar o input file para permitir selecionar o mesmo arquivo novamente
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
-
-    setError('');
-    setFile(selectedFile);
   };
 
   const handleSubmit = async (e) => {
@@ -87,10 +107,6 @@ export default function SubmitPaperPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
   };
 
   return (
@@ -204,9 +220,23 @@ export default function SubmitPaperPage() {
 
                     {file ? (
                       <div className={styles.selectedFile}>
-                        <FaUpload className={styles.uploadIcon} />
-                        <span className={styles.fileName}>{file.name}</span>
-                        <span className={styles.fileSize}>({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                        <div className={styles.fileDetails}>
+                          <span className={styles.fileName} title={file.name}>
+                            {file.name}
+                          </span>
+                          <span className={styles.fileSize}>
+                            ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <div
+                          className={styles.removeFileButton}
+                          onClick={handleRemoveFile}
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Remover arquivo"
+                        >
+                          <TrashIcon label="Excluir" />
+                        </div>
                       </div>
                     ) : (
                       <div className={styles.uploadPrompt}>

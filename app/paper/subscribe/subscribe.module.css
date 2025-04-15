@@ -155,7 +155,7 @@
 
 .fileDropArea {
   position: relative;
-  height: 150px;
+  min-height: 150px;
   border: 2px dashed #cbd5e1;
   border-radius: 0.5rem;
   display: flex;
@@ -183,12 +183,10 @@
 
 .fileInput {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: -9999px; /* Esconde o input visualmente mas mantém acessível */
   opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
+  width: 1px;
+  height: 1px;
 }
 
 .uploadIcon {
@@ -212,23 +210,44 @@
 
 .selectedFile {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between; /* Espaça os elementos */
+  width: 100%;
+  padding: 10px;
+}
+
+.fileDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Importante para permitir truncamento */
+  flex: 1;
+  margin-right: 12px; /* Espaço para o botão de remover */
 }
 
 .fileName {
   font-weight: 500;
-  color: #334155;
-  margin: 0.5rem 0 0.25rem;
-  max-width: 100%;
+  color: #333;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
 }
 
 .fileSize {
   font-size: 0.85rem;
-  color: #64748b;
+  color: #666;
+}
+
+.removeFileButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  z-index: 5; /* Garantir que esteja acima de outros elementos */
+}
+
+.removeFileButton:hover,
+.removeFileButton:focus {
+  outline: none;
 }
 
 .fileRequirements {
@@ -343,6 +362,22 @@
   
   .dragDropText {
     display: none; /* Ocultar texto de drag-and-drop em mobile */
+  }
+  
+  .selectedFile {
+    padding: 12px;
+  }
+  
+  .fileDetails {
+    gap: 4px;
+  }
+  
+  .fileName {
+    font-size: 0.9rem;
+  }
+  
+  .fileSize {
+    font-size: 0.75rem;
   }
   
   .termsGroup {

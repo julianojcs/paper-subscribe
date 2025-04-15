@@ -1,0 +1,17 @@
+.removeControl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  color: var(--paper-danger);
+  font-size: 0.875rem;
+
+  & span:hover,
+  & span:focus {
+    text-decoration: underline;
+  }
+  & span:hover {
+    color: var(--paper-danger-hover);
+  }
+}

@@ -1,6 +1,104 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --paper-primary: #0030b9;
+  --paper-primary-rgb: 0, 48, 185;
+  --paper-primary-hover: #002694;
+  --paper-primary-active: #001d6f;
+  --paper-primary-dark: #001d6f;
+
+  --paper-secondary: #6c757d;
+  --paper-secondary-rgb: 108, 117, 125;
+  --paper-secondary-hover: #5a6268;
+  --paper-secondary-active: #4e555b;
+  --paper-secondary-dark: #343a40;
+
+  --paper-success: #198754;
+  --paper-success-rgb: 25, 135, 84;
+  --paper-success-hover: #157347;
+  --paper-success-active: #136f4d;
+  --paper-success-dark: #0f5132;
+
+  --paper-warning: #ec6b00;
+  --paper-warning-rgb: 236, 107, 0;
+  --paper-warning-hover: #d95f00;
+  --paper-warning-active: #c85500;
+  --paper-warning-dark: #b05200;
+
+  --paper-danger: #dc3545;
+  --paper-danger-rgb: 220, 53, 69;
+  --paper-danger-hover: #C72A1D;
+  --paper-danger-active: #AC290D;
+  --paper-danger-dark: #A71D0F;
+
+  --paper-info: #066bb3;
+  --paper-info-rgb: 6, 107, 179;
+  --paper-info-hover: #055a9a;
+  --paper-info-active: #044b7f;
+  --paper-info-dark: #043e6b;
+
+  --paper-light: #f8f9fa;
+  --paper-light-rgb: 248, 249, 250;
+  --paper-light-hover: #e9ecef;
+  --paper-light-active: #dee2e6;
+  --paper-light-dark: #ced4da;
+
+  --paper-dark: #343a40;
+  --paper-dark-rgb: 52, 58, 64;
+  --paper-dark-hover: #2b3035;
+  --paper-dark-active: #24292e;
+  --paper-dark-dark: #212529;
+
+  --paper-primary-100: rgb(204, 213.6, 241);
+  --paper-primary-200: rgb(153, 172.2, 227);
+  --paper-primary-300: rgb(102, 130.8, 213);
+  --paper-primary-400: rgb(51, 89.4, 199);
+  --paper-primary-500: #0030b9;
+  --paper-primary-600: rgb(0, 38.4, 148);
+  --paper-primary-700: rgb(0, 28.8, 111);
+  --paper-primary-800: rgb(0, 19.2, 74);
+  --paper-primary-900: rgb(0, 9.6, 37);
+
+  --paper-secondary-100: #e9ecef;
+  --paper-secondary-200: #dee2e6;
+  --paper-secondary-300: #ced4da;
+  --paper-secondary-400: #adb5bd;
+  --paper-secondary-500: #6c757d;
+  --paper-secondary-600: #495057;
+  --paper-secondary-700: #343a40;
+  --paper-secondary-800: #212529;
+  --paper-secondary-900: #1a1e21;
+
+  --paper-success-100: rgb(209, 231, 220.8);
+  --paper-success-200: rgb(163, 207, 186.6);
+  --paper-success-300: rgb(117, 183, 152.4);
+  --paper-success-400: rgb(71, 159, 118.2);
+  --paper-success-500: #198754;
+  --paper-success-600: rgb(20, 108, 67.2);
+  --paper-success-700: rgb(15, 81, 50.4);
+  --paper-success-800: rgb(10, 54, 33.6);
+  --paper-success-900: rgb(5, 27, 16.8);
+
+  --paper-warning-100: rgb(251.2, 225.4, 204);
+  --paper-warning-200: rgb(247.4, 195.8, 153);
+  --paper-warning-300: rgb(243.6, 166.2, 102);
+  --paper-warning-400: rgb(239.8, 136.6, 51);
+  --paper-warning-500: #ec6b00;
+  --paper-warning-600: rgb(188.8, 85.6, 0);
+  --paper-warning-700: rgb(141.6, 64.2, 0);
+  --paper-warning-800: rgb(94.4, 42.8, 0);
+  --paper-warning-900: rgb(47.2, 21.4, 0);
+
+  --paper-danger-100: rgb(248, 214.6, 217.8);
+  --paper-danger-200: rgb(241, 174.2, 180.6);
+  --paper-danger-300: rgb(234, 133.8, 143.4);
+  --paper-danger-400: rgb(227, 93.4, 106.2);
+  --paper-danger-500: #dc3545;
+  --paper-danger-600: rgb(189.6, 56.4, 69);
+  --paper-danger-700: rgb(142.2, 42.6, 52.8);
+  --paper-danger-800: rgb(94.8, 28.8, 36);
+  --paper-danger-900: rgb(47.4, 15, 19.2);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,8 +140,8 @@ a {
   text-decoration: none;
 }
 
-main, 
-[role="main"], 
+main,
+[role="main"],
 .content,
 .page-content {
   /* Não mais necessário adicionar padding-top para compensar um header fixo */
@@ -62,107 +160,107 @@ main,
   html {
     font-size: 15px; /* Reduz ligeiramente o tamanho base da fonte */
   }
-  
+
   body {
     margin: 0;
     padding: 0;
   }
-  
+
   /* Ajuste global para controles de formulário */
   input, button, select, textarea {
     font-size: 16px; /* Evita zoom automático em iOS */
   }
-  
+
   /* Tamanhos comuns de tipografia */
   h1 {
     font-size: 1.5rem;
     margin-bottom: 0.75rem;
   }
-  
+
   h2 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
   }
-  
+
   h3 {
     font-size: 1.1rem !important;
     margin-bottom: 0.5rem !important;
   }
-  
+
   p {
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .paperPage {
     padding: 1rem 0;
   }
-  
+
   .sectionTitle {
     font-size: 1.3rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .sectionDescription {
     font-size: 0.9rem;
     margin-bottom: 1rem;
     line-height: 1.4;
   }
-  
+
   /* Classes utilitárias para espaçamento */
   .mt-md {
     margin-top: 0.75rem !important;
   }
-  
+
   .mb-md {
     margin-bottom: 0.75rem !important;
   }
-  
+
   .py-md {
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
   }
-  
+
   .px-md {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
-  
+
   /* Containers */
   .contentContainer {
     padding: 0.75rem;
   }
-  
+
   .container {
     padding: 1rem !important;
     margin: 1rem auto !important;
   }
-  
+
   /* Grids responsivos */
   .gridContainer {
     gap: 0.75rem;
   }
-  
+
   /* Espaçamento */
   .section {
     margin-bottom: 1.5rem !important;
     padding: 1rem !important;
   }
-  
+
   /* Inputs e Forms */
   input, select, textarea, button {
     font-size: 0.9rem !important;
   }
-  
+
   /* Classes utilitárias */
   .mobile-full-width {
     width: 100% !important;
   }
-  
+
   .mobile-stack {
     flex-direction: column !important;
   }
-  
+
   .mobile-center {
     text-align: center !important;
     justify-content: center !important;
@@ -174,31 +272,31 @@ main,
   html {
     font-size: 14px;
   }
-  
+
   .paperPage {
     padding: 0.75rem 0;
   }
-  
+
   .sectionTitle {
     font-size: 1.2rem;
   }
-  
+
   .contentContainer {
     padding: 0.6rem;
   }
-  
+
   .container {
     padding: 0.75rem !important;
   }
-  
+
   .buttonFull {
     width: 100%;
   }
-  
+
   h1 {
     font-size: 1.3rem !important;
   }
-  
+
   input, select, textarea, button {
     font-size: 0.85rem !important;
   }
