@@ -2,9 +2,15 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function RedirectPage() {
+// Componente de loading simples
+function LoadingState() {
+  return null; // Ou uma UI mínima de carregamento
+}
+
+// Componente interno que usa useSearchParams
+function RedirectHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(true);
@@ -29,13 +35,20 @@ export default function RedirectPage() {
     return () => {
       setIsProcessing(false);
       // Tentativa adicional de limpar o histórico (funciona em alguns navegadores)
-      if (window.history.length > 1) {
+      if (window.history && window.history.length > 1) {
         window.history.replaceState(null, '', '/login');
       }
     };
   }, [router, searchParams]);
 
+  return null;
+}
+
+// Componente principal que usa Suspense
+export default function RedirectPage() {
   return (
-    null
+    <Suspense fallback={<LoadingState />}>
+      <RedirectHandler />
+    </Suspense>
   );
 }
