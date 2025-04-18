@@ -1,0 +1,34 @@
+.authorsListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.authorList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.addAuthorContainer {
+  margin-top: 8px;
+}
+
+.addAuthorButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.addIcon {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .authorList {
+    grid-template-columns: 1fr;
+  }
+}

@@ -606,3 +606,125 @@
     font-size: 1rem;
   }
 }
+
+/* Select Wrapper */
+.selectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.selectWrapper::after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #4b5563;
+  pointer-events: none;
+}
+
+.areaSelect {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: 0 15px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #374151;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+
+.areaSelect:focus {
+  border-color: #3b82f6;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.areaSelect:hover:not(:disabled) {
+  border-color: #9ca3af;
+}
+
+.areaSelect:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.areaSelect option {
+  padding: 10px;
+}
+
+.areaSelect option:first-child {
+  color: #6b7280;
+}
+
+.areaSelect.inputError {
+  border-color: #ef4444;
+}
+
+.areaSelect.inputError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* Container para o select e sua descrição */
+.selectContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Container para a descrição da área selecionada */
+.selectedAreaDescription {
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .selectContainer {
+    gap: 0.5rem;
+  }
+  
+  .areaSelect {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+  }
+  
+  .selectedAreaDescription {
+    padding: 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Ajuste para telas muito pequenas */
+@media (max-width: 480px) {
+  .areaSelect {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .selectWrapper::after {
+    right: 12px;
+    border-left-width: 5px;
+    border-right-width: 5px;
+    border-top-width: 5px;
+  }
+}

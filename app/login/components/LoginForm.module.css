@@ -1,5 +1,5 @@
 .formContainer {
-  margin-bottom: 2rem;
+  /* margin-bottom: 1rem; */
 }
 
 .tabButtons {
@@ -51,6 +51,53 @@
   font-size: 0.875rem;
 }
 
+.tokenConfirmation {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(25, 135, 84, 0.1);
+  border: 1px solid var(--paper-success);
+  border-radius: 0.375rem;
+}
+
+.tokenMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tokenIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: var(--paper-success);
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  font-size: 0.75rem;
+}
+
+.tokenText {
+  font-size: 0.875rem;
+  color: var(--paper-success-700);
+}
+
+.loginInfo {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #0ea5e9;
+}
+
+.infoText {
+  color: #0369a1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
 @media (prefers-color-scheme: dark) {
   .tabButtons {
     border-bottom-color: #333;
@@ -69,9 +116,18 @@
     background-color: rgba(239, 68, 68, 0.2);
     color: #f87171;
   }
-  
+
   .success {
     background-color: rgba(22, 163, 74, 0.2);
     color: #4ade80;
+  }
+
+  .loginInfo {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-left-color: #0ea5e9;
+  }
+
+  .infoText {
+    color: #38bdf8;
   }
 }

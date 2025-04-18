@@ -8,56 +8,107 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export async function POST(request) {
   try {
-    // Verificar se o usuário está autenticado
     const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    }
 
-    if (!session || !session.user) {
+    // Obter dados do formulário multipart
+    const formData = await request.formData();
+
+    console.log("Dados do formulário recebidos:", formData);
+    return {};
+
+    const title = formData.get('title');
+    const authorsJson = formData.get('authors');
+    const abstract = formData.get('abstract');
+    const keywords = formData.get('keywords');
+    const file = formData.get('file');
+    const areaId = formData.get('areaId');
+    const paperTypeId = formData.get('paperTypeId');
+    const eventId = formData.get('eventId');
+    
+    // Validar campos obrigatórios
+    if (!title || !authorsJson || !abstract || !keywords || !file) {
       return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
+        { message: "Todos os campos obrigatórios devem ser preenchidos" },
+        { status: 400 }
       );
+    }
+    
+    // Converter string JSON para objeto
+    let authors;
+    try {
+      authors = JSON.parse(authorsJson);
+      if (!Array.isArray(authors) || authors.length === 0) {
+        throw new Error("Lista de autores inválida");
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { message: "Formato de autores inválido", error: error.message },
+        { status: 400 }
+      );
+    }
+    
+    // Obter o usuário atual
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+    
+    if (!user) {
+      return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
+    }
+    
+    // Verificar se o evento existe (se foi fornecido)
+    if (eventId) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { areas: true, paperTypes: true }
+      });
+      
+      if (!event) {
+        return NextResponse.json({ message: "Evento não encontrado" }, { status: 404 });
+      }
+      
+      // Verificar se o evento está aceitando submissões
+      const now = new Date();
+      if (event.submissionStart && now < new Date(event.submissionStart)) {
+        return NextResponse.json(
+          { message: "O período de submissão ainda não começou" },
+          { status: 400 }
+        );
+      }
+      
+      if (event.submissionEnd && now > new Date(event.submissionEnd)) {
+        return NextResponse.json(
+          { message: "O período de submissão já terminou" },
+          { status: 400 }
+        );
+      }
+      
+      // Validar área se fornecida
+      if (areaId && !event.areas.some(area => area.id === areaId)) {
+        return NextResponse.json(
+          { message: "Área temática inválida para este evento" },
+          { status: 400 }
+        );
+      }
+      
+      // Validar tipo de trabalho se fornecido
+      if (paperTypeId && !event.paperTypes.some(type => type.id === paperTypeId)) {
+        return NextResponse.json(
+          { message: "Tipo de trabalho inválido para este evento" },
+          { status: 400 }
+        );
+      }
     }
 
     // Verificar se o Firebase Storage está disponível
     if (!storage) {
       console.error("Firebase Storage não está inicializado corretamente");
       return NextResponse.json(
-        { error: 'Erro interno de configuração de armazenamento' },
+        { message: 'Erro interno de configuração de armazenamento' },
         { status: 500 }
-      );
-    }
-
-    // Processar FormData
-    const formData = await request.formData();
-
-    // Extrair dados do formulário
-    const title = formData.get('title');
-    const authors = formData.get('authors');
-    const abstract = formData.get('abstract');
-    const keywords = formData.get('keywords');
-    const file = formData.get('file');
-
-    // Validar dados
-    if (!title || !authors || !abstract || !keywords || !file) {
-      return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    // Verificar tipo do arquivo
-    if (file.type !== 'application/pdf') {
-      return NextResponse.json(
-        { error: 'O arquivo deve estar em formato PDF' },
-        { status: 400 }
-      );
-    }
-
-    // Verificar tamanho do arquivo (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'O arquivo não deve exceder 10MB' },
-        { status: 400 }
       );
     }
 
@@ -91,19 +142,52 @@ export async function POST(request) {
       // Obter URL de download do arquivo
       const downloadURL = await getDownloadURL(snapshot.ref);
 
-      // Criar o paper no banco de dados
+      // Preparar os autores no formato esperado pelo Prisma
+      const authorCreateObjects = authors.map(author => {
+        return {
+          name: author.name,
+          email: author.email || null,
+          institution: author.institution,
+          city: author.city,
+          stateId: author.state?.value || author.stateId || null,
+          isMainAuthor: author.isMainAuthor || false, 
+          isPresenter: author.isPresenter || false,
+          lattes: author.lattes || null,
+          orcid: author.orcid || null
+        };
+      });
+
+      // Criar o paper no banco de dados - Usando objetos relacionais em vez de IDs diretos
       const paper = await prisma.paper.create({
         data: {
           title,
-          authors,
           abstract,
           keywords,
+          userId: user.id,
+          event: eventId ? {
+            connect: { id: eventId }
+          } : undefined,
+          area: areaId ? {
+            connect: { id: areaId }
+          } : undefined,
+          paperType: paperTypeId ? {
+            connect: { id: paperTypeId }
+          } : undefined,
+          authors: {
+            create: authorCreateObjects
+          },
           fileUrl: downloadURL,
           fileName: originalFileName,
           fileStoragePath: `JMR${currentYear}/Papers/${sanitizedFileName}`,
           fileSize: file.size,
           status: 'pending', // Status inicial
-          userId: session.user.id,
+        },
+        include: {
+          authors: true,
+          area: true,
+          paperType: true,
+          event: true,
+          user: true
         },
       });
 
@@ -116,27 +200,22 @@ export async function POST(request) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        paper: {
-          id: paper.id,
-          title: paper.title,
-          status: paper.status,
-          createdAt: paper.createdAt
-        }
+      return NextResponse.json({ 
+        message: "Trabalho enviado com sucesso",
+        paperId: paper.id 
       });
     } catch (uploadError) {
       console.error("Erro no upload:", uploadError);
       return NextResponse.json(
-        { error: 'Erro ao fazer upload do arquivo: ' + uploadError.message },
+        { message: 'Erro ao fazer upload do arquivo: ' + uploadError.message },
         { status: 500 }
       );
     }
 
   } catch (error) {
-    console.error('Erro ao submeter paper completo:', error);
+    console.error("Erro ao submeter trabalho:", error);
     return NextResponse.json(
-      { error: "Falha ao processar o envio do trabalho: " + error.message },
+      { message: "Erro ao submeter trabalho", error: error.message },
       { status: 500 }
     );
   }

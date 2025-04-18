@@ -1,13 +1,12 @@
 import NextAuth from "next-auth";
-// import { authOptions } from "../../../lib/auth";
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 // import LinkedInProvider from 'next-auth/providers/linkedin';
 // import FacebookProvider from 'next-auth/providers/facebook';
-import { extractIPv4 } from '../../../utils';
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { prisma } from "../../../lib/db";
-import bcrypt from "bcrypt";
+import { extractIPv4 } from '../../../utils';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -105,7 +104,42 @@ export const authOptions = {
     // }),
   ],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials, req }) {
+    async signIn({ user, account, profile, email, credentials }) {
+      // Se for um login via OAuth
+      if (account && account.provider === 'google') {
+        try {
+          // Verificar se o usuário já existe
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          // Se não existir, verificar se há um token de registro válido
+          if (!existingUser) {
+            // Obter o token do cookie
+            const cookieHeader = cookies().get('social_registration_token')?.value;
+
+            if (!cookieHeader) {
+              // Se não tiver token, não permitir o login/registro
+              return false;
+            }
+
+            // Verificar se o token é válido
+            const isValid = await validateEventToken(cookieHeader);
+            if (!isValid) {
+              return false;
+            }
+
+            // Token válido, pode continuar com o registro
+          }
+
+          // Se o usuário já existe ou o token é válido, permitir login
+          return true;
+        } catch (error) {
+          console.error('Erro durante autenticação social:', error);
+          return false;
+        }
+      }
+
       // Caso 1: Login com provedor social (não credenciais)
       if (account?.provider !== "credentials") {
         try {
@@ -163,10 +197,31 @@ export const authOptions = {
 
     async session({ session, token, user }) {
       if (session?.user) {
-        session.user.id = token.uid;
-        // Passar a flag de conta vinculada para a sessão
-        if (token.accountLinked) {
-          session.accountLinked = true;
+        session.user.id = token.sub;
+
+        // Adicionar campos personalizados à sessão
+        try {
+          const userDetails = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: {
+              id: true,
+              name: true,
+              cpf: true,
+              phone: true,
+              institution: true,
+              city: true,
+              stateId: true
+            }
+          });
+
+          if (userDetails) {
+            session.user = {
+              ...session.user,
+              ...userDetails
+            };
+          }
+        } catch (error) {
+          console.error("Erro ao enriquecer sessão:", error);
         }
       }
       return session;
@@ -174,21 +229,43 @@ export const authOptions = {
 
     async jwt({ token, user, account }) {
       if (user) {
-        token.uid = user.id;
-        // Se a conta foi vinculada, adicionar flag ao token
-        if (user.accountLinked) {
-          token.accountLinked = true;
+        token.id = user.id;
+        token.email = user.email;
+        token.eventTokenVerified = false;
+
+        try {
+          const userDetails = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: {
+              id: true,
+              name: true,
+              cpf: true,
+              phone: true,
+              institution: true,
+              city: true,
+              stateId: true
+            }
+          });
+
+          if (userDetails) {
+            token = { ...token, ...userDetails };
+            session.user = {
+              ...session.user,
+              ...userDetails
+            };
+          }
+
+          // Se o usuário tem pelo menos um token válido, marcar como verificado
+          // if (userToken) {
+          //   token.eventTokenVerified = true;
+          // }
+
+        } catch (error) {
+          console.error("Erro ao verificar token do usuário:", error);
+          // Em caso de erro, não definimos token.eventTokenVerified como true,
+          // tratando como se o usuário não tivesse token verificado
         }
       }
-
-      // Se temos informações da conta e é um provedor social
-      if (account && account.provider !== "credentials") {
-        // Verificar se é uma nova vinculação
-        // Esta verificação será usada na primeira carga após login
-        token.newSocialLink = true;
-        token.provider = account.provider;
-      }
-
       return token;
     }
   },

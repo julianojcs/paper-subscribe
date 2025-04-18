@@ -12,11 +12,12 @@
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: #475569;
+  font-size: 0.875rem;
 }
 
 .required {
-  color: #ef4444;
-  margin-left: 0.25rem;
+  color: #ef4444 !important;
+  margin-left: -0.2rem;
 }
 
 .input {

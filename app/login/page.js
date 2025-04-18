@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import styles from './page.module.css';
+import { useState } from 'react';
 import LoginForm from './components/LoginForm';
-import SocialLogin from './components/SocialLogin';
+import styles from './page.module.css';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -13,19 +12,10 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <h1>Envio de Trabalho Científico</h1>
-        <h2>Login ou Registro</h2>
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.tabs}>
           <LoginForm />
-          <SocialLogin />
-        </div>
-
-        <div className={styles.loginInfo}>
-          <p className={styles.infoText}>
-            <strong>Já tem uma conta com e-mail e senha?</strong> Se você fizer login com sua conta Google usando o mesmo email
-            de uma conta existente, os métodos de login serão automaticamente vinculados.
-          </p>
         </div>
 
         <div className={styles.footer}>

@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 import prisma from "../../lib/db";
-import { authOptions } from "../../lib/auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 // GET /api/paper - Lista todos os papers do usuário autenticado
 export async function GET() {

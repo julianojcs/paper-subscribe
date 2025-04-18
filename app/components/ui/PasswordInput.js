@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import styles from './PasswordInput.module.css';
-import { FaEye, FaEyeSlash, FaTimes, FaThumbtack } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import { FaEye, FaEyeSlash, FaThumbtack, FaTimes } from 'react-icons/fa';
 import usePasswordValidation from '../../hooks/usePasswordValidation';
-// Importar o novo componente Tooltip
+import styles from './PasswordInput.module.css';
 import Tooltip from './Tooltip';
 
 export default function PasswordInput({
   label,
   id,
   placeholder,
-  value,
+  value = '', // Valor padrão vazio para evitar undefined
   onChange,
   error,
   disabled,
@@ -35,7 +34,7 @@ export default function PasswordInput({
   
   // Usar o hook personalizado
   const validation = usePasswordValidation({
-    password: value,
+    password: value || '', // Garantir que password nunca é undefined
     confirmPassword,
     requiredLength: minLength,
     requiresLowercase: requireLowercase,
@@ -78,7 +77,8 @@ export default function PasswordInput({
   
   // Determinar se os requisitos falhos devem ser exibidos
   // Mostrar sempre se estiver fixado, ou de acordo com a lógica anterior
-  const shouldShowFailedRequirements = isPinned || (showValidation && touched && !focused && value.length > 0);
+  const safeValue = value || ''; // Garantir que temos uma string
+  const shouldShowFailedRequirements = isPinned || (showValidation && touched && !focused && safeValue.length > 0);
   const hasFailedRequirements = validation.failedRequirements.length > 0;
 
   return (
@@ -90,7 +90,7 @@ export default function PasswordInput({
           id={id}
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
-          value={value}
+          value={safeValue} // Usar o valor seguro
           onChange={onChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -113,8 +113,8 @@ export default function PasswordInput({
       
       {error && <div className={styles.errorText}>{error}</div>}
       
-      {/* Barra de força da senha */}
-      {showValidation && value.length > 0 && (
+      {/* Barra de força da senha - CORREÇÃO AQUI */}
+      {showValidation && safeValue.length > 0 && (
         <div className={styles.strengthContainer}>
           <div className={styles.strengthBar}>
             <div 

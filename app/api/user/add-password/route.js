@@ -1,8 +1,8 @@
+import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
-import { authOptions } from "../../../lib/auth";
 import { prisma } from "../../../lib/db";
-import bcrypt from "bcrypt";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 export async function POST(request) {
   const session = await getServerSession(authOptions);

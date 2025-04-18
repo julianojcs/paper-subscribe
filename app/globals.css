@@ -39,10 +39,10 @@
   --paper-info-dark: #043e6b;
 
   --paper-light: #f8f9fa;
-  --paper-light-rgb: 248, 249, 250;
+  --paper-light-rgb: 181, 181, 181;
   --paper-light-hover: #e9ecef;
   --paper-light-active: #dee2e6;
-  --paper-light-dark: #ced4da;
+  --paper-light-dark: rgb(206 212 218);
 
   --paper-dark: #343a40;
   --paper-dark-rgb: 52, 58, 64;

@@ -1,9 +1,9 @@
-import './globals.css';
 import { Inter } from 'next/font/google';
-import Providers from './providers';
-import Header from './components/layout/Header';
-import styles from './layout.module.css'; // Adicionar importação do CSS modular
 import { DataProvider } from '../context/DataContext';
+import Header from './components/layout/Header';
+import './globals.css';
+import styles from './layout.module.css'; // Adicionar importação do CSS modular
+import Providers from './providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,12 +16,12 @@ export const metadata = {
   },
 };
 
-const RootLayout = async ({ children }) => {
+const RootLayout = async ({ children, session }) => {
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
         <DataProvider>
-          <Providers>
+          <Providers session={session}>
             <Header />
             <main className={styles.mainContent}> {/* Adicionar classe CSS */}
               {children}
