@@ -40,10 +40,6 @@
   text-align: center;
 }
 
-.tabs {
-  margin-bottom: 2rem;
-}
-
 .footer {
   margin-top: 2rem;
   text-align: center;
@@ -56,20 +52,6 @@
   text-decoration: underline;
 }
 
-.loginInfo {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #f0f9ff;
-  border-radius: 8px;
-  border-left: 4px solid #0ea5e9;
-}
-
-.infoText {
-  color: #0369a1;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0;
-}
 
 @media (prefers-color-scheme: dark) {
   .container {
@@ -95,14 +77,5 @@
 
   .error {
     background-color: rgba(245, 101, 101, 0.2);
-  }
-
-  .loginInfo {
-    background-color: rgba(14, 165, 233, 0.1);
-    border-left-color: #0ea5e9;
-  }
-  
-  .infoText {
-    color: #38bdf8;
   }
 }

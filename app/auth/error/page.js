@@ -1,10 +1,9 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import styles from './error.module.css';
 import Button from '../../components/ui/Button';
+import styles from './error.module.css';
 
 // Componente interno que usa useSearchParams
 function ErrorContent() {
@@ -23,6 +22,9 @@ function ErrorContent() {
       'EmailCreateAccount': 'Não foi possível criar uma conta usando o e-mail fornecido.',
       'Callback': 'Ocorreu um erro durante o processo de autenticação.',
       'OAuthAccountNotLinked': 'Este e-mail já está associado a uma conta existente. Faça login usando o método original.',
+      'TokenRequired': 'Um token de evento válido é necessário para criar uma nova conta.',
+      'InvalidToken': 'O token de evento fornecido é inválido ou expirou.',
+      'SessionStorage': 'Erro ao acessar informações de sessão. Tente limpar os cookies do navegador.',
       'default': 'Ocorreu um erro durante a autenticação. Por favor, tente novamente.',
     };
 

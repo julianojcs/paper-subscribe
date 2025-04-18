@@ -1,10 +1,10 @@
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
-import prisma from "../../../lib/db";
-import { authOptions } from "../../../lib/auth";
 import { v4 as uuidv4 } from 'uuid';
+import prisma from "../../../lib/db";
 import { storage } from "../../../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 export async function POST(request) {
   try {

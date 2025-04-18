@@ -1,25 +1,44 @@
-import React from 'react';
+import { FaSpinner } from 'react-icons/fa';
 import styles from './Button.module.css';
 
-const Button = ({ 
-  children, 
-  onClick, 
-  type = 'button', 
+const Button = ({
+  children,
+  onClick,
+  type = 'button',
   variant = 'primary',
-  disabled = false,
+  size = 'medium',
   fullWidth = false,
-  className = '', 
-  ...props 
+  disabled = false,
+  loading = false,
+  className = '',
+  ...props
 }) => {
+  // Criar classe composta baseada nas props
+  const buttonClasses = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    fullWidth ? styles.fullWidth : '',
+    loading ? styles.loading : '',
+    className
+  ].filter(Boolean).join(' ');
+
   return (
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${styles.button} ${styles[variant]} ${fullWidth ? styles.fullWidth : ''} ${className}`}
+      disabled={disabled || loading}
+      className={buttonClasses}
       {...props}
     >
-      {children}
+      {loading && (
+        <span className={styles.spinner}>
+          <FaSpinner />
+        </span>
+      )}
+      <span className={loading ? styles.buttonTextWithSpinner : ''}>
+        {children}
+      </span>
     </button>
   );
 };

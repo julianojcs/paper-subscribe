@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
-import Input from '../components/ui/Input';
-import PasswordInput from '../components/ui/PasswordInput'; // Importar o componente PasswordInput
+import { useCallback, useEffect, useState } from 'react';
+import { FaEnvelope, FaGoogle, FaKey } from 'react-icons/fa';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import LoginHistoryTable from '../components/ui/LoginHistoryTable';
 import Modal from '../components/ui/Modal';
-import { FaGoogle, FaEnvelope, FaKey } from 'react-icons/fa';
-import LoginHistoryTable from '../components/ui/LoginHistoryTable'; // Importe o novo componente
+import PasswordInput from '../components/ui/PasswordInput';
+import StateSelect from '../components/ui/StateSelect';
+import { brazilianStates } from '../utils/brazilianStates';
+import styles from './profile.module.css';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -18,6 +20,7 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
@@ -28,6 +31,17 @@ export default function ProfilePage() {
   const [accountToRemove, setAccountToRemove] = useState(null);
   const [passwordValid, setPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    cpf: '',
+    phone: '',
+    institution: '',
+    city: '',
+    stateId: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -42,6 +56,41 @@ export default function ProfilePage() {
       }
     }
   }, [status, router, session]);
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/user/profile');
+      const userData = await response.json();
+
+      if (response.ok) {
+        setFormData({
+          name: userData.name || '',
+          email: userData.email || '',
+          cpf: userData.cpf || '',
+          phone: userData.phone || '',
+          institution: userData.institution || '',
+          city: userData.city || '',
+          stateId: userData.stateId
+            ? brazilianStates.find(s => s.value === userData.stateId) || null
+            : null
+        });
+      } else {
+        setError('Erro ao carregar dados do perfil');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      setError('Erro de conexão ao carregar seus dados');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      fetchUserData();
+    }
+  }, [status, session, fetchUserData]);
 
   const fetchLinkedAccounts = async () => {
     try {
@@ -160,14 +209,81 @@ export default function ProfilePage() {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  const handleCancelEdit = () => {
+    if (session?.user) {
+      setFormData({
+        name: session.user.name || '',
+        email: session.user.email || '',
+        cpf: session.user.cpf || '',
+        phone: session.user.phone || '',
+        institution: session.user.institution || '',
+        city: session.user.city || '',
+        stateId: session.user.stateId
+          ? brazilianStates.find(s => s.value === session.user.stateId) || null
+          : null
+      });
+    }
+    setError('');
+    setSuccess('');
+    setIsEditing(false);
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const stateIdValue = typeof formData.stateId === 'object' && formData.stateId !== null
+        ? formData.stateId.value
+        : formData.stateId;
+
+      const dataToUpdate = {
+        name: formData.name,
+        email: formData.email,
+        cpf: formData.cpf,
+        phone: formData.phone,
+        institution: formData.institution,
+        city: formData.city,
+        stateId: stateIdValue
+      };
+
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataToUpdate)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Perfil atualizado com sucesso!');
+        setIsEditing(false);
+
+        if (fetchLinkedAccounts && typeof fetchLinkedAccounts === 'function') {
+          await fetchLinkedAccounts();
+        }
+      } else {
+        setError(data.message || 'Erro ao atualizar o perfil');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (status === 'loading') {
@@ -182,9 +298,166 @@ export default function ProfilePage() {
         </header>
 
         <div className={styles.profileInfo}>
-          <h2>Suas Informações</h2>
-          <p><strong>Nome:</strong> {session?.user?.name || 'Não informado'}</p>
-          <p><strong>Email:</strong> {session?.user?.email}</p>
+          <div className={styles.sectionHeader}>
+            <h2>Suas Informações</h2>
+            {!isEditing ? (
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                size="sm"
+                className={styles.editButton}
+              >
+                Editar
+              </Button>
+            ) : null}
+          </div>
+
+          {error && <div className={styles.error}>{error}</div>}
+          {success && <div className={styles.success}>{success}</div>}
+
+          {!isEditing ? (
+            <div className={styles.infoGrid}>
+              <div className={styles.infoField}>
+                <span className={styles.label}>Nome:</span>
+                <span>{formData.name || 'Não informado'}</span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>Email:</span>
+                <span>{formData.email || session?.user?.email || 'Não informado'}</span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>CPF:</span>
+                <span>{formData.cpf || 'Não informado'}</span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>Celular:</span>
+                <span>{formData.phone || 'Não informado'}</span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>Cidade:</span>
+                <span>{formData.city || 'Não informada'}</span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>Estado:</span>
+                <span>
+                  {formData.stateId ? (
+                    <div className={styles.stateDisplay}>
+                      {formData.stateId.label || formData.stateId}
+                    </div>
+                  ) : 'Não informado'}
+                </span>
+              </div>
+
+              <div className={styles.infoField}>
+                <span className={styles.label}>Instituição:</span>
+                <span>{formData.institution || 'Não informada'}</span>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleProfileUpdate} className={styles.editForm}>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoField}>
+                  <Input
+                    label="Nome Completo"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Seu nome completo"
+                    required
+                  />
+                </div>
+
+                <div className={styles.infoField + ' ' + styles.inputDisabled}>
+                  <Input
+                    label="Email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    disabled={true}
+                  />
+                </div>
+
+                <div className={styles.infoField}>
+                  <Input
+                    label="CPF"
+                    id="cpf"
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleInputChange}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+
+                <div className={styles.infoField}>
+                  <Input
+                    label="Celular"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+
+                <div className={styles.infoField}>
+                  <Input
+                    label="Cidade"
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="Sua cidade"
+                  />
+                </div>
+
+                <div className={styles.infoField}>
+                  <label htmlFor="stateId" className={styles.stateLabel}>Estado</label>
+                  <StateSelect
+                    value={formData.stateId}
+                    onChange={handleInputChange}
+                    states={brazilianStates}
+                    id="stateId"
+                    name="stateId"
+                  />
+                </div>
+                <div className={styles.infoField + ' ' + styles.fullWidth}>
+                  <Input
+                    label="Instituição"
+                    id="institution"
+                    name="institution"
+                    value={formData.institution}
+                    onChange={handleInputChange}
+                    placeholder="Nome da sua instituição"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formActions}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
 
         {message && <div className={styles.success}>{message}</div>}

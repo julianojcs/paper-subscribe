@@ -1,15 +1,14 @@
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
-import { authOptions } from "../../../lib/auth";
 import { prisma } from "../../../lib/db";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  
   if (!session?.user) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
-  
+
   try {
     // Buscar os métodos de login do usuário
     const user = await prisma.user.findUnique({
@@ -24,7 +23,7 @@ export async function GET() {
         }
       }
     });
-    
+
     const accounts = [
       // Se o usuário tem senha, adicionar método de credenciais
       ...(user.password ? [{ type: 'credentials', provider: 'credentials' }] : []),

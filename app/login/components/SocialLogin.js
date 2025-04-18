@@ -1,21 +1,28 @@
 'use client';
 
+import Cookies from 'js-cookie';
 import { signIn } from 'next-auth/react';
-import styles from './SocialLogin.module.css';
 import Image from 'next/image';
 import { useDataContext } from '../../../context/DataContext';
+import styles from './SocialLogin.module.css';
 
-export default function SocialLogin() {
+export default function SocialLogin({ label = 'Entre com o Google' }) {
   const { ip, userAgent } = useDataContext();
 
   const handleSocialLogin = (provider) => {
-    // Salvar no sessionStorage antes do redirecionamento
-    sessionStorage.setItem('auth_metadata', JSON.stringify({
+    // Salvar no cookie em vez de sessionStorage para compatibilidade com servidor
+    const metadata = {
       provider: provider.charAt(0).toUpperCase() + provider.slice(1),
       ip,
       userAgent,
       timestamp: new Date().getTime()
-    }));
+    };
+
+    Cookies.set('auth_metadata', JSON.stringify(metadata), {
+      expires: 1 / 24, // 1 hora
+      sameSite: 'Lax',
+      path: '/'
+    });
 
     // Iniciar login social
     signIn(provider, {
@@ -32,6 +39,7 @@ export default function SocialLogin() {
         <button
           onClick={() => handleSocialLogin('google')}
           className={styles.socialButton}
+          type="button"
         >
           <div className={styles.icon}>
             <Image
@@ -41,7 +49,7 @@ export default function SocialLogin() {
               height={20}
             />
           </div>
-          Entre com o Google
+          {label}
         </button>
 
         {/* <button

@@ -17,6 +17,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  gap: 8px;
 }
 
 /* Cabeçalho */
@@ -35,13 +36,6 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.profileInfo {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 8px;
-}
-
 .profileInfo h2 {
   font-size: 20px;
   margin-bottom: 16px;
@@ -56,11 +50,58 @@
   color: #334155;
 }
 
-.linkedAccounts {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 8px;
+/* Adicione apenas estes novos estilos para a seção .profileInfo */
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoField input:disabled {
+  background-color: rgba(var(--paper-light-rgb), 0.1);
+  color: rgba(var(--paper-light-rgb), 1);
+}
+
+.infoField span {
+  color: var(--paper-neutral-900);
+}
+
+.stateDisplay {
+  display: inline-flex;
+  align-items: center;
+}
+
+.profileActions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Responsividade para desktop */
+@media (min-width: 768px) {
+  .infoGrid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "name email"
+      "cpf phone"
+      "city state"
+      "institution institution";
+  }
+  
+  /* .infoField:nth-child(1) { grid-area: name; }
+  .infoField:nth-child(2) { grid-area: email; }
+  .infoField:nth-child(3) { grid-area: cpf; }
+  .infoField:nth-child(4) { grid-area: phone; }
+  .infoField:nth-child(5) { grid-area: city; }
+  .infoField:nth-child(6) { grid-area: state; }
+  .infoField:nth-child(7) { grid-area: institution; } */
 }
 
 .linkedAccounts h2 {
@@ -92,15 +133,7 @@
   padding: 20px 0;
   color: #666;
 }
-
-.addPasswordSection {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
+.addPasswordSection
 .addPasswordSection h2 {
   font-size: 20px;
   margin-bottom: 16px;
@@ -273,10 +306,13 @@
   justify-content: center;
 }
 
-.loginHistory {
-  margin-top: 2rem;
-  padding: 1rem;
-  border-top: 1px solid #e2e8f0;
+.linkedAccounts, .addPasswordSection, .loginHistory, .profileInfo {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-inline: 1rem;
+  border: 1px solid #e2e8f0;
 }
 
 .historyTable {
@@ -369,7 +405,75 @@
   line-height: 1.5;
 }
 
-/* Dark mode */
+/* Adicione estes novos estilos */
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #0f172a;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.sectionHeader h2 {
+  font-size: 20px;
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.editButton {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+.formField {
+  margin-bottom: 12px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.stateLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.editForm {
+  width: 100%;
+}
+
+/* Adicione esses seletores específicos para o modo de edição */
+
+.formField:nth-child(1) { grid-area: name; }
+.formField:nth-child(2) { grid-area: email; }
+.formField:nth-child(3) { grid-area: cpf; }
+.formField:nth-child(4) { grid-area: phone; }
+.formField:nth-child(5) { grid-area: city; }
+.formField:nth-child(6) { grid-area: state; }
+.formField:nth-child(7) { grid-area: institution; }
+
+/* Adicione também uma classe especial para institution ocupar toda a largura */
+.fullWidth {
+  grid-column: 1 / -1; /* Ocupa todas as colunas */
+}
+
+.label {
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Modo escuro para os novos elementos */
 @media (prefers-color-scheme: dark) {
   .container {
     background-color: #1e293b;
@@ -475,6 +579,15 @@
   .sectionDescription {
     color: #94a3b8;
   }
+
+  .sectionHeader {
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+  }
+  
+  .stateLabel {
+    color: #94a3b8;
+  }
 }
 
 /* Responsivity */
@@ -493,7 +606,8 @@
   /* Ajustes gerais do container */
   .container {
     padding: 1rem;
-    margin: 1rem auto;
+    margin: 8px auto;
+    gap: 8px;
   }
   
   /* Títulos */
@@ -512,22 +626,20 @@
     border-radius: 8px;
     padding: 1.75rem 1.5rem;
   }
-
-  /* Informações do perfil */
-  .profileInfo {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-  }
   
+  /* Seções */
+  .linkedAccounts, .addPasswordSection, .loginHistory, .profileInfo  {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    margin: unset;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #f8fafc;
+  }
+
   .profileInfo p {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-  }
-  
-  /* Seções */
-  .linkedAccounts, .addPasswordSection, .loginHistory {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
   }
   
   /* Lista de contas */
@@ -582,6 +694,9 @@
     padding: 0.6rem;
     font-size: 0.85rem;
     margin-bottom: 0.75rem;
+  }
+  .stateLabel {
+    margin-bottom: 0.3rem;
   }
 }
 
