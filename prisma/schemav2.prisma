@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  loginType String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  success   Boolean
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model State {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  acronym   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model User {
+  id                      String                @id @default(cuid())
+  name                    String
+  email                   String                @unique
+  emailVerified           DateTime?
+  password                String?
+  image                   String?
+  cpf                     String?               @unique
+  phone                   String?
+  institution             String?
+  city                    String?
+  stateId                 String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  isActive                Boolean               @default(true)
+  systemAdmin             Boolean               @default(false)
+  accounts                Account[]
+  evaluatorAssignments    EvaluatorAssignment[]
+  loginLogs               LoginLog[]
+  organizationMemberships OrganizationMember[]
+  papers                  Paper[]
+  paperAuthors            PaperAuthor[]
+  reviewedPapers          PaperReview[]
+  sessions                Session[]
+  state                   State?                @relation(fields: [stateId], references: [id])
+  passwordResets          PasswordReset[]       // Nova relação
+}
+
+model Organization {
+  id               String               @id @default(cuid())
+  name             String
+  shortName        String               @unique
+  description      String?
+  logoUrl          String?
+  website          String?
+  email            String?
+  phone            String?
+  address          String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  isActive         Boolean              @default(true)
+  isPremium        Boolean              @default(false)
+  subscriptionEnds DateTime?
+  events           Event[]
+  members          OrganizationMember[]
+  accessTokens     OrganizationToken[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole     @default(MEMBER)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model OrganizationToken {
+  id             String       @id @default(cuid())
+  token          String       @unique
+  description    String?
+  organizationId String
+  eventId        String?
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  isActive       Boolean      @default(true)
+  event          Event?       @relation(fields: [eventId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model EventArea {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  eventId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  papers      Paper[]
+
+  @@unique([eventId, name])
+}
+
+model EventPaperType {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  eventId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  papers      Paper[]
+
+  @@unique([eventId, name])
+}
+
+model EventField {
+  id           String            @id @default(cuid())
+  eventId      String
+  label        String
+  description  String?
+  isRequired   Boolean           @default(false)
+  fieldType    String            @default("text")
+  fieldOptions String?
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  event        Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fieldValues  PaperFieldValue[]
+
+  @@unique([eventId, label])
+}
+
+model EventFileType {
+  id              String      @id @default(cuid())
+  eventId         String
+  name            String
+  description     String?
+  acceptedFormats String
+  maxFileSize     Int
+  isRequired      Boolean     @default(true)
+  sortOrder       Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  event           Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  paperFiles      PaperFile[]
+
+  @@unique([eventId, name])
+}
+
+model PaperFile {
+  id              String         @id @default(cuid())
+  paperId         String
+  fileTypeId      String?
+  fileUrl         String
+  fileName        String
+  fileStoragePath String
+  fileSize        Int
+  fileType        String?
+  uploadedAt      DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  eventFileType   EventFileType? @relation(fields: [fileTypeId], references: [id])
+  paper           Paper          @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([paperId])
+  @@index([fileTypeId])
+}
+
+model Event {
+  id              String                @id @default(cuid())
+  name            String
+  shortName       String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  submissionStart DateTime
+  submissionEnd   DateTime
+  reviewStart     DateTime?
+  reviewEnd       DateTime?
+  organizationId  String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  isActive        Boolean               @default(true)
+  evaluators      EvaluatorAssignment[]
+  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  areas           EventArea[]
+  customFields    EventField[]
+  fileTypes       EventFileType[]
+  paperTypes      EventPaperType[]
+  eventTokens     OrganizationToken[]
+  papers          Paper[]
+
+  @@unique([organizationId, shortName])
+}
+
+model EvaluatorAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  eventId    String
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model PaperAuthor {
+  id          String   @id @default(cuid())
+  paperId     String
+  userId      String
+  isPrimary   Boolean  @default(false)
+  authorOrder Int      @default(0)
+  createdAt   DateTime @default(now())
+  paper       Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([paperId, userId])
+}
+
+model PaperFieldValue {
+  id        String     @id @default(cuid())
+  paperId   String
+  fieldId   String
+  value     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  field     EventField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  paper     Paper      @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@unique([paperId, fieldId])
+}
+
+model Paper {
+  id             String            @id @default(cuid())
+  title          String
+  abstract       String
+  keywords       String
+  status         PaperStatus       @default(PENDING)
+  maxAuthors     Int               @default(10)
+  isPublic       Boolean           @default(false)
+  publicUrl      String?
+  organizationId String
+  eventId        String
+  userId         String
+  areaId         String?
+  paperTypeId    String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  area           EventArea?        @relation(fields: [areaId], references: [id])
+  event          Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  paperType      EventPaperType?   @relation(fields: [paperTypeId], references: [id])
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authors        PaperAuthor[]
+  customFields   PaperFieldValue[]
+  files          PaperFile[]
+  history        PaperHistory[]
+  reviews        PaperReview[]
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([organizationId])
+}
+
+model PaperHistory {
+  id        String      @id @default(cuid())
+  createdAt DateTime    @default(now())
+  status    PaperStatus
+  comment   String
+  paperId   String
+  paper     Paper       @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([paperId])
+}
+
+model PaperReview {
+  id              String               @id @default(cuid())
+  paperId         String
+  reviewerId      String
+  score           Int?
+  comments        String?
+  privateComments String?
+  recommendation  ReviewRecommendation
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  paper           Paper                @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  reviewer        User                 @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([paperId, reviewerId])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum PaperStatus {
+  DRAFT
+  PENDING
+  UNDER_REVIEW
+  REVISION_REQUIRED
+  ACCEPTED
+  REJECTED
+  PUBLISHED
+  WITHDRAWN
+}
+
+enum ReviewRecommendation {
+  ACCEPT
+  REJECT
+  REVISE
+  NEUTRAL
+}
