@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { states } from '/app/data/states.js';
+import { states } from '/app/utils/brazilianStates.js';
 
 const prisma = new PrismaClient();
 

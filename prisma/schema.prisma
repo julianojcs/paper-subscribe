@@ -208,6 +208,10 @@ model PaperAuthor {
   id          String   @id @default(cuid())
   paperId     String
   userId      String
+  name        String
+  institution String
+  city        String
+  stateId     String? @db.Char(2)
   isPresenter Boolean  @default(false)
   authorOrder Int      @default(0)
   createdAt   DateTime @default(now())
@@ -216,7 +220,6 @@ model PaperAuthor {
 
   @@unique([paperId, userId])
 }
-
 
 model PaperFieldValue {
   id        String     @id @default(cuid())

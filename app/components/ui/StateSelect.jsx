@@ -167,7 +167,7 @@ export default function StateSelect({
               <div className={styles.flagContainer}>
                 <Image
                   src={getStateFlag()}
-                  alt={`Bandeira ${selectedState.label || selectedState.value}`}
+                  alt={`${selectedState.value}`}
                   width={24}
                   height={16}
                   className={`${styles.stateFlag} ${classNames.flag || ''}`}
