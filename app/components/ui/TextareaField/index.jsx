@@ -1,241 +1,134 @@
-'use client';
+import React, { useRef, useEffect, useState } from 'react';
+import styles from './TextareaField.module.css';
 
-import { useState, useEffect, useRef, useId } from 'react';
-import styles from './textareaField.module.css';
-
-/**
- * Componente TextareaField avançado e customizável
- * 
- * @param {Object} props - Propriedades do componente
- * @param {string} props.id - ID opcional do campo
- * @param {string} props.name - Nome do campo para formulários
- * @param {string} props.label - Label do campo
- * @param {string} props.value - Valor atual do campo
- * @param {function} props.onChange - Função chamada quando o valor muda
- * @param {string} props.placeholder - Placeholder do campo
- * @param {string} props.helperText - Texto de ajuda
- * @param {string} props.errorMessage - Mensagem de erro
- * @param {boolean} props.required - Se o campo é obrigatório
- * @param {boolean} props.disabled - Se o campo está desabilitado
- * @param {boolean} props.readOnly - Se o campo é somente leitura
- * @param {number} props.rows - Número de linhas visíveis
- * @param {number} props.maxRows - Limite de linhas para auto-expansão
- * @param {string} props.className - Classes CSS adicionais
- * @param {string} props.countType - Tipo de contagem ('characters' ou 'words')
- * @param {number} props.maxCount - Número máximo de caracteres/palavras
- * @param {number} props.minCount - Número mínimo de caracteres/palavras
- * @param {number} props.warningThreshold - % para aviso visual (0-100)
- * @param {boolean} props.autoResize - Se deve redimensionar automaticamente
- * @param {Object} props.fieldConfig - Configuração do campo do evento
- */
 export default function TextareaField({
   id,
   name,
   label,
-  value = '',
+  value,
   onChange,
-  placeholder = '',
+  placeholder,
   helperText,
   errorMessage,
   required = false,
-  disabled = false,
-  readOnly = false,
-  rows = 5,
-  maxRows = 15,
-  className = '',
-  countType = 'characters',
+  rows = 4,
+  maxRows = 8,
+  autoResize = false,
+  fieldConfig,
+  // Props personalizadas que não devem ir para o elemento DOM textarea
+  maxWords,
+  minWords,
   maxCount,
   minCount,
-  warningThreshold = 90,
-  autoResize = true,
-  fieldConfig = null, // Para configuração baseada em eventFields
-  ...rest
+  showWordCount = false,
+  ...props
 }) {
-  // Aplicar configuração do campo de evento, se disponível
-  useEffect(() => {
-    if (fieldConfig) {
-      // Se temos configuração de campo do evento, atualizamos as propriedades
-      if (fieldConfig.minLength) setMinChars(fieldConfig.minLength);
-      if (fieldConfig.maxLength) setMaxChars(fieldConfig.maxLength);
-      if (fieldConfig.minWords) setMinWords(fieldConfig.minWords);
-      if (fieldConfig.maxWords) setMaxWords(fieldConfig.maxWords);
-      
-      // Determinar tipo de contagem com base na configuração
-      if (fieldConfig.maxWords || fieldConfig.minWords) {
-        setCountingType('words');
-      } else if (fieldConfig.maxLength || fieldConfig.minLength) {
-        setCountingType('characters');
-      }
-    }
-  }, [fieldConfig]);
-
-  // ID único para associação de label
-  const uniqueId = useId();
-  const fieldId = id || `textarea-${uniqueId}`;
-  const helperId = `helper-${fieldId}`;
-  const counterId = `counter-${fieldId}`;
-  
-  // Refs para elementos DOM
   const textareaRef = useRef(null);
-  
-  // Estados locais
-  const [currentCount, setCurrentCount] = useState(0);
-  const [countColor, setCountColor] = useState('');
-  const [internalValue, setInternalValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const [countingType, setCountingType] = useState(countType);
-  const [minChars, setMinChars] = useState(minCount);
-  const [maxChars, setMaxChars] = useState(maxCount);
-  const [minWords, setMinWords] = useState(minCount);
-  const [maxWords, setMaxWords] = useState(maxCount);
-  
-  // Sincronizar valor interno com valor de prop
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
+  const [progressBarStyle, setProgressBarStyle] = useState({});
+  const fieldId = id || Math.random().toString(36).substring(2, 9);
+
+  // Efeito para calcular contagens quando o valor muda
   useEffect(() => {
-    setInternalValue(value);
-  }, [value]);
-  
-  // Verificar erro
-  const hasError = !!errorMessage;
-  
-  // Calcular contagem de palavras/caracteres
-  useEffect(() => {
-    if (countingType === 'words') {
-      // Contar palavras (separadas por espaços, removendo espaços extras)
-      const words = internalValue.trim() ? internalValue.trim().split(/\s+/).length : 0;
-      setCurrentCount(words);
-    } else {
+    if (value) {
+      // Contar palavras
+      const words = value.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
+      
       // Contar caracteres
-      setCurrentCount(internalValue.length);
+      setCharCount(value.length);
+    } else {
+      setWordCount(0);
+      setCharCount(0);
     }
-  }, [internalValue, countingType]);
-  
-  // Ajustar cor do contador com base na proximidade do limite
+  }, [value]);
+
+  // Calcular progresso e atualizar estilo da barra
   useEffect(() => {
-    const maxValue = countingType === 'words' ? maxWords : maxChars;
-    
-    if (!maxValue) {
-      setCountColor('');
+    if (!value) {
+      setProgressBarStyle({
+        width: '0%',
+        backgroundColor: '#e0e0e0' // Cinza neutro quando está vazio
+      });
       return;
     }
     
-    const percentage = (currentCount / maxValue) * 100;
-    
-    if (percentage >= 100) {
-      setCountColor(styles.counterDanger);
-    } else if (percentage >= warningThreshold) {
-      setCountColor(styles.counterWarning);
-    } else if (percentage >= warningThreshold * 0.8) {
-      setCountColor(styles.counterCaution);
-    } else {
-      setCountColor('');
+    // Verificar se está abaixo do mínimo
+    if ((minWords && wordCount < minWords) || (minCount && charCount < minCount)) {
+      setProgressBarStyle({
+        width: '100%',
+        backgroundColor: '#e53935' // Vermelho quando abaixo do mínimo
+      });
+      return;
     }
-  }, [currentCount, maxChars, maxWords, countingType, warningThreshold]);
-  
-  // Auto-resize do textarea
+    
+    // Calcular porcentagem baseada no máximo
+    let percentage = 0;
+    if (maxCount && charCount > 0) {
+      percentage = (charCount / maxCount) * 100;
+    } else if (maxWords && wordCount > 0) {
+      percentage = (wordCount / maxWords) * 100;
+    }
+    
+    // Limitar a 100%
+    percentage = Math.min(percentage, 100);
+    
+    // Definir cor baseada na porcentagem
+    let color;
+    if (percentage > 90) {
+      // Gradiente de laranja para vermelho
+      color = percentage >= 100 ? '#e53935' : `rgba(255, ${Math.floor(255 - (percentage - 90) * 25.5)}, 0)`;
+    } else if (percentage > 75) {
+      // Gradiente de amarelo para laranja
+      color = `rgba(255, ${Math.floor(255 - (percentage - 75) * 17)}, 0)`;
+    } else if (percentage > 50) {
+      // Gradiente de verde-amarelado para amarelo
+      color = `rgba(${Math.floor(128 + percentage)}, 200, 0)`;
+    } else {
+      // Gradiente de verde para verde-amarelado
+      color = `rgba(${Math.floor(76 + percentage * 1.5)}, 175, 80)`;
+    }
+    
+    setProgressBarStyle({
+      width: `${percentage}%`,
+      backgroundColor: color
+    });
+    
+  }, [charCount, wordCount, maxCount, maxWords, minCount, minWords, value]);
+
+  // Função para redimensionar o textarea
   useEffect(() => {
-    if (autoResize && textareaRef.current) {
-      // Resetar a altura para calcular o tamanho corretamente
+    const adjustHeight = () => {
+      if (!textareaRef.current || !autoResize) return;
+      
       textareaRef.current.style.height = 'auto';
       
-      // Calcular nova altura com base no conteúdo
       const scrollHeight = textareaRef.current.scrollHeight;
-      const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight) || 20;
+      const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight);
+      const minHeight = rows * lineHeight;
       const maxHeight = maxRows * lineHeight;
       
-      // Definir a nova altura, limitada pelo máximo de linhas
-      const newHeight = Math.min(scrollHeight, maxHeight);
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  }, [internalValue, autoResize, maxRows]);
-  
-  // Manipular mudança com validação de limite
+      textareaRef.current.style.height = Math.min(Math.max(scrollHeight, minHeight), maxHeight) + 'px';
+    };
+    
+    adjustHeight();
+  }, [value, autoResize, rows, maxRows]);
+
   const handleChange = (e) => {
-    const newValue = e.target.value || '';
-    
-    // Validar limite máximo
-    let shouldBlock = false;
-    
-    if (countingType === 'characters' && maxChars) {
-      // Não permitir caracteres além do limite
-      if (newValue.length > maxChars) {
-        shouldBlock = true;
-      }
-    } else if (countingType === 'words' && maxWords) {
-      // Contar palavras na nova entrada
-      const newWords = newValue.trim() ? newValue.trim().split(/\s+/).length : 0;
-      
-      // Permitir exclusão mesmo quando no limite
-      if (newWords > maxWords && newValue.length > internalValue.length) {
-        shouldBlock = true;
-      }
-    }
-    
-    if (shouldBlock) {
-      // Bloquear a entrada, mas permitir exclusão
-      if (newValue.length < internalValue.length) {
-        setInternalValue(newValue);
-        callOnChange(newValue);
-      }
-      
-      return;
-    }
-    
-    setInternalValue(newValue);
-    callOnChange(newValue);
+    onChange(e);
   };
-  
-  // Função para chamar onChange com evento sintético
-  const callOnChange = (newValue) => {
-    if (onChange) {
-      const syntheticEvent = {
-        target: {
-          name: name || id || fieldId,
-          value: newValue
-        }
-      };
-      onChange(syntheticEvent);
-    }
-  };
-  
-  // Formatar mensagem de contador
-  const formatCountMessage = () => {
-    if (countingType === 'words') {
-      if (maxWords && minWords) {
-        return `${currentCount}/${maxWords} palavras (mín: ${minWords})`;
-      } else if (maxWords) {
-        return `${currentCount}/${maxWords} palavras`;
-      } else if (minWords) {
-        return `${currentCount} palavras (mín: ${minWords})`;
-      }
-      return `${currentCount} palavras`;
-    } else {
-      if (maxChars && minChars) {
-        return `${currentCount}/${maxChars} caracteres (mín: ${minChars})`;
-      } else if (maxChars) {
-        return `${currentCount}/${maxChars} caracteres`;
-      } else if (minChars) {
-        return `${currentCount} caracteres (mín: ${minChars})`;
-      }
-      return `${currentCount} caracteres`;
-    }
-  };
-  
-  // Verificar se está abaixo do mínimo
-  const isBelowMinimum = (countingType === 'characters' && minChars && currentCount < minChars) ||
-                         (countingType === 'words' && minWords && currentCount < minWords);
-  
-  // Calcular porcentagem de preenchimento para barra de progresso
-  const calculateProgressPercentage = () => {
-    const maxValue = countingType === 'words' ? maxWords : maxChars;
-    if (!maxValue) return 0;
-    return Math.min(100, (currentCount / maxValue) * 100);
-  };
+
+  // Verificar se estamos excedendo limites para destacar visualmente
+  const isExceedingLimit = (maxWords && wordCount > maxWords) || (maxCount && charCount > maxCount);
+  const isBelowMinimum = (minWords && wordCount < minWords) || (minCount && charCount < minCount);
+
   
   return (
-    <div className={`${styles.textareaField} ${className}`}>
+    <div className={styles.textareaField}>
       {label && (
         <label htmlFor={fieldId} className={styles.label}>
-          {label} {required && <span className={styles.required}>*</span>}
+          {label} {required && <span className={styles.requiredMark}>*</span>}
         </label>
       )}
       
@@ -244,62 +137,84 @@ export default function TextareaField({
           ref={textareaRef}
           id={fieldId}
           name={name || id}
-          value={internalValue}
+          value={value}
           onChange={handleChange}
           placeholder={placeholder}
-          disabled={disabled}
-          readOnly={readOnly}
-          required={required}
+          className={`${styles.textarea} ${errorMessage ? styles.error : ''}`}
           rows={rows}
-          aria-invalid={hasError}
-          aria-describedby={`${helperText ? helperId : ''} ${counterId}`}
-          className={`${styles.textarea} 
-            ${hasError ? styles.error : ''} 
-            ${isBelowMinimum ? styles.belowMinimum : ''}
-            ${disabled ? styles.disabled : ''}
-            ${readOnly ? styles.readOnly : ''}`}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          maxLength={countingType === 'characters' && maxChars ? maxChars : undefined}
-          {...rest}
+          required={required}
+          maxLength={maxCount} // Apenas este é um atributo HTML válido
+          {...props} // Espalhar outras props válidas de HTML
         />
         
-        {/* Feedback visual para limite */}
-        {(maxChars || maxWords) && (
+        {/* Barra de progresso usando classes CSS */}
+        <div style={{
+          height: '4px',
+          backgroundColor: '#e0e0e0',
+          borderRadius: '0 0 4px 4px',
+          overflow: 'hidden',
+          position: 'relative',
+          width: '100%',
+          marginTop: '-1px'
+        }}>
           <div 
-            className={styles.progressContainer} 
-            role="presentation" 
-            aria-hidden="true"
-          >
-            <div 
-              className={`${styles.progressBar} ${countColor}`} 
-              style={{width: `${calculateProgressPercentage()}%`}} 
-            />
-          </div>
-        )}
+            className={styles.progressBar}
+            style={{
+              width: progressBarStyle.width || '0%',
+              backgroundColor: progressBarStyle.backgroundColor || '#4caf50'
+            }}
+          />
+        </div>
       </div>
       
-      <div className={styles.textareaFooter}>
-        {/* Mensagem de erro ou texto de ajuda */}
-        <div className={styles.textHelperContainer}>
-          {hasError ? (
-            <p className={styles.errorMessage}>{errorMessage}</p>
-          ) : helperText ? (
-            <p id={helperId} className={styles.helperText}>{helperText}</p>
-          ) : null}
+      {errorMessage && (
+        <div className={styles.errorMessage}>{errorMessage}</div>
+      )}
+      
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: '0.2rem',
+          fontSize: '0.875rem',
+          color: '#666'
+        }}>
+          {/* Helper text à esquerda */}
+          {helperText && (
+            <span className={styles.helperText}>{helperText}</span>
+          )}
+          
+          {/* Contador à direita */}
+          {(maxCount || maxWords || showWordCount) && (
+            <div className={`${styles.counterContainer} ${isExceedingLimit ? styles.countExceeding : ''}`}>
+              <span className={styles.currentCount}>
+                {maxWords ? `${wordCount} palavra${wordCount === 1 ? '' : 's'}` : `${charCount} caractere${charCount === 1 ? '' : 's'}`}
+              </span>
+              {(maxCount || maxWords) && (
+                <span className={styles.maxCount} style={{ marginLeft: '4px' }}>
+                  / {maxWords ? `${maxWords}` : `${maxCount}`}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-        
-        {/* Contador de caracteres/palavras */}
-        {(countingType === 'characters' || countingType === 'words') && (
-          <p 
-            id={counterId} 
-            className={`${styles.counter} ${countColor} ${isBelowMinimum ? styles.counterBelowMin : ''}`}
-            aria-live="polite"
-          >
-            {formatCountMessage()}
-          </p>
-        )}
-      </div>
+
+      
+      {/* Mostrar informações sobre mínimo se definido */}
+      {((minWords && maxWords) || (minCount && maxCount)) && value && (
+        <div className={`${styles.minCountInfo} ${isBelowMinimum ? styles.belowMinimum : ''}`}>
+          {minWords ? `Mínimo: ${minWords} palavra${minWords === 1 ? '' : 's'}` : 
+           minCount ? `Mínimo: ${minCount} caractere${minCount === 1 ? '' : 's'}` : ''}
+        </div>
+      )}
+      
+      {/* Mostrar contagem secundária se ambos maxWords e maxCount estiverem definidos */}
+      {maxWords && maxCount && value && (
+        <div className={styles.secondaryCounter}>
+          {`${charCount} caractere${charCount === 1 ? '' : 's'} / Máximo: ${maxCount}`}
+        </div>
+      )}
     </div>
   );
 }

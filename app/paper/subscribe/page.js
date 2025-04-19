@@ -11,6 +11,7 @@ import Select from '../../components/ui/Select';
 import TextareaField from '../../components/ui/TextareaField';
 import TrashIcon from '../../components/ui/TrashIcon';
 import useBrazilianStates from '../../hooks/useBrazilianStates';
+import { FieldType, getInputTypeFromFieldType } from '../../utils/fieldTypes';
 import styles from './subscribe.module.css';
 
 // Componente carregador para usar no Suspense
@@ -21,6 +22,68 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Funções auxiliares para formatação de texto e contagem de palavras
+const getFieldHelperText = (fieldConfig) => {
+  let text = fieldConfig.helpText || '';
+  
+  // Adicionar informações sobre limites de caracteres/palavras no texto de ajuda
+  const constraints = [];
+  
+  if (fieldConfig.minLength && fieldConfig.maxLength) {
+    constraints.push(`${fieldConfig.minLength} a ${fieldConfig.maxLength} caracteres`);
+  } else if (fieldConfig.minLength) {
+    constraints.push(`mínimo de ${fieldConfig.minLength} caracteres`);
+  } else if (fieldConfig.maxLength) {
+    constraints.push(`máximo de ${fieldConfig.maxLength} caracteres`);
+  }
+  
+  if (fieldConfig.minWords && fieldConfig.maxWords) {
+    constraints.push(`${fieldConfig.minWords} a ${fieldConfig.maxWords} palavras`);
+  } else if (fieldConfig.minWords) {
+    constraints.push(`mínimo de ${fieldConfig.minWords} palavra${fieldConfig.minWords === 1 ? '' : 's'}`);
+  } else if (fieldConfig.maxWords) {
+    constraints.push(`máximo de ${fieldConfig.maxWords} palavra${fieldConfig.maxWords === 1 ? '' : 's'}`);
+  }
+  
+  if (constraints.length > 0) {
+    if (text) text += ' ';
+    text += `(${constraints.join(', ')})`;
+  }
+  
+  return text;
+};
+
+const getWordCountText = (text, fieldConfig) => {
+  if (!text) return '';
+  
+  const wordCount = text.trim().split(/\s+/).length;
+  const characterCount = text.length;
+  
+  let message = `${wordCount} palavra${wordCount === 1 ? '' : 's'}`;
+  
+  if (fieldConfig.minWords && fieldConfig.maxWords) {
+    message += ` (mín: ${fieldConfig.minWords}, máx: ${fieldConfig.maxWords})`;
+  } else if (fieldConfig.minWords) {
+    message += ` (mín: ${fieldConfig.minWords})`;
+  } else if (fieldConfig.maxWords) {
+    message += ` (máx: ${fieldConfig.maxWords})`;
+  }
+  
+  if (fieldConfig.minLength || fieldConfig.maxLength) {
+    message += ` | ${characterCount} caractere${characterCount === 1 ? '' : 's'}`;
+    
+    if (fieldConfig.minLength && fieldConfig.maxLength) {
+      message += ` (mín: ${fieldConfig.minLength}, máx: ${fieldConfig.maxLength})`;
+    } else if (fieldConfig.minLength) {
+      message += ` (mín: ${fieldConfig.minLength})`;
+    } else if (fieldConfig.maxLength) {
+      message += ` (máx: ${fieldConfig.maxLength})`;
+    }
+  }
+  
+  return message;
+};
+
 // Componente principal que utiliza useSearchParams
 function SubmitPaperForm() {
   const { data: session, status } = useSession();
@@ -29,7 +92,6 @@ function SubmitPaperForm() {
   const fileInputRef = useRef(null);
   const [title, setTitle] = useState('');
   const [authors, setAuthors] = useState([]);
-  const [abstract, setAbstract] = useState('');
   const [keywords, setKeywords] = useState('');
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +106,8 @@ function SubmitPaperForm() {
   const [selectedPaperType, setSelectedPaperType] = useState('');
   const [eventFields, setEventFields] = useState([]);
   const [dynamicFieldValues, setDynamicFieldValues] = useState({});
-  const [abstractFieldConfig, setAbstractFieldConfig] = useState(null);
+  const [hasFileField, setHasFileField] = useState(false);
+  const [fileFieldConfig, setFileFieldConfig] = useState(null);
 
   const { states: brazilianStates, isLoading: statesLoading } = useBrazilianStates();
 
@@ -71,47 +134,80 @@ function SubmitPaperForm() {
                 setMaxAuthors(event.maxAuthors);
               }
 
+              // Ordenar áreas por sortOrder e depois alfabeticamente por name
               if (event.areas && event.areas.length > 0) {
-                setAreas(event.areas);
+                const sortedAreas = [...event.areas].sort((a, b) => {
+                  // Primeiro critério: sortOrder
+                  if (a.sortOrder !== b.sortOrder) {
+                    return a.sortOrder - b.sortOrder;
+                  }
+                  // Segundo critério (fallback): ordenação alfabética por nome
+                  return a.name.localeCompare(b.name);
+                });
+                setAreas(sortedAreas);
               }
 
+              // Ordenar tipos de trabalho por sortOrder e depois alfabeticamente por name
               if (event.paperTypes && event.paperTypes.length > 0) {
-                setPaperTypes(event.paperTypes);
+                const sortedPaperTypes = [...event.paperTypes].sort((a, b) => {
+                  // Primeiro critério: sortOrder
+                  if (a.sortOrder !== b.sortOrder) {
+                    return a.sortOrder - b.sortOrder;
+                  }
+                  // Segundo critério (fallback): ordenação alfabética por nome
+                  return a.name.localeCompare(b.name);
+                });
+                setPaperTypes(sortedPaperTypes);
               }
 
               // Processar campos do evento
               if (event.eventFields) {
-                // Filtrar apenas os campos do tipo texto ou textarea
-                const textFields = event.eventFields.filter(field =>
-                  field.fieldType === 'text' || field.fieldType === 'textarea'
+                // Verificar se existe um campo do tipo FILE
+                const fileField = event.eventFields.find(field =>
+                  field.fieldType === FieldType.FILE
                 );
+
+                if (fileField) {
+                  setHasFileField(true);
+                  setFileFieldConfig(fileField);
+                }
+
+                // Filtrar e ordenar campos dinâmicos por sortOrder e depois alfabeticamente por label
+                const formFields = event.eventFields
+                  .filter(field =>
+                    field.fieldType === FieldType.TEXT ||
+                    field.fieldType === FieldType.TEXTAREA ||
+                    field.fieldType === FieldType.SELECT ||
+                    field.fieldType === FieldType.MULTISELECT ||
+                    field.fieldType === FieldType.CHECKBOX ||
+                    field.fieldType === FieldType.RADIO ||
+                    field.fieldType === FieldType.DATE ||
+                    field.fieldType === FieldType.NUMBER ||
+                    field.fieldType === FieldType.EMAIL
+                  )
+                  .sort((a, b) => {
+                    // Primeiro critério: sortOrder
+                    if (a.sortOrder !== b.sortOrder) {
+                      return a.sortOrder - b.sortOrder;
+                    }
+                    // Segundo critério (fallback): ordenação alfabética por label
+                    return a.label.localeCompare(b.label);
+                  });
 
                 // Inicializar valores para os campos dinâmicos
                 const initialValues = {};
-                textFields.forEach(field => {
+                formFields.forEach(field => {
                   initialValues[field.id] = '';
                 });
                 setDynamicFieldValues(initialValues);
 
-                // Verificar se existe um campo específico para o resumo
-                const abstractField = event.eventFields.find(field =>
-                  (field.fieldType === 'textarea') &&
-                  (field.label.toLowerCase().includes('resumo') ||
-                    field.label.toLowerCase().includes('abstract'))
-                );
-
-                if (abstractField) {
-                  setAbstractFieldConfig(abstractField);
-                  // Remover o campo de resumo da lista de campos dinâmicos
-                  setEventFields(textFields.filter(field => field.id !== abstractField.id));
-                } else {
-                  setEventFields(textFields);
-                }
+                // Definir todos os campos como campos dinâmicos
+                setEventFields(formFields);
               }
             }
 
             const mainAuthor = {
-              id: "main-author",
+              userId: session.user.id, // Guardar o ID do usuário atual
               name: formData.name || session.user.name || "",
               institution: formData.institution || "",
               city: formData.city || "",
@@ -119,19 +215,19 @@ function SubmitPaperForm() {
                 value: formData.stateId,
                 label: formData.stateName || formData.stateId
               } : null,
-              isPresenter: true,
-              isMainAuthor: true
+              isPresenter: true, // Esta flag continua para fins de UI
+              authorOrder: 0 // Autor principal sempre é o primeiro
             };
             setAuthors([mainAuthor]);
           } else {
             const mainAuthor = {
-              id: "main-author",
+              userId: session.user.id,
               name: session.user.name || "",
               institution: "",
               city: "",
               state: null,
               isPresenter: true,
-              isMainAuthor: true
+              authorOrder: 0
             };
             setAuthors([mainAuthor]);
           }
@@ -139,13 +235,13 @@ function SubmitPaperForm() {
         } catch (error) {
           console.error('Erro ao buscar dados do usuário:', error);
           const mainAuthor = {
-            id: "main-author",
+            userId: session.user.id,
             name: session.user.name || "",
             institution: "",
             city: "",
             state: null,
             isPresenter: true,
-            isMainAuthor: true
+            authorOrder: 0
           };
           setAuthors([mainAuthor]);
           setIsLoading(false);
@@ -187,11 +283,24 @@ function SubmitPaperForm() {
   };
 
   const handleAuthorsChange = (updatedAuthors) => {
-    const mainAuthor = updatedAuthors.find(author => author.id === "main-author");
-    if (mainAuthor) {
-      mainAuthor.isMainAuthor = true;
+    // Atualizar o authorOrder com base na posição no array
+    const authorsWithOrder = updatedAuthors.map((author, index) => ({
+      ...author,
+      authorOrder: index
+    }));
+    
+    // Garantir que o autor com userId do usuário logado seja marcado como apresentador padrão
+    // se nenhum outro autor estiver marcado
+    const hasPresenter = authorsWithOrder.some(author => author.isPresenter);
+    
+    if (!hasPresenter && authorsWithOrder.length > 0) {
+      const mainAuthorIndex = authorsWithOrder.findIndex(author => author.userId === session?.user?.id);
+      if (mainAuthorIndex >= 0) {
+        authorsWithOrder[mainAuthorIndex].isPresenter = true;
+      }
     }
-    setAuthors(updatedAuthors);
+    
+    setAuthors(authorsWithOrder);
   };
 
   const handleAreaChange = (e) => {
@@ -211,27 +320,7 @@ function SubmitPaperForm() {
 
   const getPaperTypeDescription = (paperTypeId) => {
     const selectedType = paperTypes.find(type => type.id === paperTypeId);
-    if (!selectedType) return null;
-
-    let description = selectedType.description || '';
-
-    if (selectedType.minPages && selectedType.maxPages) {
-      description += description ? '\n\n' : '';
-      description += `Requisitos: ${selectedType.minPages} a ${selectedType.maxPages} páginas`;
-    } else if (selectedType.maxPages) {
-      description += description ? '\n\n' : '';
-      description += `Requisitos: Máximo de ${selectedType.maxPages} páginas`;
-    } else if (selectedType.minPages) {
-      description += description ? '\n\n' : '';
-      description += `Requisitos: Mínimo de ${selectedType.minPages} páginas`;
-    }
-
-    return description;
-  };
-
-  const handleAbstractChange = (e) => {
-    setAbstract(e.target.value);
-    setFieldErrors((prev) => ({ ...prev, abstract: null }));
+    return selectedType?.description || null;
   };
 
   const handleDynamicFieldChange = (e) => {
@@ -247,9 +336,12 @@ function SubmitPaperForm() {
     e.preventDefault();
     const errors = {};
     if (!title.trim()) errors.title = 'Título é obrigatório';
-    if (!abstract.trim()) errors.abstract = 'Resumo é obrigatório';
     if (!keywords.trim()) errors.keywords = 'Palavras-chave são obrigatórias';
-    if (!file) errors.file = 'O arquivo PDF é obrigatório';
+    
+    // Só validar arquivo se tiver campo de arquivo
+    if (hasFileField && fileFieldConfig?.isRequired && !file) {
+      errors.file = 'O arquivo PDF é obrigatório';
+    }
 
     if (areas.length > 0 && !selectedArea) {
       errors.area = 'Selecione uma área temática';
@@ -259,54 +351,67 @@ function SubmitPaperForm() {
       errors.paperType = 'Selecione um tipo de trabalho';
     }
 
+    // Validação aprimorada para campos dinâmicos, incluindo min/maxWords
     eventFields.forEach(field => {
-      if (field.required && !dynamicFieldValues[field.id]?.trim()) {
+      const value = dynamicFieldValues[field.id]?.trim() || '';
+      
+      // Validação de campo obrigatório
+      if (field.isRequired && !value) {
         errors[field.id] = `${field.label} é obrigatório`;
+        return; // Não continua validando se o campo estiver vazio
       }
 
-      if (field.minLength && dynamicFieldValues[field.id]?.length < field.minLength) {
+      // Se não tem valor e não é obrigatório, não precisa validar
+      if (!value) return;
+
+      // Validação de quantidade mínima de caracteres
+      if (field.minLength && value.length < field.minLength) {
         errors[field.id] = `${field.label} deve ter pelo menos ${field.minLength} caracteres`;
+        return;
       }
 
-      if (field.minWords) {
-        const wordCount = dynamicFieldValues[field.id]?.trim()
-          ? dynamicFieldValues[field.id].trim().split(/\s+/).length
-          : 0;
+      // Validação de quantidade máxima de caracteres
+      if (field.maxLength && value.length > field.maxLength) {
+        errors[field.id] = `${field.label} deve ter no máximo ${field.maxLength} caracteres`;
+        return;
+      }
 
+      // Validação de quantidade mínima de palavras
+      if (field.minWords) {
+        const wordCount = value.split(/\s+/).length;
+        
         if (wordCount < field.minWords) {
-          errors[field.id] = `${field.label} deve ter pelo menos ${field.minWords} palavras`;
+          errors[field.id] = `${field.label} deve ter pelo menos ${field.minWords} palavra${field.minWords === 1 ? '' : 's'}`;
+          return;
+        }
+      }
+
+      // Validação de quantidade máxima de palavras
+      if (field.maxWords) {
+        const wordCount = value.split(/\s+/).length;
+        
+        if (wordCount > field.maxWords) {
+          errors[field.id] = `${field.label} deve ter no máximo ${field.maxWords} palavra${field.maxWords === 1 ? '' : 's'}`;
+          return;
         }
       }
     });
-
-    if (abstractFieldConfig) {
-      if (abstractFieldConfig.minLength && abstract.length < abstractFieldConfig.minLength) {
-        errors.abstract = `O resumo deve ter pelo menos ${abstractFieldConfig.minLength} caracteres`;
-      }
-
-      if (abstractFieldConfig.minWords) {
-        const wordCount = abstract.trim() ? abstract.trim().split(/\s+/).length : 0;
-        if (wordCount < abstractFieldConfig.minWords) {
-          errors.abstract = `O resumo deve ter pelo menos ${abstractFieldConfig.minWords} palavras`;
-        }
-      }
-    }
 
     let hasPresenter = false;
 
     authors.forEach(author => {
       if (author.isPresenter) hasPresenter = true;
       if (!author.name.trim()) {
-        errors[`author-${author.id}-name`] = 'Nome é obrigatório';
+        errors[`author-${author.authorOrder}-name`] = 'Nome é obrigatório';
       }
       if (!author.institution.trim()) {
-        errors[`author-${author.id}-institution`] = 'Instituição é obrigatória';
+        errors[`author-${author.authorOrder}-institution`] = 'Instituição é obrigatória';
       }
       if (!author.city.trim()) {
-        errors[`author-${author.id}-city`] = 'Cidade é obrigatória';
+        errors[`author-${author.authorOrder}-city`] = 'Cidade é obrigatória';
       }
       if (!author.state) {
-        errors[`author-${author.id}-state`] = 'Estado é obrigatório';
+        errors[`author-${author.authorOrder}-state`] = 'Estado é obrigatório';
       }
     });
 
@@ -325,10 +430,27 @@ function SubmitPaperForm() {
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('authors', JSON.stringify(authors));
-      formData.append('abstract', abstract);
+      formData.append('authors', JSON.stringify(
+        authors.map(author => ({
+          userId: author.userId || null,
+          name: author.name,
+          institution: author.institution,
+          city: author.city,
+          stateId: author.state?.value || author.stateId || null,
+          isMainAuthor: author.isMainAuthor || false,
+          isPresenter: author.isPresenter || false,
+          authorOrder: author.authorOrder
+        }))
+      ));
       formData.append('keywords', keywords);
-      formData.append('file', file);
+      
+      // Só adicionar arquivo se existir
+      if (file && hasFileField) {
+        formData.append('file', file);
+        if (fileFieldConfig) {
+          formData.append('fileFieldId', fileFieldConfig.id);
+        }
+      }
 
       if (selectedArea) {
         formData.append('areaId', selectedArea);
@@ -342,11 +464,17 @@ function SubmitPaperForm() {
         formData.append('eventId', eventId);
       }
 
-      Object.keys(dynamicFieldValues).forEach(fieldId => {
-        if (dynamicFieldValues[fieldId]) {
-          formData.append(`field_${fieldId}`, dynamicFieldValues[fieldId]);
-        }
-      });
+      // Criar array de paper fields values para enviar ao backend
+      const paperFieldValues = Object.keys(dynamicFieldValues)
+        .filter(fieldId => dynamicFieldValues[fieldId]) // Filtra apenas campos preenchidos
+        .map(fieldId => ({
+          fieldId: fieldId,
+          value: dynamicFieldValues[fieldId]
+        }));
+      // Adiciona o array de paper fields values no formato correto
+      formData.append('paperFieldValues', JSON.stringify(paperFieldValues));
+      // O campo paperId não é adicionado aqui porque o paper ainda não foi criado
+      // O backend irá associar esses campos ao paper recém-criado
 
       const response = await fetch('/api/paper/submit', {
         method: 'POST',
@@ -368,52 +496,258 @@ function SubmitPaperForm() {
   };
 
   const renderDynamicField = (fieldConfig) => {
-    if (fieldConfig.fieldType === 'textarea') {
-      return (
-        <TextareaField
-          key={fieldConfig.id}
-          id={fieldConfig.id}
-          name={fieldConfig.id}
-          label={fieldConfig.label}
-          value={dynamicFieldValues[fieldConfig.id] || ''}
-          onChange={handleDynamicFieldChange}
-          placeholder={fieldConfig.placeholder || ''}
-          helperText={fieldConfig.helperText || ''}
-          errorMessage={fieldErrors[fieldConfig.id]}
-          required={fieldConfig.required}
-          rows={fieldConfig.rows || 4}
-          maxRows={fieldConfig.maxRows || 10}
-          fieldConfig={fieldConfig}
-          autoResize={true}
-        />
-      );
-    } else if (fieldConfig.fieldType === 'text') {
-      return (
-        <div className={styles.formGroup} key={fieldConfig.id}>
-          <label htmlFor={fieldConfig.id} className={styles.formLabel}>
-            {fieldConfig.label} {fieldConfig.required && <span className={styles.requiredMark}>*</span>}
-          </label>
-          <input
+    switch (fieldConfig.fieldType) {
+      case FieldType.TEXTAREA:
+        return (
+          <TextareaField
+            key={fieldConfig.id}
             id={fieldConfig.id}
             name={fieldConfig.id}
-            type="text"
+            label={fieldConfig.label}
             value={dynamicFieldValues[fieldConfig.id] || ''}
             onChange={handleDynamicFieldChange}
-            className={`${styles.formInput} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
             placeholder={fieldConfig.placeholder || ''}
-            maxLength={fieldConfig.maxLength}
-            required={fieldConfig.required}
+            helperText={getFieldHelperText(fieldConfig)}
+            errorMessage={fieldErrors[fieldConfig.id]}
+            required={fieldConfig.isRequired}
+            rows={fieldConfig.rows || 4}
+            maxRows={fieldConfig.maxRows || 10}
+            maxCount={fieldConfig.maxLength}
+            minCount={fieldConfig.minLength}
+            maxWords={fieldConfig.maxWords}
+            minWords={fieldConfig.minWords}
+            fieldConfig={fieldConfig}
+            autoResize={true}
+            showWordCount={!!fieldConfig.minWords || !!fieldConfig.maxWords}
           />
-          {fieldErrors[fieldConfig.id] && (
-            <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
-          )}
-          {fieldConfig.helperText && (
-            <span className={styles.fieldHelper}>{fieldConfig.helperText}</span>
+        );
+      case FieldType.TEXT:
+        return (
+          <div className={styles.formGroup} key={fieldConfig.id}>
+            <label htmlFor={fieldConfig.id} className={styles.formLabel}>
+              {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
+            </label>
+            <input
+              id={fieldConfig.id}
+              name={fieldConfig.id}
+              type="text"
+              value={dynamicFieldValues[fieldConfig.id] || ''}
+              onChange={handleDynamicFieldChange}
+              className={`${styles.formInput} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
+              placeholder={fieldConfig.placeholder || ''}
+              maxLength={fieldConfig.maxLength}
+              required={fieldConfig.isRequired}
+            />
+            {fieldErrors[fieldConfig.id] && (
+              <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
+            )}
+            {getFieldHelperText(fieldConfig) && (
+              <span className={styles.fieldHelper}>{getFieldHelperText(fieldConfig)}</span>
+            )}
+            {(fieldConfig.minWords || fieldConfig.maxWords) && dynamicFieldValues[fieldConfig.id] && (
+              <div className={styles.wordCount}>
+                {getWordCountText(dynamicFieldValues[fieldConfig.id], fieldConfig)}
+              </div>
+            )}
+          </div>
+        );
+      case FieldType.EMAIL:
+      case FieldType.NUMBER:
+      case FieldType.DATE:
+        return (
+          <div className={styles.formGroup} key={fieldConfig.id}>
+            <label htmlFor={fieldConfig.id} className={styles.formLabel}>
+              {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
+            </label>
+            <input
+              id={fieldConfig.id}
+              name={fieldConfig.id}
+              type={getInputTypeFromFieldType(fieldConfig.fieldType)}
+              value={dynamicFieldValues[fieldConfig.id] || ''}
+              onChange={handleDynamicFieldChange}
+              className={`${styles.formInput} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
+              placeholder={fieldConfig.placeholder || ''}
+              maxLength={fieldConfig.maxLength}
+              required={fieldConfig.isRequired}
+            />
+            {fieldErrors[fieldConfig.id] && (
+              <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
+            )}
+            {fieldConfig.helpText && (
+              <span className={styles.fieldHelper}>{fieldConfig.helpText}</span>
+            )}
+          </div>
+        );
+      case FieldType.SELECT:
+        return (
+          <div className={styles.formGroup} key={fieldConfig.id}>
+            <label htmlFor={fieldConfig.id} className={styles.formLabel}>
+              {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
+            </label>
+            <select
+              id={fieldConfig.id}
+              name={fieldConfig.id}
+              value={dynamicFieldValues[fieldConfig.id] || ''}
+              onChange={handleDynamicFieldChange}
+              className={`${styles.formSelect} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
+              required={fieldConfig.isRequired}
+            >
+              <option value="">Selecione uma opção</option>
+              {fieldConfig.fieldOptions && 
+                fieldConfig.fieldOptions.split(',').map((option, index) => (
+                  <option key={`${fieldConfig.id}-opt-${index}`} value={option.trim()}>
+                    {option.trim()}
+                  </option>
+                ))
+              }
+            </select>
+            {fieldErrors[fieldConfig.id] && (
+              <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
+            )}
+            {fieldConfig.helpText && (
+              <span className={styles.fieldHelper}>{fieldConfig.helpText}</span>
+            )}
+          </div>
+        );
+      case FieldType.CHECKBOX:
+        return (
+          <div className={styles.formGroup} key={fieldConfig.id}>
+            <div className={styles.checkboxField}>
+              <input
+                id={fieldConfig.id}
+                name={fieldConfig.id}
+                type="checkbox"
+                checked={dynamicFieldValues[fieldConfig.id] === 'true'}
+                onChange={(e) => handleDynamicFieldChange({
+                  target: { 
+                    name: fieldConfig.id, 
+                    value: e.target.checked ? 'true' : 'false' 
+                  }
+                })}
+                className={`${styles.formCheckbox} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
+                required={fieldConfig.isRequired}
+              />
+              <label htmlFor={fieldConfig.id} className={styles.checkboxLabel}>
+                {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
+              </label>
+            </div>
+            {fieldErrors[fieldConfig.id] && (
+              <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
+            )}
+            {fieldConfig.helpText && (
+              <span className={styles.fieldHelper}>{fieldConfig.helpText}</span>
+            )}
+          </div>
+        );
+      case FieldType.RADIO:
+        return (
+          <div className={styles.formGroup} key={fieldConfig.id}>
+            <fieldset className={styles.radioGroup}>
+              <legend className={styles.formLabel}>
+                {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
+              </legend>
+              {fieldConfig.fieldOptions && 
+                fieldConfig.fieldOptions.split(',').map((option, index) => (
+                  <div key={`${fieldConfig.id}-opt-${index}`} className={styles.radioOption}>
+                    <input
+                      id={`${fieldConfig.id}-opt-${index}`}
+                      name={fieldConfig.id}
+                      type="radio"
+                      value={option.trim()}
+                      checked={dynamicFieldValues[fieldConfig.id] === option.trim()}
+                      onChange={handleDynamicFieldChange}
+                      className={styles.formRadio}
+                      required={fieldConfig.isRequired && index === 0}
+                    />
+                    <label htmlFor={`${fieldConfig.id}-opt-${index}`} className={styles.radioLabel}>
+                      {option.trim()}
+                    </label>
+                  </div>
+                ))
+              }
+            </fieldset>
+            {fieldErrors[fieldConfig.id] && (
+              <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
+            )}
+            {fieldConfig.helpText && (
+              <span className={styles.fieldHelper}>{fieldConfig.helpText}</span>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderFileUploadField = () => {
+    if (!hasFileField) return null;
+    
+    return (
+      <div className={`${styles.formGroup} ${styles.fileUploadGroup}`}>
+        <label className={styles.formLabel}>
+          {fileFieldConfig?.label || "Arquivo PDF"} {fileFieldConfig?.isRequired && <span className={styles.requiredMark}>*</span>}
+        </label>
+
+        <div
+          className={`${styles.fileDropArea} ${fieldErrors.file ? styles.fileError : ''} ${file ? styles.fileSelected : ''}`}
+          onClick={triggerFileInput}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className={styles.fileInput}
+          />
+
+          {file ? (
+            <div className={styles.selectedFile}>
+              <div className={styles.fileDetails}>
+                <span className={styles.fileName} title={file.name}>
+                  {file.name}
+                </span>
+                <span className={styles.fileSize}>
+                  ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                </span>
+              </div>
+              <div
+                className={styles.removeFileButton}
+                onClick={handleRemoveFile}
+                role="button"
+                tabIndex={0}
+                aria-label="Remover arquivo"
+              >
+                <TrashIcon label="Excluir" />
+              </div>
+            </div>
+          ) : (
+            <div className={styles.uploadPrompt}>
+              <FaUpload className={styles.uploadIcon} />
+              <span className={styles.uploadText}>
+                Clique para selecionar o arquivo PDF do seu trabalho
+                <span className={styles.dragDropText}>ou arraste e solte aqui</span>
+              </span>
+            </div>
           )}
         </div>
-      );
-    }
-    return null;
+
+        {fieldErrors.file && (
+          <span className={styles.fieldError}>{fieldErrors.file}</span>
+        )}
+
+        {fileFieldConfig?.helpText ? (
+          <div className={styles.fileRequirements}>
+            <FaInfoCircle className={styles.infoIcon} />
+            <span>{fileFieldConfig.helpText}</span>
+          </div>
+        ) : (
+          <div className={styles.fileRequirements}>
+            <FaInfoCircle className={styles.infoIcon} />
+            <span>O arquivo deve estar em formato PDF e não exceder 10MB</span>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -474,7 +808,7 @@ function SubmitPaperForm() {
                     onChange={handleAuthorsChange}
                     maxAuthors={maxAuthors}
                     fieldErrors={fieldErrors}
-                    mainAuthorId="main-author"
+                    currentUserId={session?.user?.id}
                     brazilianStates={brazilianStates}
                     statesLoading={statesLoading}
                   />
@@ -513,25 +847,13 @@ function SubmitPaperForm() {
                   />
                 )}
 
-                <TextareaField
-                  id="abstract"
-                  name="abstract"
-                  label="Resumo"
-                  value={abstract}
-                  onChange={handleAbstractChange}
-                  placeholder="Descreva brevemente os objetivos, metodologia e resultados principais do seu trabalho"
-                  helperText={abstractFieldConfig?.helperText || "O resumo deve ser conciso e representativo do conteúdo do trabalho"}
-                  errorMessage={fieldErrors.abstract}
-                  required={true}
-                  rows={5}
-                  maxRows={10}
-                  fieldConfig={abstractFieldConfig}
-                  autoResize={true}
-                />
-
+                {/* Renderiza todos os campos dinâmicos */}
                 {eventFields.map(field => renderDynamicField(field))}
 
-                <div className={styles.formGroup}>
+                {/* Renderiza o campo de upload de arquivo somente se houver um campo do tipo FILE */}
+                {renderFileUploadField()}
+
+                <div className={styles.formGroup}> {/* Keywords */}
                   <label htmlFor="keywords" className={styles.formLabel}>
                     Palavras-chave <span className={styles.requiredMark}>*</span>
                   </label>
@@ -549,65 +871,7 @@ function SubmitPaperForm() {
                   <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.fileUploadGroup}`}>
-                  <label className={styles.formLabel}>
-                    Arquivo PDF <span className={styles.requiredMark}>*</span>
-                  </label>
-
-                  <div
-                    className={`${styles.fileDropArea} ${fieldErrors.file ? styles.fileError : ''} ${file ? styles.fileSelected : ''}`}
-                    onClick={triggerFileInput}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileChange}
-                      className={styles.fileInput}
-                    />
-
-                    {file ? (
-                      <div className={styles.selectedFile}>
-                        <div className={styles.fileDetails}>
-                          <span className={styles.fileName} title={file.name}>
-                            {file.name}
-                          </span>
-                          <span className={styles.fileSize}>
-                            ({(file.size / (1024 * 1024)).toFixed(2)} MB)
-                          </span>
-                        </div>
-                        <div
-                          className={styles.removeFileButton}
-                          onClick={handleRemoveFile}
-                          role="button"
-                          tabIndex={0}
-                          aria-label="Remover arquivo"
-                        >
-                          <TrashIcon label="Excluir" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={styles.uploadPrompt}>
-                        <FaUpload className={styles.uploadIcon} />
-                        <span className={styles.uploadText}>
-                          Clique para selecionar o arquivo PDF do seu trabalho
-                          <span className={styles.dragDropText}>ou arraste e solte aqui</span>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {fieldErrors.file && (
-                    <span className={styles.fieldError}>{fieldErrors.file}</span>
-                  )}
-
-                  <div className={styles.fileRequirements}>
-                    <FaInfoCircle className={styles.infoIcon} />
-                    <span>O arquivo deve estar em formato PDF e não exceder 10MB</span>
-                  </div>
-                </div>
-
-                <div className={styles.termsGroup}>
+                <div className={styles.termsGroup}> {/* Termos e privacidade */}
                   <p className={styles.termsNotice}>
                     Ao enviar este trabalho, você concorda com nossos
                     <a href="/terms" className={styles.termsLink}> termos de serviço</a> e
@@ -615,7 +879,7 @@ function SubmitPaperForm() {
                   </p>
                 </div>
 
-                <div className={styles.formActions}>
+                <div className={styles.formActions}> {/* Buttons */}
                   <Button
                     variant="outline"
                     type="button"
