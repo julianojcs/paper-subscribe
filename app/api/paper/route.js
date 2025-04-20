@@ -65,12 +65,51 @@ export async function POST(request) {
     }
 
     // Extrair dados do corpo da requisição
-    const { title, abstract, authors, keywords } = await request.json();
+    const { 
+      title, 
+      authors, 
+      keywords, 
+      abstract, 
+      areaId, 
+      paperTypeId, 
+      eventId,
+      paperFieldValues 
+    } = await request.json();
 
     // Validação básica
-    if (!title || !abstract || !authors || !keywords) {
+    if (!title) {
       return NextResponse.json(
-        { error: "Campos obrigatórios não preenchidos" },
+        { error: "Título do trabalho é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    if (!authors || !Array.isArray(authors) || authors.length === 0) {
+      return NextResponse.json(
+        { error: "É necessário informar pelo menos um autor" },
+        { status: 400 }
+      );
+    }
+
+    if (!keywords) {
+      return NextResponse.json(
+        { error: "Palavras-chave são obrigatórias" },
+        { status: 400 }
+      );
+    }
+
+    if (!eventId) {
+      return NextResponse.json(
+        { error: "ID do evento é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se o usuário logado está entre os autores
+    const currentUserIsAuthor = authors.some(author => author.userId === session.user.id);
+    if (!currentUserIsAuthor) {
+      return NextResponse.json(
+        { error: "O usuário logado deve ser um dos autores do trabalho" },
         { status: 400 }
       );
     }
@@ -79,12 +118,14 @@ export async function POST(request) {
     const paper = await prisma.paper.create({
       data: {
         title,
-        abstract,
-        authors,
         keywords,
+        areaId,
+        paperTypeId,
+        eventId,
         status: 'draft', // Status inicial como rascunho
-        userId: session.user.id,
-        // Esses campos podem ser atualizados posteriormente quando o arquivo for enviado
+        userId: session.user.id, // Usuário que está submetendo o trabalho
+        // Campos opcionais ou que terão valores padrão
+        abstract: abstract || '',
         fileUrl: '',
         fileName: '',
         fileStoragePath: '',
@@ -92,11 +133,42 @@ export async function POST(request) {
       },
     });
 
-    return NextResponse.json({ success: true, paper }, { status: 201 });
+    // Após criar o paper, criar os autores associados
+    if (authors && authors.length > 0) {
+      await prisma.paperAuthor.createMany({
+        data: authors.map(author => ({
+          paperId: paper.id,
+          userId: author.userId || null,
+          name: author.name,
+          institution: author.institution,
+          city: author.city,
+          stateId: author.stateId,
+          isPresenter: author.isPresenter || false,
+          authorOrder: author.authorOrder || 0
+        }))
+      });
+    }
+
+    // Após criar o paper e os autores, criar os valores dos campos dinâmicos
+    if (paperFieldValues && Array.isArray(paperFieldValues) && paperFieldValues.length > 0) {
+      await prisma.paperFieldValue.createMany({
+        data: paperFieldValues.map(field => ({
+          paperId: paper.id,
+          fieldId: field.fieldId,
+          value: field.value
+        }))
+      });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      paper,
+      message: "Trabalho criado com sucesso"
+    }, { status: 201 });
   } catch (error) {
     console.error("Erro ao criar paper:", error);
     return NextResponse.json(
-      { error: "Falha ao criar trabalho" },
+      { error: "Falha ao criar trabalho", details: error.message },
       { status: 500 }
     );
   }
