@@ -728,3 +728,21 @@
     border-top-width: 5px;
   }
 }
+
+/* Informações de palavras-chave */
+.keywordsInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
+.keywordCount {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.keywordCountError {
+  color: #e53935;
+  font-weight: 500;
+}

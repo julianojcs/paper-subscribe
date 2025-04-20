@@ -92,7 +92,11 @@ function SubmitPaperForm() {
   const fileInputRef = useRef(null);
   const [title, setTitle] = useState('');
   const [authors, setAuthors] = useState([]);
-  const [keywords, setKeywords] = useState('');
+  const [keywords, setKeywords] = useState({
+    value: '',
+    min: 0,
+    max: 0
+  });
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -133,6 +137,13 @@ function SubmitPaperForm() {
               if (event.maxAuthors) {
                 setMaxAuthors(event.maxAuthors);
               }
+
+              // Atualizar estado de keywords com limites do evento
+              setKeywords(prev => ({
+                ...prev,
+                min: event.minKeywords || 0,
+                max: event.maxKeywords || 0
+              }));
 
               // Ordenar áreas por sortOrder e depois alfabeticamente por name
               if (event.areas && event.areas.length > 0) {
@@ -332,12 +343,46 @@ function SubmitPaperForm() {
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
   };
 
+  const handleKeywordsChange = (e) => {
+    const newValue = e.target.value;
+    setKeywords(prev => ({
+      ...prev,
+      value: newValue
+    }));
+  };
+
+  const countKeywords = (keywordsStr) => {
+    if (!keywordsStr) return 0;
+    
+    return keywordsStr
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k.length > 0)
+      .length;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = {};
     if (!title.trim()) errors.title = 'Título é obrigatório';
-    if (!keywords.trim()) errors.keywords = 'Palavras-chave são obrigatórias';
     
+    // Validação de keywords
+    if (keywords.max > 0) { // Só validar se tiver max definido
+      if (!keywords.value.trim()) {
+        errors.keywords = 'Palavras-chave são obrigatórias';
+      } else {
+        const keywordsCount = countKeywords(keywords.value);
+        
+        if (keywords.min === keywords.max && keywordsCount !== keywords.min) {
+          errors.keywords = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'}`;
+        } else if (keywords.min > 0 && keywordsCount < keywords.min) {
+          errors.keywords = `Informe pelo menos ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'}`;
+        } else if (keywords.max > 0 && keywordsCount > keywords.max) {
+          errors.keywords = `Informe no máximo ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'}`;
+        }
+      }
+    }
+
     // Só validar arquivo se tiver campo de arquivo
     if (hasFileField && fileFieldConfig?.isRequired && !file) {
       errors.file = 'O arquivo PDF é obrigatório';
@@ -442,7 +487,7 @@ function SubmitPaperForm() {
           authorOrder: author.authorOrder
         }))
       ));
-      formData.append('keywords', keywords);
+      formData.append('keywords', keywords.value); // Enviar apenas o valor string
       
       // Só adicionar arquivo se existir
       if (file && hasFileField) {
@@ -750,6 +795,66 @@ function SubmitPaperForm() {
     );
   };
 
+  const renderKeywordsField = () => {
+    // Não renderizar o campo se max não estiver definido
+    if (!keywords.max) return null;
+    
+    // Texto de ajuda baseado nas regras
+    let helperText = '';
+    
+    if (keywords.min === keywords.max) {
+      helperText = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
+    } else if (keywords.min > 0 && keywords.max > 0) {
+      helperText = `Informe de ${keywords.min} a ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
+    } else if (keywords.min > 0) {
+      helperText = `Informe pelo menos ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
+    } else if (keywords.max > 0) {
+      helperText = `Informe até ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
+    }
+    
+    // Contador de palavras-chave atuais
+    const keywordsCount = countKeywords(keywords.value);
+    let keywordCountText = '';
+    
+    if (keywords.value.trim()) {
+      keywordCountText = `${keywordsCount} palavra${keywordsCount === 1 ? '-chave' : 's-chave'} informada${keywordsCount === 1 ? '' : 's'}`;
+    }
+    
+    // Verificar se está fora das regras
+    const isInvalid = 
+      (keywords.min === keywords.max && keywordsCount !== keywords.min) ||
+      (keywords.min > 0 && keywordsCount < keywords.min) ||
+      (keywords.max > 0 && keywordsCount > keywords.max);
+    
+    return (
+      <div className={styles.formGroup}>
+        <label htmlFor="keywords" className={styles.formLabel}>
+          Palavras-chave <span className={styles.requiredMark}>*</span>
+        </label>
+        <input
+          id="keywords"
+          type="text"
+          value={keywords.value}
+          onChange={handleKeywordsChange}
+          className={`${styles.formInput} ${fieldErrors.keywords ? styles.inputError : ''}`}
+          placeholder="Palavras-chave separadas por vírgula"
+        />
+        {fieldErrors.keywords && (
+          <span className={styles.fieldError}>{fieldErrors.keywords}</span>
+        )}
+        <div className={styles.keywordsInfo}>
+          <span className={styles.fieldHelper}>{helperText}</span>
+          {keywordCountText && (
+            <span className={`${styles.keywordCount} ${isInvalid ? styles.keywordCountError : ''}`}>
+              {keywordCountText}
+            </span>
+          )}
+        </div>
+        <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -853,23 +958,8 @@ function SubmitPaperForm() {
                 {/* Renderiza o campo de upload de arquivo somente se houver um campo do tipo FILE */}
                 {renderFileUploadField()}
 
-                <div className={styles.formGroup}> {/* Keywords */}
-                  <label htmlFor="keywords" className={styles.formLabel}>
-                    Palavras-chave <span className={styles.requiredMark}>*</span>
-                  </label>
-                  <input
-                    id="keywords"
-                    type="text"
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    className={`${styles.formInput} ${fieldErrors.keywords ? styles.inputError : ''}`}
-                    placeholder="Palavras-chave separadas por vírgula"
-                  />
-                  {fieldErrors.keywords && (
-                    <span className={styles.fieldError}>{fieldErrors.keywords}</span>
-                  )}
-                  <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
-                </div>
+                {/* Renderiza o campo de palavras-chave */}
+                {renderKeywordsField()}
 
                 <div className={styles.termsGroup}> {/* Termos e privacidade */}
                   <p className={styles.termsNotice}>

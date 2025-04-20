@@ -246,6 +246,8 @@ model Paper {
   id              String    @id @default(cuid())
   title           String
   keywords        String
+  maxKeywords     Int       @default(5)
+  minKeywords     Int       @default(1)
   fileUrl          String?
   fileName         String?
   fileStoragePath  String?    // pasta/caminho no Firebase
