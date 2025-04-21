@@ -244,7 +244,7 @@ export default function PaperDetailPage() {
   }
 
   // Determinar se o trabalho pode ser editado
-  const canEdit = ['DRAFT', 'PENDING'].includes(paper.status);
+  const canEdit = false; // ['DRAFT', 'PENDING'].includes(paper.status);
 
   return (
     <div className={styles.container}>
