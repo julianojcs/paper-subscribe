@@ -1,13 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaUserPlus } from 'react-icons/fa';
+import { FaUserPlus, FaExclamationTriangle } from 'react-icons/fa';
 import Button from '../../ui/Button';
 import AuthorCard from './AuthorCard';
 import styles from './AuthorsList.module.css';
 
 // Função para gerar IDs estáveis para autores temporários
 const generateStableId = (index) => `temp-author-${index}`;
+
+// Função para verificar se um autor está completo
+const isAuthorComplete = (author) => {
+  return (
+    author.name?.trim() &&
+    author.institution?.trim() &&
+    author.city?.trim() &&
+    author.state
+  );
+};
 
 export default function AuthorsList({
   authors,
@@ -181,19 +191,28 @@ export default function AuthorsList({
           const isMainAuthor = author.userId === currentUserId;
           
           return (
-            <AuthorCard
+            <div
               key={author.id || `fallback-${author.authorOrder}`}
-              author={author}
-              onUpdate={handleUpdateAuthor}
-              onDelete={handleDeleteAuthor}
-              isPresenter={author.id === presenterId}
-              onSetPresenter={handleSetPresenter}
-              canDelete={authors.length > 1 && !isMainAuthor}
-              fieldErrors={fieldErrors}
-              isMainAuthor={isMainAuthor}
-              brazilianStates={brazilianStates}
-              statesLoading={statesLoading}
-            />
+              className={`${styles.authorCard} ${!isAuthorComplete(author) ? styles.incompleteAuthor : ''}`}
+            >
+              <AuthorCard
+                author={author}
+                onUpdate={handleUpdateAuthor}
+                onDelete={handleDeleteAuthor}
+                isPresenter={author.id === presenterId}
+                onSetPresenter={handleSetPresenter}
+                canDelete={authors.length > 1 && !isMainAuthor}
+                fieldErrors={fieldErrors}
+                isMainAuthor={isMainAuthor}
+                brazilianStates={brazilianStates}
+                statesLoading={statesLoading}
+              />
+              {!isAuthorComplete(author) && (
+                <div className={styles.warningMessage}>
+                  <FaExclamationTriangle /> Informações incompletas
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

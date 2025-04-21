@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { states } from '../app/utils/brazilianStates.js';
+import { brazilianStates as states } from '../app/utils/brazilianStates.js';
 
 const prisma = new PrismaClient();
 
@@ -11,14 +11,14 @@ async function main() {
     console.log('Importando estados...');
     for (const state of states) {
       await prisma.state.upsert({
-        where: { id: state.id },
+        where: { id: state.value },
         update: {
-          name: state.name,
+          name: state.label,
           flag: state.flag
         },
         create: {
-          id: state.id,
-          name: state.name,
+          id: state.value,
+          name: state.label,
           flag: state.flag
         }
       });
@@ -153,7 +153,7 @@ async function main() {
         label: 'Metodologia',
         description: 'Descreva a metodologia utilizada no trabalho',
         isRequired: true,
-        fieldType: 'textarea',
+        fieldType: 'TEXTAREA',
         sortOrder: 1
       },
       {
@@ -162,7 +162,7 @@ async function main() {
         label: 'Resultados',
         description: 'Apresente os resultados obtidos',
         isRequired: true,
-        fieldType: 'textarea',
+        fieldType: 'TEXTAREA',
         sortOrder: 2
       },
       {
@@ -171,7 +171,7 @@ async function main() {
         label: 'Financiamento',
         description: 'Indique se o trabalho recebeu financiamento e de qual fonte',
         isRequired: false,
-        fieldType: 'text',
+        fieldType: 'TEXT',
         sortOrder: 3
       }
     ];

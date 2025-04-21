@@ -60,7 +60,6 @@ export async function GET(request) {
                       id: true,
                       name: true,
                       shortName: true,
-                      description: true,
                       startDate: true,
                       endDate: true,
                       submissionStart: true,
@@ -68,26 +67,31 @@ export async function GET(request) {
                       reviewStart: true,
                       reviewEnd: true,
                       maxAuthors: true,
+                      maxKeywords: true,
+                      minKeywords: true,
+                      maxFiles: true,
+                      maxFileSize: true,
                       isActive: true,
                       areas: {
                         select: {
                           id: true,
                           name: true,
                           description: true,
+                          sortOrder: true,
                         }
                       },
                       paperTypes: {
                         select: {
                           id: true,
                           name: true,
-                          description: true
+                          description: true,
+                          sortOrder: true,
                         }
                       },
                       eventFields: {
                         select: {
                           id: true,
                           label: true,
-                          description: true,
                           isRequired: true,
                           fieldType: true,
                           fieldOptions: true,
@@ -148,7 +152,7 @@ export async function GET(request) {
 
       user.organizationMemberships.forEach(membership => {
         const org = membership.organization;
-        
+
         organizations.push({
           id: org.id,
           name: org.name,
@@ -198,6 +202,10 @@ export async function GET(request) {
               reviewStart: event.reviewStart,
               reviewEnd: event.reviewEnd,
               maxAuthors: event.maxAuthors,
+              maxKeywords: event.maxKeywords,
+              minKeywords: event.minKeywords,
+              maxFiles: event.maxFiles,
+              maxFileSize: event.maxFileSize,
               isActive: event.isActive,
               areas: event.areas,
               paperTypes: event.paperTypes,

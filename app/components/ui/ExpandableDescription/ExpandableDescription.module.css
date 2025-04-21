@@ -1,0 +1,105 @@
+.descriptionContainer {
+  margin-top: 4px;
+  margin-left: 26px;
+  padding-left: 60px;
+  width: 100%;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin: 0;
+  line-height: 1.6;
+  font-style: italic;
+  white-space: pre-wrap; /* Preserva quebras de linha */
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  color: #3182ce;
+  font-size: 0.8rem;
+  padding: 2px 0;
+  margin-top: 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  display: block;
+  font-weight: 500;
+}
+
+.toggleButton:hover {
+  color: #2c5282;
+}
+
+.toggleButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3);
+}
+
+.inlineDescriptionContainer {
+  display: inline;
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.inlineToggleButton {
+  display: inline;
+  background: none;
+  border: none;
+  color: #3182ce;
+  font-size: 0.8rem;
+  padding: 0;
+  padding-inline-start: 4px;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+  font-style: normal;
+}
+
+.inlineToggleButton:hover {
+  color: #2c5282;
+  text-decoration: underline;
+}
+
+.inlineToggleButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(49, 130, 206, 0.3);
+}
+
+/* Para suportar modo escuro, se aplicável */
+@media (prefers-color-scheme: dark) {
+  .description {
+    color: #cbd5e0;
+  }
+  
+  .toggleButton {
+    color: #63b3ed;
+  }
+  
+  .toggleButton:hover {
+    color: #90cdf4;
+  }
+
+  .inlineDescriptionContainer {
+    color: #cbd5e0;
+  }
+  
+  .inlineToggleButton {
+    color: #63b3ed;
+  }
+  
+  .inlineToggleButton:hover {
+    color: #90cdf4;
+  }
+}
+
+/* Para tornar o componente responsivo */
+@media (max-width: 640px) {
+  .descriptionContainer {
+    padding-left: 20px;
+    margin-left: 10px;
+  }
+}

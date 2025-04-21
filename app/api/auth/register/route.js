@@ -4,7 +4,8 @@ import prisma from "../../../lib/db";
 
 export async function POST(request) {
   try {
-    const { name, email, password } = await request.json();
+    // Extrair dados da requisição
+    const { name, email, password, eventToken } = await request.json();
 
     // Validação básica
     if (!name || !email || !password) {
@@ -12,6 +13,28 @@ export async function POST(request) {
         { message: "Nome, email e senha são obrigatórios" },
         { status: 400 }
       );
+    }
+
+    // Validar eventToken e obter o organizationId associado
+    let organizationId = null;
+    if (eventToken) {
+      const tokenRecord = await prisma.organizationToken.findFirst({
+        where: { 
+          token: eventToken,
+          expiresAt: {
+            gte: new Date() // Verificar se o token não expirou
+          }
+        }
+      });
+
+      if (!tokenRecord) {
+        return NextResponse.json(
+          { message: "Token do evento inválido ou expirado" },
+          { status: 400 }
+        );
+      }
+
+      organizationId = tokenRecord.organizationId;
     }
 
     // Verificar se o email já existe
@@ -34,6 +57,28 @@ export async function POST(request) {
         }
       });
 
+      // Se foi obtido um organizationId do eventToken, associar este usuário à organização
+      if (organizationId) {
+        // Verificar se já existe uma associação
+        const existingMembership = await prisma.organizationMember.findFirst({
+          where: {
+            userId: existingUser.id,
+            organizationId
+          }
+        });
+
+        if (!existingMembership) {
+          // Criar associação com a organização
+          await prisma.organizationMember.create({
+            data: {
+              userId: existingUser.id,
+              organizationId,
+              role: "MEMBER" // Definindo papel padrão como membro
+            }
+          });
+        }
+      }
+
       return NextResponse.json(
         {
           message: "Senha adicionada com sucesso à sua conta existente. Agora você pode fazer login com email e senha.",
@@ -54,20 +99,54 @@ export async function POST(request) {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Criar usuário
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
+    // Usar uma transação para garantir que ambos os registros sejam criados ou nenhum seja
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Criar usuário
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      // 2. Se organizationId foi obtido do eventToken, criar associação com a organização
+      if (organizationId) {
+        await tx.organizationMember.create({
+          data: {
+            userId: newUser.id,
+            organizationId,
+            role: "MEMBER" // Definindo papel padrão como membro
+          }
+        });
+      } else {
+        // Se não foi fornecido um eventToken válido, podemos tentar encontrar uma organização padrão
+        const defaultOrg = await tx.organization.findFirst({
+          where: { isDefault: true }
+        });
+
+        if (defaultOrg) {
+          await tx.organizationMember.create({
+            data: {
+              userId: newUser.id,
+              organizationId: defaultOrg.id,
+              role: "MEMBER"
+            }
+          });
+        }
+      }
+
+      return newUser;
     });
 
     // Retornar resposta sem expor a senha
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = result;
 
     return NextResponse.json(
-      { user: userWithoutPassword, message: "Usuário registrado com sucesso" },
+      { 
+        user: userWithoutPassword, 
+        message: "Usuário registrado com sucesso e associado à organização" 
+      },
       { status: 201 }
     );
   } catch (error) {

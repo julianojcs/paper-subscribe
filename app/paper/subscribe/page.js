@@ -13,6 +13,7 @@ import TrashIcon from '../../components/ui/TrashIcon';
 import useBrazilianStates from '../../hooks/useBrazilianStates';
 import { FieldType, getInputTypeFromFieldType } from '../../utils/fieldTypes';
 import styles from './subscribe.module.css';
+import ProfileRedirectModal from './components/ProfileRedirectModal';
 
 // Componente carregador para usar no Suspense
 const LoadingFallback = () => (
@@ -103,6 +104,7 @@ function SubmitPaperForm() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [maxAuthors, setMaxAuthors] = useState(10);
   const [eventId, setEventId] = useState(null);
+  const [eventName, setEventName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [areas, setAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState('');
@@ -112,6 +114,8 @@ function SubmitPaperForm() {
   const [dynamicFieldValues, setDynamicFieldValues] = useState({});
   const [hasFileField, setHasFileField] = useState(false);
   const [fileFieldConfig, setFileFieldConfig] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileRedirectUrl, setProfileRedirectUrl] = useState('');
 
   const { states: brazilianStates, isLoading: statesLoading } = useBrazilianStates();
 
@@ -130,9 +134,37 @@ function SubmitPaperForm() {
 
           if (response.ok) {
             const formData = await response.json();
+
+            // Verificar se todos os dados necessários existem antes de definir o autor principal
+            if (formData.name && formData.institution && formData.city && formData.stateId) {
+              const mainAuthor = {
+                userId: session.user.id,
+                name: formData.name,
+                institution: formData.institution,
+                city: formData.city,
+                state: {
+                  value: formData.stateId,
+                  label: formData.state?.name || formData.stateId
+                },
+                isMainAuthor: true,
+                isPresenter: true,
+                authorOrder: 0
+              };
+              setAuthors([mainAuthor]);
+              setIsLoading(false);
+            } else {
+              // Em vez de redirecionar imediatamente, exiba o modal
+              setProfileRedirectUrl('/profile?callbackUrl=' + encodeURIComponent(window.location.href));
+              setShowProfileModal(true);
+              setIsLoading(false);
+            }
+
             if (formData.events && formData.events.length > 0) {
               const event = formData.events[0];
               setEventId(event.id);
+
+              // Salvar o nome do evento
+              setEventName(event.name || 'Evento');
 
               if (event.maxAuthors) {
                 setMaxAuthors(event.maxAuthors);
@@ -299,18 +331,18 @@ function SubmitPaperForm() {
       ...author,
       authorOrder: index
     }));
-    
+
     // Garantir que o autor com userId do usuário logado seja marcado como apresentador padrão
     // se nenhum outro autor estiver marcado
     const hasPresenter = authorsWithOrder.some(author => author.isPresenter);
-    
+
     if (!hasPresenter && authorsWithOrder.length > 0) {
       const mainAuthorIndex = authorsWithOrder.findIndex(author => author.userId === session?.user?.id);
       if (mainAuthorIndex >= 0) {
         authorsWithOrder[mainAuthorIndex].isPresenter = true;
       }
     }
-    
+
     setAuthors(authorsWithOrder);
   };
 
@@ -353,7 +385,7 @@ function SubmitPaperForm() {
 
   const countKeywords = (keywordsStr) => {
     if (!keywordsStr) return 0;
-    
+
     return keywordsStr
       .split(',')
       .map(k => k.trim())
@@ -365,14 +397,14 @@ function SubmitPaperForm() {
     e.preventDefault();
     const errors = {};
     if (!title.trim()) errors.title = 'Título é obrigatório';
-    
+
     // Validação de keywords
     if (keywords.max > 0) { // Só validar se tiver max definido
       if (!keywords.value.trim()) {
         errors.keywords = 'Palavras-chave são obrigatórias';
       } else {
         const keywordsCount = countKeywords(keywords.value);
-        
+
         if (keywords.min === keywords.max && keywordsCount !== keywords.min) {
           errors.keywords = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'}`;
         } else if (keywords.min > 0 && keywordsCount < keywords.min) {
@@ -399,7 +431,7 @@ function SubmitPaperForm() {
     // Validação aprimorada para campos dinâmicos, incluindo min/maxWords
     eventFields.forEach(field => {
       const value = dynamicFieldValues[field.id]?.trim() || '';
-      
+
       // Validação de campo obrigatório
       if (field.isRequired && !value) {
         errors[field.id] = `${field.label} é obrigatório`;
@@ -424,7 +456,7 @@ function SubmitPaperForm() {
       // Validação de quantidade mínima de palavras
       if (field.minWords) {
         const wordCount = value.split(/\s+/).length;
-        
+
         if (wordCount < field.minWords) {
           errors[field.id] = `${field.label} deve ter pelo menos ${field.minWords} palavra${field.minWords === 1 ? '' : 's'}`;
           return;
@@ -434,7 +466,7 @@ function SubmitPaperForm() {
       // Validação de quantidade máxima de palavras
       if (field.maxWords) {
         const wordCount = value.split(/\s+/).length;
-        
+
         if (wordCount > field.maxWords) {
           errors[field.id] = `${field.label} deve ter no máximo ${field.maxWords} palavra${field.maxWords === 1 ? '' : 's'}`;
           return;
@@ -443,25 +475,52 @@ function SubmitPaperForm() {
     });
 
     let hasPresenter = false;
+    let hasEmptyFields = false;
 
     authors.forEach(author => {
       if (author.isPresenter) hasPresenter = true;
-      if (!author.name.trim()) {
+
+      // Criar um objeto para armazenar os campos vazios deste autor
+      const emptyFields = [];
+
+      if (!author.name?.trim()) {
         errors[`author-${author.authorOrder}-name`] = 'Nome é obrigatório';
+        emptyFields.push('nome');
       }
-      if (!author.institution.trim()) {
+
+      if (!author.institution?.trim()) {
         errors[`author-${author.authorOrder}-institution`] = 'Instituição é obrigatória';
+        emptyFields.push('instituição');
       }
-      if (!author.city.trim()) {
+
+      if (!author.city?.trim()) {
         errors[`author-${author.authorOrder}-city`] = 'Cidade é obrigatória';
+        emptyFields.push('cidade');
       }
+
       if (!author.state) {
         errors[`author-${author.authorOrder}-state`] = 'Estado é obrigatório';
+        emptyFields.push('estado');
+      }
+
+      // Se este autor tem campos vazios, mostrar uma mensagem geral também
+      if (emptyFields.length > 0) {
+        hasEmptyFields = true;
+
+        // Se for o autor principal (userId coincide com o usuário logado)
+        if (author.userId === session?.user?.id) {
+          errors.authors = `Complete as informações do autor principal: ${emptyFields.join(', ')}`;
+        }
       }
     });
 
     if (!hasPresenter) {
-      errors.authors = 'É necessário definir um autor como apresentador';
+      errors.authors = errors.authors || 'É necessário definir um autor como apresentador';
+    }
+
+    // Se temos campos vazios mas não temos uma mensagem geral para autores
+    if (hasEmptyFields && !errors.authors) {
+      errors.authors = 'Um ou mais autores possuem informações incompletas';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -488,7 +547,7 @@ function SubmitPaperForm() {
         }))
       ));
       formData.append('keywords', keywords.value); // Enviar apenas o valor string
-      
+
       // Só adicionar arquivo se existir
       if (file && hasFileField) {
         formData.append('file', file);
@@ -507,7 +566,9 @@ function SubmitPaperForm() {
 
       if (eventId) {
         formData.append('eventId', eventId);
+        formData.append('eventName', eventName);
       }
+
 
       // Criar array de paper fields values para enviar ao backend
       const paperFieldValues = Object.keys(dynamicFieldValues)
@@ -521,20 +582,34 @@ function SubmitPaperForm() {
       // O campo paperId não é adicionado aqui porque o paper ainda não foi criado
       // O backend irá associar esses campos ao paper recém-criado
 
-      const response = await fetch('/api/paper/submit', {
+      const response = await fetch('/api/paper', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao enviar trabalho');
+
+        // Verificar se temos erros de validação específicos para campos
+        if (errorData.fieldErrors) {
+          setFieldErrors(errorData.fieldErrors);
+          throw new Error('Por favor, corrija os erros destacados no formulário.');
+        } else {
+          // Erro geral
+          throw new Error(errorData.error || 'Erro ao enviar trabalho');
+        }
       }
 
       router.push('/paper?success=true');
     } catch (error) {
       console.error('Erro ao submeter trabalho:', error);
       setError(error.message || 'Ocorreu um erro ao enviar seu trabalho. Tente novamente.');
+
+      // Rolar a tela para o topo para que o usuário veja a mensagem de erro
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     } finally {
       setSubmitting(false);
     }
@@ -638,7 +713,7 @@ function SubmitPaperForm() {
               required={fieldConfig.isRequired}
             >
               <option value="">Selecione uma opção</option>
-              {fieldConfig.fieldOptions && 
+              {fieldConfig.fieldOptions &&
                 fieldConfig.fieldOptions.split(',').map((option, index) => (
                   <option key={`${fieldConfig.id}-opt-${index}`} value={option.trim()}>
                     {option.trim()}
@@ -664,9 +739,9 @@ function SubmitPaperForm() {
                 type="checkbox"
                 checked={dynamicFieldValues[fieldConfig.id] === 'true'}
                 onChange={(e) => handleDynamicFieldChange({
-                  target: { 
-                    name: fieldConfig.id, 
-                    value: e.target.checked ? 'true' : 'false' 
+                  target: {
+                    name: fieldConfig.id,
+                    value: e.target.checked ? 'true' : 'false'
                   }
                 })}
                 className={`${styles.formCheckbox} ${fieldErrors[fieldConfig.id] ? styles.inputError : ''}`}
@@ -691,7 +766,7 @@ function SubmitPaperForm() {
               <legend className={styles.formLabel}>
                 {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
               </legend>
-              {fieldConfig.fieldOptions && 
+              {fieldConfig.fieldOptions &&
                 fieldConfig.fieldOptions.split(',').map((option, index) => (
                   <div key={`${fieldConfig.id}-opt-${index}`} className={styles.radioOption}>
                     <input
@@ -726,7 +801,7 @@ function SubmitPaperForm() {
 
   const renderFileUploadField = () => {
     if (!hasFileField) return null;
-    
+
     return (
       <div className={`${styles.formGroup} ${styles.fileUploadGroup}`}>
         <label className={styles.formLabel}>
@@ -798,10 +873,10 @@ function SubmitPaperForm() {
   const renderKeywordsField = () => {
     // Não renderizar o campo se max não estiver definido
     if (!keywords.max) return null;
-    
+
     // Texto de ajuda baseado nas regras
     let helperText = '';
-    
+
     if (keywords.min === keywords.max) {
       helperText = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
     } else if (keywords.min > 0 && keywords.max > 0) {
@@ -811,21 +886,21 @@ function SubmitPaperForm() {
     } else if (keywords.max > 0) {
       helperText = `Informe até ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
     }
-    
+
     // Contador de palavras-chave atuais
     const keywordsCount = countKeywords(keywords.value);
     let keywordCountText = '';
-    
+
     if (keywords.value.trim()) {
       keywordCountText = `${keywordsCount} palavra${keywordsCount === 1 ? '-chave' : 's-chave'} informada${keywordsCount === 1 ? '' : 's'}`;
     }
-    
+
     // Verificar se está fora das regras
-    const isInvalid = 
+    const isInvalid =
       (keywords.min === keywords.max && keywordsCount !== keywords.min) ||
       (keywords.min > 0 && keywordsCount < keywords.min) ||
       (keywords.max > 0 && keywordsCount > keywords.max);
-    
+
     return (
       <div className={styles.formGroup}>
         <label htmlFor="keywords" className={styles.formLabel}>
@@ -837,13 +912,13 @@ function SubmitPaperForm() {
           value={keywords.value}
           onChange={handleKeywordsChange}
           className={`${styles.formInput} ${fieldErrors.keywords ? styles.inputError : ''}`}
-          placeholder="Palavras-chave separadas por vírgula"
+          placeholder={helperText}
         />
         {fieldErrors.keywords && (
           <span className={styles.fieldError}>{fieldErrors.keywords}</span>
         )}
         <div className={styles.keywordsInfo}>
-          <span className={styles.fieldHelper}>{helperText}</span>
+          {/* <span className={styles.fieldHelper}>{helperText}</span> */}
           {keywordCountText && (
             <span className={`${styles.keywordCount} ${isInvalid ? styles.keywordCountError : ''}`}>
               {keywordCountText}
@@ -866,9 +941,14 @@ function SubmitPaperForm() {
 
   return (
     <div className={styles.pageWrapper}>
+      {/* Modal de perfil incompleto */}
+      {showProfileModal && <ProfileRedirectModal />}
+
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Enviar Novo Trabalho Científico</h1>
+          <h1 className={styles.title}>
+            {eventName ? `Enviar Trabalho - ${eventName}` : 'Enviar Novo Trabalho Científico'}
+          </h1>
         </header>
 
         <div className={styles.content}>

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './paper.module.css';
 import Button from '../components/ui/Button';
-import { FaFileAlt, FaCalendarAlt, FaUsers, FaHistory } from 'react-icons/fa';
+import { FaFileAlt, FaCalendarAlt, FaUsers, FaTag, FaBookmark, FaBuilding, FaDownload, FaHistory, FaFlask, FaMicroscope, FaStethoscope } from 'react-icons/fa';
 import Tooltip from '../components/ui/Tooltip';
 
 // Componente que usa searchParams
@@ -15,26 +15,45 @@ function PaperPageContent() {
   const searchParams = useSearchParams();
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  });
 
   // Verificar mensagem de sucesso
   const success = searchParams ? searchParams.get('success') : null;
+  const page = parseInt(searchParams.get('page') || '1');
 
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchpapers();
+      fetchPapers(page);
     }
-  }, [status]);
+  }, [status, page]);
 
-  const fetchpapers = async () => {
+  const fetchPapers = async (page = 1) => {
     setLoading(true);
+    setError('');
     try {
-      const response = await fetch('/api/paper');
-      if (!response.ok) throw new Error('Falha ao buscar trabalhos');
+      const response = await fetch(`/api/paper?page=${page}&limit=10`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao buscar trabalhos');
+      }
       const data = await response.json();
       setPapers(data.papers || []);
+      setPagination(data.pagination || {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 0
+      });
     } catch (error) {
       console.error('Erro ao carregar trabalhos:', error);
+      setError(error.message || 'Ocorreu um erro ao carregar seus trabalhos');
     } finally {
       setLoading(false);
     }
@@ -42,6 +61,7 @@ function PaperPageContent() {
 
   // Formatar data para exibição
   const formatDate = (dateString) => {
+    if (!dateString) return 'Data não informada';
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -53,11 +73,13 @@ function PaperPageContent() {
   // Status do paper com cor correspondente
   const getStatusBadge = (status) => {
     const statusMap = {
-      'pending': { label: 'Em análise', className: styles.statusPending },
-      'reviewing': { label: 'Em revisão', className: styles.statusReviewing },
-      'accepted': { label: 'Aprovado', className: styles.statusAccepted },
-      'rejected': { label: 'Recusado', className: styles.statusRejected },
-      'published': { label: 'Publicado', className: styles.statusPublished }
+      'DRAFT': { label: 'Rascunho', className: styles.statusDraft },
+      'SUBMITTED': { label: 'Enviado', className: styles.statusSubmitted },
+      'PENDING': { label: 'Em análise', className: styles.statusPending },
+      'REVIEWING': { label: 'Em revisão', className: styles.statusReviewing },
+      'ACCEPTED': { label: 'Aprovado', className: styles.statusAccepted },
+      'REJECTED': { label: 'Recusado', className: styles.statusRejected },
+      'PUBLISHED': { label: 'Publicado', className: styles.statusPublished }
     };
 
     const statusInfo = statusMap[status] || { label: 'Desconhecido', className: '' };
@@ -67,6 +89,52 @@ function PaperPageContent() {
         {statusInfo.label}
       </span>
     );
+  };
+
+  // Extrair nomes dos autores para exibição
+  const getAuthorsDisplay = (authors) => {
+    if (!authors || authors.length === 0) return 'Sem autores';
+    
+    // Ordenar os autores por authorOrder
+    const sortedAuthors = [...authors].sort((a, b) => a.authorOrder - b.authorOrder);
+    
+    // Pegar os nomes dos autores
+    const authorNames = sortedAuthors.map(author => author.name);
+    
+    // Se houver mais de 3 autores, mostre os 2 primeiros e "et al."
+    if (authorNames.length > 3) {
+      return `${authorNames[0]}, ${authorNames[1]} et al.`;
+    }
+    
+    return authorNames.join(', ');
+  };
+
+  // Obter uma descrição detalhada dos autores para o tooltip
+  const getAuthorsTooltip = (authors) => {
+    if (!authors || authors.length === 0) return 'Sem autores';
+
+    const sortedAuthors = [...authors].sort((a, b) => a.authorOrder - b.authorOrder);
+
+    return sortedAuthors.map(author => {
+      const roles = [];
+      if (author.isMainAuthor) roles.push('Autor Principal');
+      if (author.isPresenter) roles.push('Apresentador');
+
+      const roleText = roles.length > 0 ? ` (${roles.join(', ')})` : '';
+      return `${author.name}${roleText} - ${author.institution}`;
+    });
+  };
+
+  // Obter campos dinâmicos específicos, como resumo
+  const getFieldValue = (paper, fieldType) => {
+    if (!paper.fieldValues || paper.fieldValues.length === 0) return '';
+    
+    // Procurar por campos com o tipo desejado
+    const field = paper.fieldValues.find(
+      fv => fv.field && fv.field.fieldType.toUpperCase() === fieldType
+    );
+    
+    return field ? field.value : '';
   };
 
   return (
@@ -81,6 +149,12 @@ function PaperPageContent() {
             <div className={styles.successMessage}>
               <FaFileAlt className={styles.successIcon} />
               <span>Seu trabalho foi enviado com sucesso!</span>
+            </div>
+          )}
+
+          {error && (
+            <div className={styles.errorMessage}>
+              <span>{error}</span>
             </div>
           )}
 
@@ -113,75 +187,157 @@ function PaperPageContent() {
                     <p>Carregando seus trabalhos...</p>
                   </div>
                 ) : papers.length > 0 ? (
-                  <div className={styles.papersList}>
-                    {papers.map((paper) => (
-                      <div key={paper.id}
-                           className={styles.paperCard}
-                          //  onClick={() => router.push(`/paper/${paper.id}`)}
-                      >
-                        <div className={styles.paperHeader}>
-                          <h4 className={styles.cardTitle}>{paper.title}</h4>
-                          {getStatusBadge(paper.status)}
-                        </div>
+                  <>
+                    <div className={styles.papersList}>
+                      {papers.map((paper) => {
+                        // Obter o resumo do paper (abstract) dos campos dinâmicos ou do campo direto
+                        const abstract = paper.abstract || getFieldValue(paper, 'TEXTAREA');
 
-                        <div className={styles.paperMeta}>
-                          <div className={styles.metaItem}>
-                            <FaCalendarAlt className={styles.metaIcon} />
-                            <span className={styles.metaText}>
-                              Enviado em {formatDate(paper.createdAt)}
-                            </span>
-                          </div>
-
-                          <div className={styles.metaItem}>
-                            <FaUsers className={styles.metaIcon} />
-                            <Tooltip
-                              content={paper.authors || 'Sem autores informados'}
-                              position="top"
-                              delay={300}
-                              arrow={true}
-                            >
-                              <span
-                                className={styles.metaText}
-                                aria-label={`Autores: ${paper.authors || 'Sem autores informados'}`}
-                              >
-                                {paper.authors || 'Sem autores informados'}
-                              </span>
-                            </Tooltip>
-                          </div>
-
-                          {paper.updatedAt && (
-                            <div className={styles.metaItem}>
-                              <FaHistory className={styles.metaIcon} />
-                              <span className={styles.metaText}>
-                                Atualizado em {formatDate(paper.updatedAt)}
-                              </span>
+                        return (
+                          <div key={paper.id} className={styles.paperCard}>
+                            <div className={styles.paperHeader}>
+                              <h4 className={styles.cardTitle}>{paper.title}</h4>
                             </div>
-                          )}
-                        </div>
 
-                        {paper.abstract && (
-                          <p className={styles.paperAbstract}>
-                            {paper.abstract.length > 150
-                              ? `${paper.abstract.substring(0, 150)}...`
-                              : paper.abstract}
-                          </p>
-                        )}
+                            <div className={styles.paperEventRow}>
+                              <div className={styles.paperEvent}>
+                                <FaBuilding className={styles.metaIcon} />
+                                <span className={styles.eventName}>
+                                  {paper.event ? paper.event.name : 'Evento não especificado'}
+                                </span>
+                              </div>
+                              {getStatusBadge(paper.status)}
+                            </div>
 
-                        <div className={styles.cardActions}>
-                          <Button
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/paper/${paper.id}`);
-                            }}
-                            className={styles.actionButton}
-                          >
-                            Ver Detalhes
-                          </Button>
-                        </div>
+                            <div className={styles.paperMeta}>
+                              <div className={styles.metaItem}>
+                                <FaCalendarAlt className={styles.metaIcon} />
+                                <span className={styles.metaText}>
+                                  {formatDate(paper.createdAt)}
+                                </span>
+                              </div>
+
+                              <div className={styles.metaItem}>
+                                <FaUsers className={styles.metaIcon} />
+                                <Tooltip
+                                  content={getAuthorsTooltip(paper.authors)}
+                                  position="top"
+                                  delay={300}
+                                  arrow={true}
+                                  multiline={true}
+                                >
+                                  <span className={styles.metaText}>
+                                    {getAuthorsDisplay(paper.authors)}
+                                  </span>
+                                </Tooltip>
+                              </div>
+
+                              {paper.area && (
+                                <div className={styles.metaItem}>
+                                  <FaStethoscope className={styles.metaIcon} /> {/* Ícone diferente para área */}
+                                  <Tooltip
+                                    content={paper.area.description || 'Área temática'}
+                                    position="top"
+                                    delay={300}
+                                    arrow={true}
+                                  >
+                                    <span className={styles.metaText}>
+                                      {paper.area.name}
+                                    </span>
+                                  </Tooltip>
+                                </div>
+                              )}
+
+                              {paper.paperType && (
+                                <div className={styles.metaItem}>
+                                  <FaTag className={styles.metaIcon} />
+                                  <Tooltip
+                                    content={paper.paperType.description || ''}
+                                    position="top"
+                                    delay={300}
+                                    arrow={true}
+                                  >
+                                    <span className={styles.metaText}>
+                                      {paper.paperType.name}
+                                    </span>
+                                  </Tooltip>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className={styles.keywordsContainer}>
+                              {paper.keywords.split(',').map((keyword, index) => (
+                                <span key={index} className={styles.keywordTag}>
+                                  {keyword.trim()}
+                                </span>
+                              ))}
+                            </div>
+
+                            {abstract && (
+                              <p className={styles.paperAbstract}>
+                                {abstract.length > 150
+                                  ? `${abstract.substring(0, 150)}...`
+                                  : abstract}
+                              </p>
+                            )}
+
+                            <div className={styles.cardActions}>
+                              <Button
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/paper/${paper.id}`);
+                                }}
+                                className={styles.actionButton}
+                              >
+                                Ver Detalhes
+                              </Button>
+
+                              {paper.fileUrl && (
+                                <a 
+                                  href={paper.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.downloadLink}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <FaDownload className={styles.downloadIcon} />
+                                  Baixar PDF
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Paginação */}
+                    {pagination.pages > 1 && (
+                      <div className={styles.pagination}>
+                        <Button
+                          variant="outline"
+                          onClick={() => router.push(`/paper?page=${Math.max(1, pagination.page - 1)}`)}
+                          disabled={pagination.page <= 1}
+                          className={styles.paginationButton}
+                        >
+                          Anterior
+                        </Button>
+                        
+                        <span className={styles.paginationInfo}>
+                          Página {pagination.page} de {pagination.pages}
+                        </span>
+                        
+                        <Button
+                          variant="outline"
+                          onClick={() => router.push(`/paper?page=${Math.min(pagination.pages, pagination.page + 1)}`)}
+                          disabled={pagination.page >= pagination.pages}
+                          className={styles.paginationButton}
+                        >
+                          Próxima
+                        </Button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className={styles.emptyState}>
                     <FaFileAlt className={styles.emptyStateIcon} />

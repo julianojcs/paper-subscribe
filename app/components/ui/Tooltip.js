@@ -10,6 +10,7 @@ export default function Tooltip({
   position = 'top',
   delay = 200,
   arrow = true,
+  multLine = false,
   className = '',
   style = {}
 }) {
@@ -182,26 +183,30 @@ export default function Tooltip({
 
     return createPortal(
       <div 
-        ref={tooltipRef}
-        className={`${styles.tooltip} ${styles[position]} ${className}`}
-        style={{
-          ...style,
-          top: `${tooltipPosition.top}px`,
-          left: `${tooltipPosition.left}px`
-        }}
-        role="tooltip"
-        aria-hidden="false"
+      ref={tooltipRef}
+      className={`${styles.tooltip} ${styles[position]} ${className}`}
+      style={{
+        ...style,
+        top: `${tooltipPosition.top}px`,
+        left: `${tooltipPosition.left}px`
+      }}
+      role="tooltip"
+      aria-hidden="false"
       >
-        {content}
-        {arrow && (
-          <span 
-            className={styles.arrow} 
-            style={{
-              top: arrowPosition.top,
-              left: arrowPosition.left
-            }}
-          />
-        )}
+      {multLine && Array.isArray(content) ? (
+        content.map((line, index) => <p key={index}>{line}</p>)
+      ) : (
+        content
+      )}
+      {arrow && (
+        <span 
+        className={styles.arrow} 
+        style={{
+          top: arrowPosition.top,
+          left: arrowPosition.left
+        }}
+        />
+      )}
       </div>,
       tooltipElement
     );

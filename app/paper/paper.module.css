@@ -123,7 +123,7 @@
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  /* cursor: pointer; */
+  padding: 1rem;
 }
 
 .paperCard:hover {
@@ -133,7 +133,7 @@
 }
 
 .paperHeader {
-  padding: 1.25rem 1.25rem 0.75rem;
+  padding-block-end: 0.75rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -146,17 +146,19 @@
   color: #1e293b;
   margin: 0;
   flex: 1;
-  margin-right: 1rem;
   line-height: 1.4;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .statusBadge {
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
+  padding: 3px 8px;
+  border-radius: 12px;
   white-space: nowrap;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .statusPending {
@@ -184,6 +186,17 @@
   color: #3730a3;
 }
 
+/* Novos status */
+.statusDraft {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.statusSubmitted {
+  background-color: #bee3f8;
+  color: #2c5282;
+}
+
 .paperMeta {
   padding: 0.75rem 1.25rem;
   display: flex;
@@ -202,7 +215,7 @@
 
 .metaIcon {
   margin-right: 0.5rem;
-  color: #94a3b8;
+  color: #3498db;
   font-size: 0.875rem;
   flex-shrink: 0;
 }
@@ -211,18 +224,74 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px; /* Ajuste conforme o layout */
+  max-width: 250px; /* Ajuste conforme o layout */
   display: inline-block;
   cursor: help;
 }
 
+/* Estilo para o nome do evento */
+.paperEventRow {
+  Display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-block-end: 0.75rem;
+}
+
+.paperEvent {
+  display: flex;
+  align-items: center;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.eventName {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Estilos para palavras-chave */
+.keywordsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.keywordTag {
+  background-color: #e2e8f0;
+  color: #4a5568;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
 .paperAbstract {
-  padding: 0.75rem 1.25rem;
+  padding-block: 0.75rem;
   font-size: 0.875rem;
   color: #64748b;
   border-top: 1px solid #f1f5f9;
   line-height: 1.5;
   flex-grow: 1;
+}
+
+/* Link para download */
+.downloadLink {
+  display: flex;
+  align-items: center;
+  color: #3182ce;
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+.downloadIcon {
+  margin-right: 4px;
 }
 
 .cardActions {
@@ -234,6 +303,36 @@
 
 .actionButton {
   font-size: 0.875rem;
+}
+
+/* Estilos para paginação */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.paginationInfo {
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.paginationButton {
+  min-width: 100px;
+}
+
+/* Mensagem de erro */
+.errorMessage {
+  background-color: #fed7d7;
+  border-left: 4px solid #e53e3e;
+  color: #c53030;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
 }
 
 /* Estado de carregamento */

@@ -122,7 +122,7 @@ model EventArea {
   id          String   @id @default(cuid())
   name        String
   description String?
-  sortOrder    Int     @default(0)
+  sortOrder   Int     @default(0)
   eventId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -165,8 +165,9 @@ model EventField {
   id           String            @id @default(cuid())
   eventId      String
   label        String
-  description  String?
-  helpText     String?
+  helperText   String?
+  defaultValue String?
+  placeholder  String?
   isRequired   Boolean           @default(false)
   fieldType     FieldType         @default(TEXT)
   fieldOptions  String?
@@ -195,6 +196,10 @@ model Event {
   reviewStart     DateTime?
   reviewEnd       DateTime?
   maxAuthors      Int                   @default(5)
+  minKeywords     Int                   @default(1)
+  maxKeywords     Int                   @default(5)
+  maxFileSize     Int?                   @default(3) // em MB
+  maxFiles        Int?                   @default(0)
   organizationId  String
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
@@ -213,7 +218,7 @@ model Event {
 model PaperFieldValue {
   id        String     @id @default(cuid())
   paperId   String
-  fieldId   String
+  fieldId    String
   value     String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -246,8 +251,6 @@ model Paper {
   id              String    @id @default(cuid())
   title           String
   keywords        String
-  maxKeywords     Int       @default(5)
-  minKeywords     Int       @default(1)
   fileUrl          String?
   fileName         String?
   fileStoragePath  String?    // pasta/caminho no Firebase
@@ -284,8 +287,9 @@ model PaperAuthor {
   institution   String?   // Instituição do usuário
   city          String?   // Cidade do usuário
   stateId       String?   @db.Char(2) // Relação com o estado usando UF
-
   isPresenter   Boolean  @default(false)
+  isMainAuthor  Boolean  @default(false)
+
   authorOrder   Int      @default(0)
   createdAt     DateTime @default(now())
 

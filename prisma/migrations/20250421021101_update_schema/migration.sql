@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Event" ALTER COLUMN "maxFileSize" DROP NOT NULL,
+ALTER COLUMN "maxFiles" DROP NOT NULL,
+ALTER COLUMN "maxFiles" SET DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "PaperAuthor" ADD COLUMN     "isMainAuthor" BOOLEAN NOT NULL DEFAULT false;

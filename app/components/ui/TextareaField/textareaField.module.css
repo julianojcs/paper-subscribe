@@ -140,6 +140,7 @@
 .counterContainer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.875rem;
   color: #666;
   margin-top: 0.5rem;
@@ -242,6 +243,16 @@
 
 .progressBar.counterDanger {
   background-color: #ef4444; /* Red/500 */
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
+  color: #666;
 }
 
 @media (max-width: 640px) {
