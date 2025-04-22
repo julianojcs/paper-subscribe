@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FaChevronDown } from 'react-icons/fa';
 import styles from './select.module.css';
 
@@ -49,6 +50,10 @@ export default function Select({
   const [isOpen, setIsOpen] = useState(false);
   // Estado para controle de navegação por teclado
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  // Estado para gerenciar o portal
+  const [portalContainer, setPortalContainer] = useState(null);
+  // Estado para posição do dropdown
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Refs para os elementos DOM
   const triggerRef = useRef(null);
@@ -96,20 +101,75 @@ export default function Select({
   const selectedDescription = getSelectedDescription();
   const hasError = !!errorMessage;
 
+  // Criar container do portal ao montar o componente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Verificar se já existe um container para os selectPortals
+      let container = document.getElementById('select-portals-container');
+      
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'select-portals-container';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '0';
+        container.style.overflow = 'visible';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+      }
+      
+      setPortalContainer(container);
+    }
+  }, []);
+
+  // Calcular posição do dropdown
+  const updateDropdownPosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Usado position fixed para mobile para evitar problemas com scroll
+      setDropdownPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
   // Fechar o dropdown quando clicado fora
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        isOpen &&
+        triggerRef.current && 
+        !triggerRef.current.contains(event.target) &&
+        listboxRef.current && 
+        !listboxRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      if (isOpen) {
+        updateDropdownPosition();
       }
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleScroll);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleScroll);
     };
   }, [isOpen]);
 
@@ -182,13 +242,16 @@ export default function Select({
 
   const toggleDropdown = () => {
     if (!disabled) {
-      setIsOpen(!isOpen);
-      
-      // Reset highlight ao abrir
+      // Atualizar posição antes de abrir o dropdown
       if (!isOpen) {
+        updateDropdownPosition();
+        
+        // Reset highlight ao abrir
         const selectedIndex = processedOptions.findIndex(opt => opt.id === value || opt.value === value);
         setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
       }
+      
+      setIsOpen(!isOpen);
     }
   };
 
@@ -224,6 +287,59 @@ export default function Select({
     
     // Demais teclas implementadas no useEffect para navegar o listbox
   };
+  
+  // Renderizar o listbox através do portal
+  const renderListbox = () => {
+    if (!isOpen || !portalContainer) return null;
+    
+    return createPortal(
+      <div 
+        className={styles.listboxPortalWrapper}
+        style={{
+          position: 'fixed', 
+          top: `${dropdownPosition.top}px`, 
+          left: `${dropdownPosition.left}px`,
+          width: `${dropdownPosition.width}px`,
+          zIndex: 9999
+        }}
+      >
+        <ul
+          ref={listboxRef}
+          id={listboxId}
+          role="listbox"
+          className={styles.optionsList}
+          aria-labelledby={selectId}
+          tabIndex={-1}
+        >
+          {processedOptions.length > 0 ? (
+            processedOptions.map((option, index) => (
+              <li
+                key={option.id || index}
+                id={`option-${selectId}-${index}`}
+                role="option"
+                aria-selected={option.id === value || option.value === value}
+                className={`${styles.option} 
+                  ${(option.id === value || option.value === value) ? styles.selected : ''} 
+                  ${highlightedIndex === index ? styles.highlighted : ''}`}
+                onClick={() => handleOptionSelect(option)}
+                onMouseEnter={() => setHighlightedIndex(index)}
+              >
+                <span className={styles.optionLabel}>{option.label}</span>
+                {option.description && (
+                  <span className={styles.optionDescription}>
+                    {option.description}
+                  </span>
+                )}
+              </li>
+            ))
+          ) : (
+            <li className={styles.noOptions}>Nenhuma opção disponível</li>
+          )}
+        </ul>
+      </div>,
+      portalContainer
+    );
+  };
 
   return (
     <div className={`${styles.selectGroup} ${className}`} ref={containerRef}>
@@ -257,42 +373,8 @@ export default function Select({
           <FaChevronDown className={`${styles.selectIcon} ${isOpen ? styles.open : ''}`} aria-hidden="true" />
         </button>
         
-        {/* Dropdown listbox */}
-        {isOpen && (
-          <ul
-            ref={listboxRef}
-            id={listboxId}
-            role="listbox"
-            className={styles.optionsList}
-            aria-labelledby={selectId}
-            tabIndex={-1}
-          >
-            {processedOptions.length > 0 ? (
-              processedOptions.map((option, index) => (
-                <li
-                  key={option.id || index}
-                  id={`option-${selectId}-${index}`}
-                  role="option"
-                  aria-selected={option.id === value || option.value === value}
-                  className={`${styles.option} 
-                    ${(option.id === value || option.value === value) ? styles.selected : ''} 
-                    ${highlightedIndex === index ? styles.highlighted : ''}`}
-                  onClick={() => handleOptionSelect(option)}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  <span className={styles.optionLabel}>{option.label}</span>
-                  {option.description && (
-                    <span className={styles.optionDescription}>
-                      {option.description}
-                    </span>
-                  )}
-                </li>
-              ))
-            ) : (
-              <li className={styles.noOptions}>Nenhuma opção disponível</li>
-            )}
-          </ul>
-        )}
+        {/* Dropdown listbox renderizado via portal */}
+        {renderListbox()}
         
         {/* Descrição da opção selecionada */}
         {selectedDescription && (

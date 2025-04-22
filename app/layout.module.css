@@ -8,4 +8,5 @@
   scrollbar-width: thin;
   scrollbar-color: var(--facebook-clr, #1877f2) transparent;
   background-color: #f9fafb;
+  justify-items: center;
 }

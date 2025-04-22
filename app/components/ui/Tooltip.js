@@ -168,14 +168,54 @@ export default function Tooltip({
     setIsVisible(false);
   };
 
-  // Clone the children with additional props
-  const childrenWithProps = React.cloneElement(children, {
-    ref: targetRef,
-    onMouseEnter: handleMouseEnter,
-    onMouseLeave: handleMouseLeave,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-  });
+  // SOLUÇÃO MAIS SEGURA: usar verificação baseada em tipo em vez de isValidElement
+  const renderChildrenWithProps = () => {
+    // Verificação segura para elementos React válidos sem usar isValidElement
+    const isReactElement = children && typeof children === 'object' && 
+                          'type' in children && 
+                          'props' in children &&
+                          children !== null;
+    
+    // Se não parece ser um elemento React válido, envolva em um span
+    if (!isReactElement) {
+      return (
+        <span
+          ref={targetRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+        >
+          {children}
+        </span>
+      );
+    }
+    
+    // Usar cloneElement diretamente com o elemento React
+    try {
+      return React.cloneElement(children, {
+        ref: targetRef,
+        onMouseEnter: handleMouseEnter,
+        onMouseLeave: handleMouseLeave,
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+      });
+    } catch (err) {
+      // Fallback seguro se o cloneElement falhar
+      console.warn('Tooltip: Failed to clone element', err);
+      return (
+        <span
+          ref={targetRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+        >
+          {children}
+        </span>
+      );
+    }
+  };
 
   // Render tooltip using portal
   const renderTooltip = () => {
@@ -183,30 +223,30 @@ export default function Tooltip({
 
     return createPortal(
       <div 
-      ref={tooltipRef}
-      className={`${styles.tooltip} ${styles[position]} ${className}`}
-      style={{
-        ...style,
-        top: `${tooltipPosition.top}px`,
-        left: `${tooltipPosition.left}px`
-      }}
-      role="tooltip"
-      aria-hidden="false"
-      >
-      {multLine && Array.isArray(content) ? (
-        content.map((line, index) => <p key={index}>{line}</p>)
-      ) : (
-        content
-      )}
-      {arrow && (
-        <span 
-        className={styles.arrow} 
+        ref={tooltipRef}
+        className={`${styles.tooltip} ${styles[position]} ${className}`}
         style={{
-          top: arrowPosition.top,
-          left: arrowPosition.left
+          ...style,
+          top: `${tooltipPosition.top}px`,
+          left: `${tooltipPosition.left}px`
         }}
-        />
-      )}
+        role="tooltip"
+        aria-hidden="false"
+      >
+        {multLine && Array.isArray(content) ? (
+          content.map((line, index) => <p key={index}>{line}</p>)
+        ) : (
+          content
+        )}
+        {arrow && (
+          <span 
+            className={styles.arrow} 
+            style={{
+              top: arrowPosition.top,
+              left: arrowPosition.left
+            }}
+          />
+        )}
       </div>,
       tooltipElement
     );
@@ -214,7 +254,7 @@ export default function Tooltip({
 
   return (
     <>
-      {childrenWithProps}
+      {renderChildrenWithProps()}
       {renderTooltip()}
     </>
   );

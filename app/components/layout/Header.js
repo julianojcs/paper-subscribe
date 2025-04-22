@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import styles from './Header.module.css';
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt, FaHome } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt, FaHome, FaUsers, FaCog } from 'react-icons/fa';
 
 const Header = () => {
   const { data: session } = useSession();
@@ -13,6 +13,9 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar carregamento inicial
   const pathname = usePathname();
+  const isAdmin = session?.user?.role === 'ADMIN' ||
+    (session?.user?.organizationMemberships &&
+    session.user.organizationMemberships.some(m => m.role === 'ADMIN'));
 
   // Verificar tamanho da tela e definir estado mobile
   useEffect(() => {
@@ -94,6 +97,17 @@ const Header = () => {
                 <FaCloudUploadAlt className={styles.navIcon} />
                 <span>Enviar Trabalho</span>
               </Link>
+
+              {/* Menu item exclusivo para administradores */}
+              {isAdmin && (
+                <Link
+                  href="/admin/organization/users"
+                  className={`${styles.navLink} ${styles.adminLink} ${isActive('/admin/organization/users') ? styles.activeLink : ''}`}
+                >
+                  <FaUsers className={styles.navIcon} />
+                  <span>Usuários</span>
+                </Link>
+              )}
 
               <Link
                 href="/profile"

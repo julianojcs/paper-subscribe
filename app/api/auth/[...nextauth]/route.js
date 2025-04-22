@@ -195,34 +195,18 @@ export const authOptions = {
       return true; // Permitir login
     },
 
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       if (session?.user) {
+        // Usar os dados do token JWT para enriquecer a sessão
         session.user.id = token.sub;
+        session.user.cpf = token.cpf;
+        session.user.phone = token.phone;
+        session.user.institution = token.institution;
+        session.user.city = token.city;
+        session.user.stateId = token.stateId;
+        session.user.organizationMemberships = token.organizationMemberships;
 
-        // Adicionar campos personalizados à sessão
-        try {
-          const userDetails = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            select: {
-              id: true,
-              name: true,
-              cpf: true,
-              phone: true,
-              institution: true,
-              city: true,
-              stateId: true
-            }
-          });
-
-          if (userDetails) {
-            session.user = {
-              ...session.user,
-              ...userDetails
-            };
-          }
-        } catch (error) {
-          console.error("Erro ao enriquecer sessão:", error);
-        }
+        // A verificação de admin agora pode ser feita facilmente no Header.js
       }
       return session;
     },
@@ -235,7 +219,7 @@ export const authOptions = {
 
         try {
           const userDetails = await prisma.user.findUnique({
-            where: { email: session.user.email },
+            where: { email: user.email },
             select: {
               id: true,
               name: true,
@@ -243,27 +227,25 @@ export const authOptions = {
               phone: true,
               institution: true,
               city: true,
-              stateId: true
+              stateId: true,
+              organizationMemberships: {
+                select: {
+                  organizationId: true,
+                  role: true
+                }
+              }
             }
           });
 
           if (userDetails) {
-            token = { ...token, ...userDetails };
-            session.user = {
-              ...session.user,
-              ...userDetails
+            token = {
+              ...token,
+              ...userDetails,
+              sub: token.sub || user.id
             };
           }
-
-          // Se o usuário tem pelo menos um token válido, marcar como verificado
-          // if (userToken) {
-          //   token.eventTokenVerified = true;
-          // }
-
         } catch (error) {
           console.error("Erro ao verificar token do usuário:", error);
-          // Em caso de erro, não definimos token.eventTokenVerified como true,
-          // tratando como se o usuário não tivesse token verificado
         }
       }
       return token;

@@ -1,0 +1,28 @@
+.pageHeader {
+  margin-bottom: 2rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.iconContainer {
+  margin-right: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.description {
+  margin: 0;
+  color: #718096;
+  font-size: 1rem;
+}

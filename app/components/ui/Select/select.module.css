@@ -31,7 +31,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.45rem 0.75rem 0.45rem 0.75rem;
   font-size: 1rem;
   line-height: 1.5;
   color: #1e293b;
@@ -42,7 +42,6 @@
   text-align: left;
   transition: all 0.15s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  min-height: 2.75rem;
 }
 
 .selectTrigger:focus {

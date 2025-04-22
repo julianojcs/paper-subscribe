@@ -1,39 +1,57 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styles from './Input.module.css';
 
-const Input = ({
-  label,
-  id,
+const Input = forwardRef(({
   type = 'text',
+  placeholder,
   value,
   onChange,
-  placeholder,
-  required = false,
-  error,
-  helpText,
+  onBlur,
+  className,
+  id,
+  name,
+  autoComplete,
+  required,
+  disabled,
+  label,
+  leftIcon,
   ...props
-}) => {
+}, ref) => {
+  const inputClasses = `${styles.input} ${leftIcon ? styles.withLeftIcon : ''} ${className || ''}`;
+
   return (
-    <div className={styles.container}>
+    <div className={styles.inputWrapper}>
       {label && (
         <label htmlFor={id} className={styles.label}>
-          {label} {required && <span className={styles.required}>*</span>}
+          {label}
         </label>
       )}
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`${styles.input} ${error ? styles.error : ''}`}
-        required={required}
-        {...props}
-      />
-      {helpText && <small className={styles.helpText}>{helpText}</small>}
-      {error && <div className={styles.errorText}>{error}</div>}
+      <div className={styles.inputContainer}>
+        {leftIcon && (
+          <div className={styles.leftIconContainer}>
+            {leftIcon}
+          </div>
+        )}
+        <input
+          ref={ref}
+          type={type}
+          id={id}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          className={inputClasses}
+          autoComplete={autoComplete}
+          required={required}
+          disabled={disabled}
+          {...props}
+        />
+      </div>
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 export default Input;
