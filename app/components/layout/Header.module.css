@@ -269,3 +269,86 @@
     }
   }
 }
+
+/* Adicione estes estilos ao seu arquivo CSS existente */
+
+.adminMenuContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.submenuContainer {
+  display: none;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  min-width: 200px;
+  z-index: 100;
+}
+
+/* No desktop, posicionado abaixo do menu */
+@media (min-width: 768px) {
+  .submenuContainer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+/* No mobile, integrado com o menu principal */
+@media (max-width: 767px) {
+  .submenuContainer {
+    position: relative;
+    box-shadow: none;
+    margin-left: 1.5rem;
+    border-left: 2px solid var(--color-primary-light);
+  }
+}
+
+.submenuVisible {
+  display: flex;
+}
+
+.submenuLink {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.submenuLink:hover {
+  background-color: var(--color-background-light);
+}
+
+.activeSubmenuLink {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.submenuIcon {
+  margin-right: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.submenuIndicator {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  transition: transform 0.2s;
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+/* Destaque para o menu admin */
+.adminLink {
+  color: var(--color-primary);
+  font-weight: 500;
+}
