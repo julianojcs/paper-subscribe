@@ -9,8 +9,7 @@
 }
 
 .container {
-  max-width: 800px;
-  width: 100%;
+  width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -589,6 +588,205 @@
   .stateLabel {
     color: #94a3b8;
   }
+
+  .loadingSpinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #60a5fa;
+  }
+  
+  .loadingContainer {
+    color: #e2e8f0;
+  }
+
+  /* Estilos básicos para o layout */
+  .pageWrapper {
+    background-color: #0f172a;
+  }
+  
+  /* Estilos para o cabeçalho */
+  .header {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+  }
+  
+  /* Estilos para formulários e campos */
+  .formInput, .formTextarea {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+  
+  .formInput:focus, .formTextarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+  
+  .formLabel, .stateLabel {
+    color: #cbd5e1;
+  }
+  
+  .infoField span.label {
+    color: #94a3b8;
+  }
+  
+  .infoField span:not(.label) {
+    color: #e2e8f0;
+  }
+  
+  /* Estilos para tabela de histórico */
+  .loginHistory {
+    background-color: #0f172a;
+    border-color: #334155;
+  }
+  
+  /* Histórico de login */
+  .loginHistory h2 {
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+  }
+  
+  /* Botões em dark mode */
+  .editButton {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+  }
+  
+  .editButton:hover {
+    background-color: #2563eb;
+  }
+  
+  /* Botões em dark mode - corrigido com seletores específicos */
+  .editButton {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .editButton:hover {
+    background-color: #2563eb;
+  }
+
+  .editForm button[type="submit"] {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .editForm button[type="submit"]:hover {
+    background-color: #2563eb;
+  }
+
+  .formActions button[type="button"] {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #334155;
+  }
+
+  .formActions button[type="button"]:hover {
+    background-color: #334155;
+  }
+
+  /* Select e dropdown em dark mode */
+  .editForm select, 
+  .stateSelect {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+  /* Input desabilitado em dark mode */
+  .inputDisabled input {
+    background-color: #0f172a !important;
+    border-color: #1e293b !important;
+    color: #64748b !important;
+  }
+  
+  /* Mensagens ao usuário */
+  .success {
+    background-color: rgba(22, 163, 74, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+  }
+  
+  .error {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+  }
+
+  /* Modal em dark mode */
+  .modalOverlay {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .modalContent {
+    background-color: #1e293b;
+    border-color: #334155;
+  }
+  
+  .modalTitle {
+    color: #f1f5f9;
+    border-bottom-color: #334155;
+  }
+  
+  .modalBody {
+    color: #cbd5e1;
+  }
+  
+  .modalActions {
+    border-top-color: #334155;
+  }
+  
+  /* Validações de password em dark mode */
+  .passwordValidation {
+    background-color: #1e293b;
+    border-color: #334155;
+  }
+  
+  .validationItem {
+    color: #94a3b8;
+  }
+  
+  .validationItem.valid {
+    color: #4ade80;
+  }
+  
+  .validationItem.invalid {
+    color: #f87171;
+  }
+  
+  /* Explicação de tooltip */
+  .tooltipContent {
+    background-color: #334155;
+    color: #f1f5f9;
+    border-color: #475569;
+  }
+  
+  /* Paginação */
+  .pagination button {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #334155;
+  }
+  
+  .pagination button:hover:not(:disabled) {
+    background-color: #334155;
+  }
+  
+  .pagination button:disabled {
+    background-color: #1e293b;
+    color: #64748b;
+    border-color: #334155;
+  }
+
+  /* Estilos para o spinner de carregamento - já existentes mas mantidos para referência */
+  .loadingSpinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #60a5fa;
+  }
+  
+  .loadingContainer {
+    color: #e2e8f0;
+  }
 }
 
 /* Responsivity */
@@ -699,9 +897,19 @@
   .stateLabel {
     margin-bottom: 0.3rem;
   }
+
+  .loadingContainer {
+    padding: 2rem 1rem;
+    min-height: 150px;
+  }
+
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
 }
 
-/* Para telas muito pequenas */
 @media (max-width: 374px) {
   .container {
     padding: 0.75rem;
@@ -720,4 +928,42 @@
     width: 1.75rem;
     height: 1.75rem;
   }
+
+  .loadingContainer {
+    padding: 1.5rem 0.75rem;
+    min-height: 120px;
+  }
+
+  .loadingSpinner {
+    width: 35px;
+    height: 35px;
+    border-width: 3px;
+  }
+}
+
+/* Adicione estes estilos ao seu arquivo CSS existente */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  min-height: 200px;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3b82f6;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

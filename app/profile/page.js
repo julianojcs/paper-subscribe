@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { FaEnvelope, FaGoogle, FaKey } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -13,7 +13,16 @@ import StateSelect from '../components/ui/StateSelect';
 import { brazilianStates } from '../utils/brazilianStates';
 import styles from './profile.module.css';
 
-export default function ProfilePage() {
+// Componente de loading consistente para reutilização
+const LoadingSpinner = ({ message = "Carregando..." }) => (
+  <div className={styles.loadingContainer}>
+    <div className={styles.loadingSpinner}></div>
+    <p>{message}</p>
+  </div>
+);
+
+// Componente principal que usa session
+function ProfileContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -21,7 +30,8 @@ export default function ProfilePage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
+  const [contentReady, setContentReady] = useState(false); // Novo estado para controlar quando o conteúdo está pronto
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
@@ -43,23 +53,8 @@ export default function ProfilePage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated') {
-      fetchLinkedAccounts();
-      fetchLoginHistory();
-
-      const token = session?.token;
-      if (token?.newSocialLink && token?.provider) {
-        setMessage(`Conta ${token.provider.charAt(0).toUpperCase() + token.provider.slice(1)} vinculada com sucesso à sua conta existente.`);
-      }
-    }
-  }, [status, router, session]);
-
   const fetchUserData = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/user/profile');
       const userData = await response.json();
 
@@ -75,22 +70,46 @@ export default function ProfilePage() {
             ? brazilianStates.find(s => s.value === userData.stateId) || null
             : null
         });
+        return true;
       } else {
         setError('Erro ao carregar dados do perfil');
+        return false;
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setError('Erro de conexão ao carregar seus dados');
-    } finally {
-      setLoading(false);
+      return false;
     }
   }, []);
 
   useEffect(() => {
-    if (status === 'authenticated' && session) {
-      fetchUserData();
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    } 
+    
+    if (status === 'authenticated') {
+      // Carregar dados em paralelo
+      Promise.all([
+        fetchUserData(),
+        fetchLinkedAccounts(),
+        fetchLoginHistory()
+      ]).then(() => {
+        // Quando todas as promises forem resolvidas, marcar como pronto
+        setContentReady(true);
+        setLoading(false);
+      }).catch(error => {
+        console.error("Erro ao carregar dados do perfil:", error);
+        setContentReady(true);
+        setLoading(false);
+      });
+
+      const token = session?.token;
+      if (token?.newSocialLink && token?.provider) {
+        setMessage(`Conta ${token.provider.charAt(0).toUpperCase() + token.provider.slice(1)} vinculada com sucesso à sua conta existente.`);
+      }
     }
-  }, [status, session, fetchUserData]);
+  }, [status, router, session, fetchUserData]);
 
   const fetchLinkedAccounts = async () => {
     try {
@@ -101,8 +120,10 @@ export default function ProfilePage() {
       if (res.ok) {
         setAccounts(data.accounts);
       }
+      return true;
     } catch (error) {
       console.error('Erro ao carregar contas vinculadas:', error);
+      return false;
     } finally {
       setAccountsLoading(false);
     }
@@ -117,8 +138,10 @@ export default function ProfilePage() {
       if (res.ok) {
         setLoginHistory(data.loginLogs);
       }
+      return true;
     } catch (error) {
       console.error('Erro ao carregar histórico de login:', error);
+      return false;
     } finally {
       setHistoryLoading(false);
     }
@@ -142,8 +165,6 @@ export default function ProfilePage() {
     setMessage('');
 
     try {
-      const email = session?.user?.email;
-
       const res = await fetch('/api/user/add-password', {
         method: 'POST',
         headers: {
@@ -286,8 +307,207 @@ export default function ProfilePage() {
     }
   };
 
-  if (status === 'loading') {
-    return <div className={styles.loading}>Carregando perfil...</div>;
+  const getLoginHistorySection = () => {
+    if (session?.user?.organization === 'SRMG') {
+      return null;
+    }
+    return (
+      <div className={styles.loginHistory}>
+        <h2>Histórico de Login Recente</h2>
+
+        {historyLoading ? (
+          <p>Carregando histórico...</p>
+        ) : loginHistory.length > 0 ? (
+          <LoginHistoryTable 
+            loginHistory={loginHistory} 
+            compactMode={true} 
+          />
+        ) : (
+          <p>Nenhum registro de login encontrado</p>
+        )}
+
+        <div className={styles.historyFooter}>
+          <Button
+            onClick={() => router.push('/profile/login-history')}
+            type="button"
+            variant="secondary"
+            className={styles.viewMoreButton}
+          >
+            Ver histórico completo
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const getLinkedAccountsSection = () => {
+    if (session?.user?.organization === 'SRMG') {
+      return null;
+    }
+    return (
+      <>
+        <div className={styles.linkedAccounts}>
+          <h2>Métodos de Login</h2>
+
+          {accountsLoading ? (
+            <p>Carregando métodos de login...</p>
+          ) : accounts.length > 0 ? (
+            <ul className={styles.accountsList}>
+              {accounts.map((account, index) => (
+                <li
+                  key={index}
+                  className={`${styles.accountItem} ${accounts.length === 1 ? styles.singleAccount : ''}`}
+                >
+                  <div className={styles.accountInfo}>
+                    <div className={styles.accountIcon}>
+                      {account.type === 'credentials' ? (
+                        <FaKey className={styles.credentialsIcon} />
+                      ) : account.provider === 'google' ? (
+                        <FaGoogle className={styles.googleIcon} />
+                      ) : (
+                        <FaEnvelope className={styles.defaultIcon} />
+                      )}
+                    </div>
+                    <div className={styles.accountName}>
+                      {account.type === 'credentials' ? 'Email e Senha' : 
+                      account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
+                    </div>
+                  </div>
+
+                  {accounts.length > 1 && (
+                    <button
+                      onClick={() => showRemoveConfirmation(account)}
+                      className={styles.unlinkButton}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Nenhum método de login configurado</p>
+          )}
+        </div>
+        <Modal
+          isOpen={modalIsOpen}
+          onClose={() => setModalIsOpen(false)}
+          title="Confirmar remoção"
+          actions={
+            <>
+              <Button
+                onClick={() => setModalIsOpen(false)}
+                variant="outline"
+                disabled={unlinkLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUnlinkAccount}
+                variant="danger"
+                disabled={unlinkLoading}
+              >
+                {unlinkLoading ? 'Removendo...' : 'Remover'}
+              </Button>
+            </>
+          }
+        >
+          <p className={styles.confirmationText}>
+            Tem certeza que deseja remover este método de login:
+            <span className={styles.accountHighlight}>
+              {accountToRemove?.type === 'credentials'
+                ? 'Email e Senha'
+                : accountToRemove?.provider?.charAt(0).toUpperCase() + accountToRemove?.provider?.slice(1)}
+            </span>?
+          </p>
+          <p className={styles.warningText}>
+            Se você remover este método, não poderá mais usá-lo para acessar sua conta.
+          </p>
+        </Modal>
+      </>
+    );
+  };
+
+  const getAddPasswordSection = () => {
+    if (session?.user?.organization === 'SRMG') {
+      return null;
+    }
+    return (
+      <>
+        {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
+          <div className={styles.addPasswordSection}>
+            <h2>Adicionar Login com Email e Senha</h2>
+            <p className={styles.sectionDescription}>
+              Atualmente você só pode acessar sua conta usando provedores sociais. 
+              Adicione uma senha para também poder fazer login diretamente com seu email.
+            </p>
+
+            <form onSubmit={handleAddPassword}>
+              <div className={styles.emailDisplay}>
+                <label>Email</label>
+                <div className={styles.emailField}>
+                  {session?.user?.email}
+                </div>
+              </div>
+
+              <PasswordInput
+                label="Nova Senha"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Crie uma senha forte"
+                disabled={loading}
+                showValidation={true}
+                minLength={8}
+                requireLowercase={true}
+                requireUppercase={true}
+                requireNumber={true}
+                requireSpecial={true}
+                onValidationChange={(state) => setPasswordValid(state.isValid)}
+              />
+
+              <PasswordInput
+                label="Confirmar Senha"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua senha"
+                disabled={loading}
+                showValidation={true}
+                minLength={8}
+                requireLowercase={true}
+                requireUppercase={true}
+                requireNumber={true}
+                requireSpecial={true}
+                confirmPassword={password}
+                onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
+              />
+
+              <Button
+                type="submit"
+                disabled={loading || !passwordValid || !confirmPasswordValid}
+              >
+                {loading ? 'Salvando...' : 'Adicionar Senha'}
+              </Button>
+            </form>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  // Se estiver carregando (inicial ou durante fetch), mostrar loading spinner
+  if (loading || status === 'loading' || !contentReady) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Perfil do Usuário</h1>
+          </header>
+          <LoadingSpinner message="Carregando dados do perfil..." />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -463,171 +683,31 @@ export default function ProfilePage() {
         {message && <div className={styles.success}>{message}</div>}
         {error && <div className={styles.error}>{error}</div>}
 
-        <div className={styles.linkedAccounts}>
-          <h2>Métodos de Login</h2>
+        {getLinkedAccountsSection()}
 
-          {accountsLoading ? (
-            <p>Carregando métodos de login...</p>
-          ) : accounts.length > 0 ? (
-            <ul className={styles.accountsList}>
-              {accounts.map((account, index) => (
-                <li
-                  key={index}
-                  className={`${styles.accountItem} ${accounts.length === 1 ? styles.singleAccount : ''}`}
-                >
-                  <div className={styles.accountInfo}>
-                    <div className={styles.accountIcon}>
-                      {account.type === 'credentials' ? (
-                        <FaKey className={styles.credentialsIcon} />
-                      ) : account.provider === 'google' ? (
-                        <FaGoogle className={styles.googleIcon} />
-                      ) : (
-                        <FaEnvelope className={styles.defaultIcon} />
-                      )}
-                    </div>
-                    <div className={styles.accountName}>
-                      {account.type === 'credentials' ? 'Email e Senha' : 
-                      account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
-                    </div>
-                  </div>
+        {getAddPasswordSection()}
 
-                  {accounts.length > 1 && (
-                    <button
-                      onClick={() => showRemoveConfirmation(account)}
-                      className={styles.unlinkButton}
-                    >
-                      Remover
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Nenhum método de login configurado</p>
-          )}
-        </div>
+        {getLoginHistorySection()}
 
-        {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
-          <div className={styles.addPasswordSection}>
-            <h2>Adicionar Login com Email e Senha</h2>
-            <p className={styles.sectionDescription}>
-              Atualmente você só pode acessar sua conta usando provedores sociais. 
-              Adicione uma senha para também poder fazer login diretamente com seu email.
-            </p>
-
-            <form onSubmit={handleAddPassword}>
-              <div className={styles.emailDisplay}>
-                <label>Email</label>
-                <div className={styles.emailField}>
-                  {session?.user?.email}
-                </div>
-              </div>
-
-              <PasswordInput
-                label="Nova Senha"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Crie uma senha forte"
-                disabled={loading}
-                showValidation={true}
-                minLength={8}
-                requireLowercase={true}
-                requireUppercase={true}
-                requireNumber={true}
-                requireSpecial={true}
-                onValidationChange={(state) => setPasswordValid(state.isValid)}
-              />
-
-              <PasswordInput
-                label="Confirmar Senha"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme sua senha"
-                disabled={loading}
-                showValidation={true}
-                minLength={8}
-                requireLowercase={true}
-                requireUppercase={true}
-                requireNumber={true}
-                requireSpecial={true}
-                confirmPassword={password}
-                onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
-              />
-
-              <Button
-                type="submit"
-                disabled={loading || !passwordValid || !confirmPasswordValid}
-              >
-                {loading ? 'Salvando...' : 'Adicionar Senha'}
-              </Button>
-            </form>
-          </div>
-        )}
-
-        <div className={styles.loginHistory}>
-          <h2>Histórico de Login Recente</h2>
-
-          {historyLoading ? (
-            <p>Carregando histórico...</p>
-          ) : loginHistory.length > 0 ? (
-            <LoginHistoryTable 
-              loginHistory={loginHistory} 
-              compactMode={true} 
-            />
-          ) : (
-            <p>Nenhum registro de login encontrado</p>
-          )}
-
-          <div className={styles.historyFooter}>
-            <Button
-              onClick={() => router.push('/profile/login-history')}
-              type="button"
-              variant="secondary"
-              className={styles.viewMoreButton}
-            >
-              Ver histórico completo
-            </Button>
-          </div>
-        </div>
-
-        <Modal
-          isOpen={modalIsOpen}
-          onClose={() => setModalIsOpen(false)}
-          title="Confirmar remoção"
-          actions={
-            <>
-              <Button
-                onClick={() => setModalIsOpen(false)}
-                variant="outline"
-                disabled={unlinkLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleUnlinkAccount}
-                variant="danger"
-                disabled={unlinkLoading}
-              >
-                {unlinkLoading ? 'Removendo...' : 'Remover'}
-              </Button>
-            </>
-          }
-        >
-          <p className={styles.confirmationText}>
-            Tem certeza que deseja remover este método de login:
-            <span className={styles.accountHighlight}>
-              {accountToRemove?.type === 'credentials'
-                ? 'Email e Senha'
-                : accountToRemove?.provider?.charAt(0).toUpperCase() + accountToRemove?.provider?.slice(1)}
-            </span>?
-          </p>
-          <p className={styles.warningText}>
-            Se você remover este método, não poderá mais usá-lo para acessar sua conta.
-          </p>
-        </Modal>
       </div>
     </div>
+  );
+}
+
+// Componente principal com Suspense
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Perfil do Usuário</h1>
+          </header>
+          <LoadingSpinner message="Carregando perfil..." />
+        </div>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }

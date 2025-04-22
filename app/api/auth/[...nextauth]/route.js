@@ -205,9 +205,11 @@ export const authOptions = {
         session.user.city = token.city;
         session.user.stateId = token.stateId;
         session.user.organizationMemberships = token.organizationMemberships;
-
-        // A verificação de admin agora pode ser feita facilmente no Header.js
-      }
+        session.user.isAdmin = token.organizationMemberships.some(membership => membership.role === 'ADMIN'); // Verifica se o usuário é admin
+        session.user.role = token.organizationMemberships[0]?.role;
+        session.user.organization = token.organizationMemberships[0]?.organization?.shortName;
+     }
+      // console.log("Session user: ", session.user);
       return session;
     },
 
@@ -231,7 +233,12 @@ export const authOptions = {
               organizationMemberships: {
                 select: {
                   organizationId: true,
-                  role: true
+                  role: true,
+                  organization: {
+                    select: {
+                      shortName: true,
+                    }
+                  }
                 }
               }
             }
