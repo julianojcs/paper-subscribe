@@ -39,29 +39,31 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified  DateTime?
-  password      String?
-  image         String?
-  cpf           String?   @unique // CPF do usuário
-  phone         String?   // Telefone do usuário
-  institution   String?   // Instituição do usuário
-  city          String?   // Cidade do usuário
-  stateId       String?   @db.Char(2) // Relação com o estado usando UF
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                      String    @id @default(cuid())
+  name                    String
+  email                   String    @unique
+  emailVerified            DateTime?
+  password                String?
+  image                   String?
+  cpf                     String?   @unique // CPF do usuário
+  phone                   String?   // Telefone do usuário
+  institution             String?   // Instituição do usuário
+  city                    String?   // Cidade do usuário
+  stateId                 String?   @db.Char(2) // Relação com o estado usando UF
+  isActive                Boolean   @default(true)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
-  accounts      Account[]
-  loginLogs     LoginLog[]
+  accounts                Account[]
+  evaluatorAssignments    EvaluatorAssignment[]
+  loginLogs               LoginLog[]
   organizationMemberships OrganizationMember[]
-  papers        Paper[]
-  paperAuthors  PaperAuthor[]
-  sessions      Session[]
-  state         State?    @relation(fields: [stateId], references: [id])
-  passwordResets PasswordReset[]
+  papers                  Paper[]
+  paperAuthors            PaperAuthor[]
+  reviewedPapers          PaperReview[]
+  sessions                Session[]
+  state                   State?    @relation(fields: [stateId], references: [id])
+  passwordResets          PasswordReset[]
 
   @@index([stateId]) // Adicionar índice para melhorar performance de consultas
 }
@@ -188,6 +190,8 @@ model Event {
   id              String                @id @default(cuid())
   name            String
   shortName       String
+  logoUrl         String?
+  website         String?
   description     String?
   startDate       DateTime?
   endDate         DateTime?
@@ -205,14 +209,27 @@ model Event {
   updatedAt       DateTime              @updatedAt
   isActive        Boolean               @default(true)
 
+  evaluators      EvaluatorAssignment[] // Avaliadores do evento
   organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   areas           EventArea[]
   paperTypes      EventPaperType[]
   eventTokens     OrganizationToken[]
   papers          Paper[]
-  eventFields     EventField[] // Opposite relation for EventField
+  eventFields     EventField[]          // Campos personalizados do evento
 
   @@unique([organizationId, shortName])
+}
+
+model EvaluatorAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  eventId    String
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
 }
 
 model PaperFieldValue {
@@ -271,8 +288,9 @@ model Paper {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   authors         PaperAuthor[]
   status          PaperStatus       @default(PENDING)
-  history         PaperHistory[]
   fieldValues      PaperFieldValue[] // Opposite relation for PaperFieldValue
+  history         PaperHistory[]
+  reviews         PaperReview[]
 
   @@index([userId])
   @@index([eventId])
@@ -299,12 +317,27 @@ model PaperAuthor {
   @@unique([paperId, userId])
 }
 
+model PaperReview {
+  id              String               @id @default(cuid())
+  paperId         String
+  reviewerId      String
+  score           Int?
+  comments        String?
+  privateComments String?
+  recommendation  ReviewRecommendation
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  paper           Paper                @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  reviewer        User                 @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([paperId, reviewerId])
+}
+
 model PaperHistory {
   id         String   @id @default(cuid())
   createdAt  DateTime @default(now())
   status     String
   comment    String   @db.Text
-  reviewerId String?  // ID do revisor, se aplicável
 
   paperId    String
   paper      Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)

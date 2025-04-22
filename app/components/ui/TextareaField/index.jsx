@@ -160,7 +160,7 @@ export default function TextareaField({
         {(maxCount || maxWords || showWordCount) && (
           <div className={`${styles.counterContainer} ${isExceedingLimit ? styles.countExceeding : ''}`}>
             <span className={styles.currentCount}>
-              {maxWords ? `${wordCount} palavra${wordCount === 1 ? '' : 's'}` : `${charCount} caractere${charCount === 1 ? '' : 's'}`}
+              {maxWords ? `${wordCount}` : `${charCount}`}
             </span>
             {(maxCount || maxWords) && (
               <span className={styles.maxCount} style={{ marginLeft: '4px' }}>

@@ -112,12 +112,16 @@ export async function GET(request) {
                   select: {
                     id: true,
                     label: true,
-                    description: true,
+                    helperText: true,
+                    defaultValue: true,
+                    placeholder: true,
                     isRequired: true,
                     fieldType: true,
                     fieldOptions: true,
                     maxLength: true,
                     minLength: true,
+                    maxWords: true,
+                    minWords: true,
                     sortOrder: true,
                   },
                   orderBy: {
