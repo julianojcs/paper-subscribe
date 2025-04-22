@@ -8,8 +8,7 @@
 }
 
 .container {
-  max-width: 800px;
-  width: 100%;
+  width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -745,4 +744,167 @@
 .keywordCountError {
   color: #e53935;
   font-weight: 500;
+}
+
+/* Estilos para o Loading Spinner */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  min-height: 200px;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3b82f6;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Esquema de cores dark para o Loading Spinner */
+@media (prefers-color-scheme: dark) {
+  .loadingSpinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #60a5fa;
+  }
+  
+  .loadingContainer {
+    color: #e2e8f0;
+  }
+
+  /* Complemento do esquema de cores dark para outros elementos */
+  .pageWrapper {
+    background-color: #0f172a;
+  }
+  
+  .container {
+    background-color: #1e293b;
+  }
+  
+  .sectionTitle {
+    color: #e2e8f0;
+  }
+  
+  .sectionDescription, .fieldHelper, .uploadText, .fileSize, .termsNotice, .fileRequirements {
+    color: #94a3b8;
+  }
+  
+  .formLabel {
+    color: #cbd5e1;
+  }
+  
+  .formInput, .formTextarea, .formSelect, .areaSelect {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+  
+  .formInput:focus, .formTextarea:focus, .formSelect:focus, .areaSelect:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+  
+  .fileDropArea {
+    border-color: #475569;
+    background-color: #1e293b;
+  }
+  
+  .fileDropArea:hover {
+    background-color: #334155;
+    border-color: #64748b;
+  }
+  
+  .fileSelected {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+  
+  .fileName {
+    color: #e2e8f0;
+  }
+  
+  .uploadIcon, .infoIcon {
+    color: #64748b;
+  }
+  
+  .errorMessage {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    border-left-color: #ef4444;
+  }
+
+  .keywordCount {
+    color: #94a3b8;
+  }
+
+  .keywordCountError {
+    color: #f87171;
+  }
+
+  .checkboxLabel, .radioLabel {
+    color: #cbd5e1;
+  }
+
+  .formCheckbox:checked, .formRadio:checked {
+    accent-color: #3b82f6;
+  }
+
+  .selectContainer .selectedAreaDescription {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #cbd5e1;
+  }
+
+  /* Estilização para o modal */
+  .profileModal {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+
+  .profileModalTitle {
+    color: #f1f5f9;
+  }
+
+  .profileModalText {
+    color: #cbd5e1;
+  }
+}
+
+/* Corrigir o problema com múltiplas definições de @media */
+@media (max-width: 767px) {
+  .loadingContainer {
+    padding: 2rem 1rem;
+    min-height: 150px;
+  }
+
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 374px) {
+  .loadingContainer {
+    padding: 1.5rem 0.75rem;
+    min-height: 120px;
+  }
+
+  .loadingSpinner {
+    width: 35px;
+    height: 35px;
+    border-width: 3px;
+  }
 }

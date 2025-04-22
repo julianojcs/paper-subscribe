@@ -15,11 +15,11 @@ import { FieldType, getInputTypeFromFieldType } from '../../utils/fieldTypes';
 import styles from './subscribe.module.css';
 import ProfileRedirectModal from './components/ProfileRedirectModal';
 
-// Componente carregador para usar no Suspense
-const LoadingFallback = () => (
+// Componente de loading consistente para reutilização - igualzinho ao da página principal
+const LoadingSpinner = ({ message = "Carregando..." }) => (
   <div className={styles.loadingContainer}>
-    <div className={styles.spinner}></div>
-    <p>Carregando...</p>
+    <div className={styles.loadingSpinner}></div>
+    <p>{message}</p>
   </div>
 );
 
@@ -105,7 +105,8 @@ function SubmitPaperForm() {
   const [maxAuthors, setMaxAuthors] = useState(10);
   const [eventId, setEventId] = useState(null);
   const [eventName, setEventName] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
+  const [contentReady, setContentReady] = useState(false); // Novo estado para controlar quando o conteúdo está pronto
   const [areas, setAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState('');
   const [paperTypes, setPaperTypes] = useState([]);
@@ -120,6 +121,10 @@ function SubmitPaperForm() {
   const { states: brazilianStates, isLoading: statesLoading } = useBrazilianStates();
 
   useEffect(() => {
+    // Sempre começar com loading ativo
+    setIsLoading(true);
+    setContentReady(false);
+    
     if (status === 'loading') return;
 
     if (status === 'unauthenticated') {
@@ -151,12 +156,10 @@ function SubmitPaperForm() {
                 authorOrder: 0
               };
               setAuthors([mainAuthor]);
-              setIsLoading(false);
             } else {
               // Em vez de redirecionar imediatamente, exiba o modal
               setProfileRedirectUrl('/profile?callbackUrl=' + encodeURIComponent(window.location.href));
               setShowProfileModal(true);
-              setIsLoading(false);
             }
 
             if (formData.events && formData.events.length > 0) {
@@ -274,6 +277,9 @@ function SubmitPaperForm() {
             };
             setAuthors([mainAuthor]);
           }
+          
+          // Dados carregados com sucesso
+          setContentReady(true);
           setIsLoading(false);
         } catch (error) {
           console.error('Erro ao buscar dados do usuário:', error);
@@ -287,6 +293,9 @@ function SubmitPaperForm() {
             authorOrder: 0
           };
           setAuthors([mainAuthor]);
+          
+          // Mesmo com erro, considerar dados carregados
+          setContentReady(true);
           setIsLoading(false);
         }
       };
@@ -930,11 +939,16 @@ function SubmitPaperForm() {
     );
   };
 
-  if (isLoading) {
+  // Mostrar loading se estiver carregando ou se o conteúdo não estiver pronto
+  if (isLoading || status === 'loading' || !contentReady) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <p>Carregando dados do autor...</p>
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Enviar Trabalho Científico</h1>
+          </header>
+          <LoadingSpinner message="Carregando dados do formulário..." />
+        </div>
       </div>
     );
   }
@@ -967,23 +981,7 @@ function SubmitPaperForm() {
                   Preencha todos os campos abaixo com as informações do seu trabalho científico.
                 </p>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="title" className={styles.formLabel}>
-                    Título <span className={styles.requiredMark}>*</span>
-                  </label>
-                  <input
-                    id="title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className={`${styles.formInput} ${fieldErrors.title ? styles.inputError : ''}`}
-                    placeholder="Título completo do trabalho"
-                  />
-                  {fieldErrors.title && (
-                    <span className={styles.fieldError}>{fieldErrors.title}</span>
-                  )}
-                </div>
-
+                {/* Lista de autores */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>
                     Autores <span className={styles.requiredMark}>*</span>
@@ -1002,6 +1000,25 @@ function SubmitPaperForm() {
                   )}
                 </div>
 
+                {/* Titulo */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="title" className={styles.formLabel}>
+                    Título <span className={styles.requiredMark}>*</span>
+                  </label>
+                  <input
+                    id="title"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={`${styles.formInput} ${fieldErrors.title ? styles.inputError : ''}`}
+                    placeholder="Título completo do trabalho"
+                  />
+                  {fieldErrors.title && (
+                    <span className={styles.fieldError}>{fieldErrors.title}</span>
+                  )}
+                </div>
+
+                {/* Área temática */}
                 {areas.length > 0 && (
                   <Select
                     id="area"
@@ -1017,6 +1034,7 @@ function SubmitPaperForm() {
                   />
                 )}
 
+                {/* Tipo de Trabalho */}
                 {paperTypes.length > 0 && (
                   <Select
                     id="paperType"
@@ -1041,6 +1059,7 @@ function SubmitPaperForm() {
                 {/* Renderiza o campo de palavras-chave */}
                 {renderKeywordsField()}
 
+                {/* Termos de uso e privacidade */}
                 <div className={styles.termsGroup}> {/* Termos e privacidade */}
                   <p className={styles.termsNotice}>
                     Ao enviar este trabalho, você concorda com nossos
@@ -1081,7 +1100,16 @@ function SubmitPaperForm() {
 // Componente página que envolve o form com Suspense
 export default function SubmitPaperPage() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Enviar Trabalho Científico</h1>
+          </header>
+          <LoadingSpinner message="Carregando..." />
+        </div>
+      </div>
+    }>
       <SubmitPaperForm />
     </Suspense>
   );

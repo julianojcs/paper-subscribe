@@ -8,14 +8,23 @@ import Button from '../components/ui/Button';
 import { FaFileAlt, FaCalendarAlt, FaUsers, FaTag, FaBookmark, FaBuilding, FaDownload, FaHistory, FaFlask, FaMicroscope, FaStethoscope } from 'react-icons/fa';
 import Tooltip from '../components/ui/Tooltip';
 
+// Componente de loading consistente para reutilização
+const LoadingSpinner = ({ message = "Carregando..." }) => (
+  <div className={styles.loadingContainer}>
+    <div className={styles.loadingSpinner}></div>
+    <p>{message}</p>
+  </div>
+);
+
 // Componente que usa searchParams
 function PaperPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [papers, setPapers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
   const [error, setError] = useState('');
+  const [contentReady, setContentReady] = useState(false); // Novo estado para controlar quando o conteúdo está pronto
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -29,10 +38,23 @@ function PaperPageContent() {
 
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
+    // Se o status está mudando ou é desconhecido, mostrar loading
+    if (status === 'loading') {
+      setLoading(true);
+      return;
+    }
+
+    // Redirecionar se não estiver autenticado
+    if (status === 'unauthenticated') {
+      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.href));
+      return;
+    }
+
+    // Se autenticado, buscar dados
     if (status === 'authenticated') {
       fetchPapers(page);
     }
-  }, [status, page]);
+  }, [status, page, router]);
 
   const fetchPapers = async (page = 1) => {
     setLoading(true);
@@ -51,9 +73,13 @@ function PaperPageContent() {
         total: 0,
         pages: 0
       });
+      
+      // Marcar que o conteúdo está pronto para ser exibido
+      setContentReady(true);
     } catch (error) {
       console.error('Erro ao carregar trabalhos:', error);
       setError(error.message || 'Ocorreu um erro ao carregar seus trabalhos');
+      setContentReady(true); // Mesmo com erro, o conteúdo está "pronto" (mostraremos mensagem de erro)
     } finally {
       setLoading(false);
     }
@@ -94,18 +120,18 @@ function PaperPageContent() {
   // Extrair nomes dos autores para exibição
   const getAuthorsDisplay = (authors) => {
     if (!authors || authors.length === 0) return 'Sem autores';
-    
+
     // Ordenar os autores por authorOrder
     const sortedAuthors = [...authors].sort((a, b) => a.authorOrder - b.authorOrder);
-    
+
     // Pegar os nomes dos autores
     const authorNames = sortedAuthors.map(author => author.name);
-    
+
     // Se houver mais de 3 autores, mostre os 2 primeiros e "et al."
     if (authorNames.length > 3) {
       return `${authorNames[0]}, ${authorNames[1]} et al.`;
     }
-    
+
     return authorNames.join(', ');
   };
 
@@ -137,6 +163,50 @@ function PaperPageContent() {
     return field ? field.value : '';
   };
 
+  // Se estiver carregando (inicial ou durante fetch), mostrar loading spinner
+  if (loading || status === 'loading' || !contentReady) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Meus Trabalhos Científicos</h1>
+          </header>
+          <LoadingSpinner message="Carregando seus trabalhos..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Se não autenticado (e não está carregando), mostrar conteúdo não autenticado
+  if (status === 'unauthenticated') {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Meus Trabalhos Científicos</h1>
+          </header>
+          <div className={styles.unauthenticatedContent}>
+            <h2 className={styles.sectionTitle}>Submeta Seu Trabalho Científico</h2>
+            <p className={styles.sectionDescription}>
+              Junte-se à nossa plataforma para submeter seus trabalhos para revisão e publicação.
+              Nossa plataforma oferece um processo de submissão simplificado e revisão especializada.
+            </p>
+            <div className={styles.authLinks}>
+              <Button
+                onClick={() => router.push('/login?callbackUrl=' + encodeURIComponent(window.location.href))}
+                variant="primary"
+                className={styles.authButton}
+              >
+                Entrar / Cadastrar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se chegamos aqui, o usuário está autenticado e os dados foram carregados
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.container}>
@@ -158,219 +228,193 @@ function PaperPageContent() {
             </div>
           )}
 
-          {status === 'authenticated' ? (
-            <>
-              <div className={styles.paperControls}>
-                <div className={styles.welcomeSection}>
-                  <h2 className={styles.sectionTitle}>Gerenciamento de Trabalhos</h2>
-                  <p className={styles.sectionDescription}>
-                    Acompanhe o status de seus trabalhos submetidos e envie novos artigos.
-                  </p>
-                </div>
-                <div className={styles.newPaperButton}>
-                  <Button
-                    onClick={() => router.push('/paper/subscribe')}
-                    variant="primary"
-                    fullWidth={false}
-                  >
-                    Novo Trabalho
-                  </Button>
-                </div>
-              </div>
+          <div className={styles.paperControls}>
+            <div className={styles.welcomeSection}>
+              <h2 className={styles.sectionTitle}>Gerenciamento de Trabalhos</h2>
+              <p className={styles.sectionDescription}>
+                Acompanhe o status de seus trabalhos submetidos e envie novos artigos.
+              </p>
+            </div>
+            <div className={styles.newPaperButton}>
+              <Button
+                onClick={() => router.push('/paper/subscribe')}
+                variant="primary"
+                fullWidth={false}
+              >
+                Novo Trabalho
+              </Button>
+            </div>
+          </div>
 
-              <div className={styles.papersSection}>
-                <h3 className={styles.subsectionTitle}>Seus Trabalhos</h3>
+          <div className={styles.papersSection}>
+            <h3 className={styles.subsectionTitle}>Seus Trabalhos</h3>
 
-                {loading ? (
-                  <div className={styles.loadingContainer}>
-                    <div className={styles.loadingSpinner}></div>
-                    <p>Carregando seus trabalhos...</p>
-                  </div>
-                ) : papers.length > 0 ? (
-                  <>
-                    <div className={styles.papersList}>
-                      {papers.map((paper) => {
-                        // Obter o resumo do paper (abstract) dos campos dinâmicos ou do campo direto
-                        const abstract = paper.abstract || getFieldValue(paper, 'TEXTAREA');
+            {papers.length > 0 ? (
+              <>
+                <div className={styles.papersList}>
+                  {papers.map((paper) => {
+                    // Obter o resumo do paper (abstract) dos campos dinâmicos ou do campo direto
+                    const abstract = paper.abstract || getFieldValue(paper, 'TEXTAREA');
 
-                        return (
-                          <div key={paper.id} className={styles.paperCard}>
-                            <div className={styles.paperHeader}>
-                              <h4 className={styles.cardTitle}>{paper.title}</h4>
-                            </div>
+                    return (
+                      <div key={paper.id} className={styles.paperCard}>
+                        <div className={styles.paperHeader}>
+                          <h4 className={styles.cardTitle}>{paper.title}</h4>
+                        </div>
 
-                            <div className={styles.paperEventRow}>
-                              <div className={styles.paperEvent}>
-                                <FaBuilding className={styles.metaIcon} />
-                                <span className={styles.eventName}>
-                                  {paper.event ? paper.event.name : 'Evento não especificado'}
-                                </span>
-                              </div>
-                              {getStatusBadge(paper.status)}
-                            </div>
-
-                            <div className={styles.paperMeta}>
-                              <div className={styles.metaItem}>
-                                <FaCalendarAlt className={styles.metaIcon} />
-                                <span className={styles.metaText}>
-                                  {formatDate(paper.createdAt)}
-                                </span>
-                              </div>
-
-                              <div className={styles.metaItem}>
-                                <FaUsers className={styles.metaIcon} />
-                                <Tooltip
-                                  content={getAuthorsTooltip(paper.authors)}
-                                  position="top"
-                                  delay={300}
-                                  arrow={true}
-                                  multiline={true}
-                                >
-                                  <span className={styles.metaText}>
-                                    {getAuthorsDisplay(paper.authors)}
-                                  </span>
-                                </Tooltip>
-                              </div>
-
-                              {paper.area && (
-                                <div className={styles.metaItem}>
-                                  <FaStethoscope className={styles.metaIcon} /> {/* Ícone diferente para área */}
-                                  <Tooltip
-                                    content={paper.area.description || 'Área temática'}
-                                    position="top"
-                                    delay={300}
-                                    arrow={true}
-                                  >
-                                    <span className={styles.metaText}>
-                                      {paper.area.name}
-                                    </span>
-                                  </Tooltip>
-                                </div>
-                              )}
-
-                              {paper.paperType && (
-                                <div className={styles.metaItem}>
-                                  <FaTag className={styles.metaIcon} />
-                                  <Tooltip
-                                    content={paper.paperType.description || ''}
-                                    position="top"
-                                    delay={300}
-                                    arrow={true}
-                                  >
-                                    <span className={styles.metaText}>
-                                      {paper.paperType.name}
-                                    </span>
-                                  </Tooltip>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className={styles.keywordsContainer}>
-                              {paper.keywords.split(',').map((keyword, index) => (
-                                <span key={index} className={styles.keywordTag}>
-                                  {keyword.trim()}
-                                </span>
-                              ))}
-                            </div>
-
-                            {abstract && (
-                              <p className={styles.paperAbstract}>
-                                {abstract.length > 150
-                                  ? `${abstract.substring(0, 150)}...`
-                                  : abstract}
-                              </p>
-                            )}
-
-                            <div className={styles.cardActions}>
-                              <Button
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(`/paper/${paper.id}`);
-                                }}
-                                className={styles.actionButton}
-                              >
-                                Ver Detalhes
-                              </Button>
-
-                              {paper.fileUrl && (
-                                <a 
-                                  href={paper.fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={styles.downloadLink}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <FaDownload className={styles.downloadIcon} />
-                                  Baixar PDF
-                                </a>
-                              )}
-                            </div>
+                        <div className={styles.paperEventRow}>
+                          <div className={styles.paperEvent}>
+                            <FaBuilding className={styles.metaIcon} />
+                            <span className={styles.eventName}>
+                              {paper.event ? paper.event.name : 'Evento não especificado'}
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                    
-                    {/* Paginação */}
-                    {pagination.pages > 1 && (
-                      <div className={styles.pagination}>
-                        <Button
-                          variant="outline"
-                          onClick={() => router.push(`/paper?page=${Math.max(1, pagination.page - 1)}`)}
-                          disabled={pagination.page <= 1}
-                          className={styles.paginationButton}
-                        >
-                          Anterior
-                        </Button>
-                        
-                        <span className={styles.paginationInfo}>
-                          Página {pagination.page} de {pagination.pages}
-                        </span>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={() => router.push(`/paper?page=${Math.min(pagination.pages, pagination.page + 1)}`)}
-                          disabled={pagination.page >= pagination.pages}
-                          className={styles.paginationButton}
-                        >
-                          Próxima
-                        </Button>
+                          {getStatusBadge(paper.status)}
+                        </div>
+
+                        <div className={styles.paperMeta}>
+                          <div className={styles.metaItem}>
+                            <FaCalendarAlt className={styles.metaIcon} />
+                            <span className={styles.metaText}>
+                              {formatDate(paper.createdAt)}
+                            </span>
+                          </div>
+
+                          <div className={styles.metaItem}>
+                            <FaUsers className={styles.metaIcon} />
+                            <Tooltip
+                              content={getAuthorsTooltip(paper.authors)}
+                              position="top"
+                              delay={300}
+                              arrow={true}
+                              multiline={true}
+                            >
+                              <span className={styles.metaText}>
+                                {getAuthorsDisplay(paper.authors)}
+                              </span>
+                            </Tooltip>
+                          </div>
+
+                          {paper.area && (
+                            <div className={styles.metaItem}>
+                              <FaStethoscope className={styles.metaIcon} />
+                              <Tooltip
+                                content={paper.area.description || 'Área temática'}
+                                position="top"
+                                delay={300}
+                                arrow={true}
+                              >
+                                <span className={styles.metaText}>
+                                  {paper.area.name}
+                                </span>
+                              </Tooltip>
+                            </div>
+                          )}
+
+                          {paper.paperType && (
+                            <div className={styles.metaItem}>
+                              <FaTag className={styles.metaIcon} />
+                              <Tooltip
+                                content={paper.paperType.description || ''}
+                                position="top"
+                                delay={300}
+                                arrow={true}
+                              >
+                                <span className={styles.metaText}>
+                                  {paper.paperType.name}
+                                </span>
+                              </Tooltip>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.keywordsContainer}>
+                          {paper.keywords.split(',').map((keyword, index) => (
+                            <span key={index} className={styles.keywordTag}>
+                              {keyword.trim()}
+                            </span>
+                          ))}
+                        </div>
+
+                        {abstract && (
+                          <p className={styles.paperAbstract}>
+                            {abstract.length > 150
+                              ? `${abstract.substring(0, 150)}...`
+                              : abstract}
+                          </p>
+                        )}
+
+                        <div className={styles.cardActions}>
+                          <Button
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/paper/${paper.id}`);
+                            }}
+                            className={styles.actionButton}
+                          >
+                            Ver Detalhes
+                          </Button>
+
+                          {paper.fileUrl && (
+                            <a
+                              href={paper.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.downloadLink}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <FaDownload className={styles.downloadIcon} />
+                              Baixar PDF
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <FaFileAlt className={styles.emptyStateIcon} />
-                    <p>Você ainda não enviou nenhum trabalho.</p>
+                    );
+                  })}
+                </div>
+
+                {/* Paginação */}
+                {pagination.pages > 1 && (
+                  <div className={styles.pagination}>
                     <Button
-                      onClick={() => router.push('/paper/subscribe')}
-                      variant="secondary"
-                      className={styles.emptyStateButton}
+                      variant="outline"
+                      onClick={() => router.push(`/paper?page=${Math.max(1, pagination.page - 1)}`)}
+                      disabled={pagination.page <= 1}
+                      className={styles.paginationButton}
                     >
-                      Enviar Meu Primeiro Trabalho
+                      Anterior
+                    </Button>
+
+                    <span className={styles.paginationInfo}>
+                      Página {pagination.page} de {pagination.pages}
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push(`/paper?page=${Math.min(pagination.pages, pagination.page + 1)}`)}
+                      disabled={pagination.page >= pagination.pages}
+                      className={styles.paginationButton}
+                    >
+                      Próxima
                     </Button>
                   </div>
                 )}
-              </div>
-            </>
-          ) : (
-            <div className={styles.unauthenticatedContent}>
-              <h2 className={styles.sectionTitle}>Submeta Seu Trabalho Científico</h2>
-              <p className={styles.sectionDescription}>
-                Junte-se à nossa plataforma para submeter seus trabalhos para revisão e publicação.
-                Nossa plataforma oferece um processo de submissão simplificado e revisão especializada.
-              </p>
-              <div className={styles.authLinks}>
+              </>
+            ) : (
+              <div className={styles.emptyState}>
+                <FaFileAlt className={styles.emptyStateIcon} />
+                <p>Você ainda não enviou nenhum trabalho.</p>
                 <Button
-                  onClick={() => router.push('/login')}
-                  variant="primary"
-                  className={styles.authButton}
+                  onClick={() => router.push('/paper/subscribe')}
+                  variant="secondary"
+                  className={styles.emptyStateButton}
                 >
-                  Entrar / Cadastrar
+                  Enviar Meu Primeiro Trabalho
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -380,7 +424,16 @@ function PaperPageContent() {
 // Componente principal com Suspense
 export default function PaperPage() {
   return (
-    <Suspense fallback={<div className={styles.loading}>Carregando...</div>}>
+    <Suspense fallback={
+      <div className={styles.pageWrapper}>
+        <div className={styles.container}>
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Carregando...</p>
+          </div>
+        </div>
+      </div>
+    }>
       <PaperPageContent />
     </Suspense>
   );
