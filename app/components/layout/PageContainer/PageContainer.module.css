@@ -1,0 +1,33 @@
+.pageWrapper {
+  width: 100svw;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+  background-color: #f8fafc;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 800px;
+  width: calc(100% - 2rem);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Responsividade */
+@media (max-width: 767px) {
+  .pageWrapper {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+}
