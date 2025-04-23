@@ -8,6 +8,7 @@ const allowedImageDomains = [
   'upload.wikimedia.org',
   's3.amazonaws.com',
   'storage.googleapis.com',
+  'firebasestorage.googleapis.com', // Adicionando o domínio completo do Firebase Storage
   // Adicione mais domínios conforme necessário
 ];
 
@@ -21,6 +22,11 @@ const allowedRemotePatterns = [
   {
     protocol: 'https',
     hostname: '*.cloudinary.com',
+  },
+  {
+    protocol: 'https',
+    hostname: 'firebasestorage.googleapis.com', // Correção do padrão Firebase Storage
+    pathname: '/v0/**', // Permitindo todos os caminhos que começam com v0/
   },
   // Adicione mais padrões conforme necessário
 ];

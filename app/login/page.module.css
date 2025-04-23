@@ -1,81 +1,148 @@
 .container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  min-height: 80vh;
-  padding: 2rem;
-  background-color: #f9fafb;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: 2rem 1rem;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .card {
-  max-width: 450px;
   width: 100%;
-  background: white;
-  padding: 2rem;
+  max-width: 380px;
+  background-color: white;
   border-radius: 12px;
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden; /* Importante para que o header vá até as bordas */
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.card h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  text-align: center;
-  color: #0070f3;
+.card.ready {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.card h2 {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
+/* Estilo para o cabeçalho padrão sem token validado */
+.standardHeader {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  padding: 2rem;
   text-align: center;
-  font-weight: normal;
-  color: #666;
+  width: 100%;
+}
+
+.title {
+  color: white;
+  font-size: 1.75rem;
+  margin: 0;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para o HeaderContentTitle quando exibido em largura completa */
+.fullWidthHeader {
+  /* Estes estilos serão aplicados ao header do componente HeaderContentTitle */
+  width: 100%;
+  border-radius: 0; /* Remover bordas arredondadas no topo */
+  margin: 0; /* Remover margens */
+}
+
+/* Ajustar os elementos internos do HeaderContentTitle quando dentro do card */
+.fullWidthHeader :global(.headerContent) {
+  width: 100%;
+}
+
+.fullWidthHeader :global(.logoWrapper) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.fullWidthHeader :global(.eventLogo) {
+  max-width: 220px;
+  max-height: 110px;
+  object-fit: contain;
+}
+
+.fullWidthHeader :global(.subtitle) {
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+/* Conteúdo do card (tudo exceto o header) */
+.cardContent {
+  padding: 1.5rem;
 }
 
 .error {
-  color: #f56565;
-  background-color: #fed7d7;
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
   padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  text-align: center;
+  background-color: rgba(220, 38, 38, 0.1);
+  border-radius: 0.375rem;
+}
+
+.tabs {
+  margin-bottom: 1.5rem;
+}
+
+/* CORREÇÃO: Combinando o seletor global com uma classe local */
+.tabs :global(.loginForm) {
+  margin-top: 0;
 }
 
 .footer {
-  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #64748b;
   text-align: center;
-  font-size: 0.875rem;
-  color: #666;
+  margin-top: 1.5rem;
 }
 
 .footer a {
-  color: #0070f3;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.footer a:hover {
   text-decoration: underline;
 }
 
-
-/* @media (prefers-color-scheme: dark) {
-  .container {
-    background-color: #111;
-  }
-
+/* Responsividade */
+@media (max-width: 640px) {
   .card {
-    background: #1a1a1a;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    border-radius: 8px;
   }
+  
+  .fullWidthHeader :global(.eventLogo) {
+    max-width: 180px;
+    max-height: 90px;
+  }
+}
 
-  .card h2 {
-    color: #ccc;
-  }
+/* Adicione estes estilos */
 
-  .footer {
-    color: #ccc;
-  }
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  width: 100%;
+}
 
-  .footer a {
-    color: #3291ff;
+/* Animação de transição suave */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-
-  .error {
-    background-color: rgba(245, 101, 101, 0.2);
+  to {
+    opacity: 1;
   }
-} */
+}

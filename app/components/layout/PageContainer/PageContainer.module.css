@@ -20,6 +20,18 @@
   overflow: hidden;
 }
 
+/* Animações de fade para transição suave */
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.fadeIn {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease-in-out;
+}
+
 /* Responsividade */
 @media (max-width: 767px) {
   .pageWrapper {
@@ -27,6 +39,7 @@
   }
 
   .container {
+    border-radius: 8px;
     padding: 1rem;
     margin: 1rem auto;
   }

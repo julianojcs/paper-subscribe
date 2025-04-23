@@ -52,35 +52,35 @@
 }
 
 .tokenConfirmation {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background-color: rgba(25, 135, 84, 0.1);
-  border: 1px solid var(--paper-success);
-  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
 .tokenMessage {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  padding: 0.75rem;
 }
 
 .tokenIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  background-color: var(--paper-success);
+  background-color: #34D399;
   color: white;
-  font-weight: bold;
   border-radius: 50%;
-  font-size: 0.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.75rem;
+  font-weight: bold;
 }
 
 .tokenText {
-  font-size: 0.875rem;
-  color: var(--paper-success-700);
+  color: #065F46;
+  font-size: 0.9rem;
 }
 
 .loginInfo {
@@ -96,6 +96,31 @@
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
+}
+
+/* Novos estilos para exibição do logo do evento */
+.eventLogoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+.eventLogo {
+  max-width: 100%;
+  height: auto;
+  max-height: 120px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.eventName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #0F172A;
+  margin: 0.5rem 0 0;
 }
 
 /* @media (prefers-color-scheme: dark) {

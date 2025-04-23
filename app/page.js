@@ -3,43 +3,58 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import styles from './page.module.css';
 import Button from './components/ui/Button';
-import { FaPaperPlane, FaFileAlt, FaSignInAlt, FaSpinner } from 'react-icons/fa';
+import { FaPaperPlane, FaFileAlt, FaSignInAlt } from 'react-icons/fa';
+import LoadingSpinner from './components/ui/LoadingSpinner';
+import PageContainer from './components/layout/PageContainer';
+import HeaderContentTitle from './components/layout/HeaderContentTitle';
+import { useDataContext } from '../context/DataContext';
 
 const Home = () => {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [eventData, setEventData] = useState({
-    name: '',
-    description: '',
-    logoUrl: '',
-    website: ''
-  });
+  const { eventData: contextEventData, setEventData } = useDataContext();
+  
   const [loading, setLoading] = useState(true);
   const [dataReady, setDataReady] = useState(false);
+  const [eventData, setLocalEventData] = useState(null);
 
-  // Função para buscar dados do evento
+  // Função para buscar dados do evento apenas se não existirem no contexto
   const fetchEventDescription = useCallback(async () => {
+    // Se já temos dados no contexto, usamos eles
+    if (contextEventData) {
+      setLocalEventData(contextEventData);
+      return true;
+    }
+    
+    // Caso contrário, buscamos os dados da API
     try {
       const res = await fetch('/api/organization/events');
       const data = await res.json();
 
       if (res.ok && data.events && data.events.length > 0) {
-        setEventData({
+        const newEventData = {
           name: data.events[0].name || 'Evento Científico',
           description: data.events[0].description || '',
           logoUrl: data.events[0].logoUrl || '',
           website: data.events[0].website || ''
-        });
+        };
+        
+        // Atualizamos o estado local
+        setLocalEventData(newEventData);
+        
+        // Atualizamos o contexto global para uso em outras páginas
+        setEventData(newEventData);
+        
+        return true;
       }
-      return true;
+      return false;
     } catch (error) {
       console.error('Erro ao carregar dados do evento:', error);
       return false;
     }
-  }, []);
+  }, [contextEventData, setEventData]);
 
   // Função para registrar login
   const logUserLogin = useCallback(async () => {
@@ -65,20 +80,20 @@ const Home = () => {
   useEffect(() => {
     const initializeData = async () => {
       if (authStatus === 'loading') return;
-      
+
       setLoading(true);
-      
-      // Carregar dados do evento
+
+      // Verificar primeiro no contexto e depois na API se necessário
       await fetchEventDescription();
-      
+
       // Registrar login se autenticado
       if (authStatus === 'authenticated') {
         await logUserLogin();
       }
-      
+
       // Finalizar carregamento
       setLoading(false);
-      
+
       // Atrasar levemente a exibição do conteúdo para garantir que tudo esteja pronto
       setTimeout(() => {
         setDataReady(true);
@@ -88,42 +103,15 @@ const Home = () => {
     initializeData();
   }, [authStatus, router, fetchEventDescription, logUserLogin]);
 
-  // Componente de Loading
-  const LoadingScreen = () => (
-    <div className={styles.loadingContainer}>
-      <FaSpinner className={styles.loadingSpinner} />
-      <p>Carregando...</p>
-    </div>
-  );
-
   // Conteúdo principal
   const MainContent = () => (
     <>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          {eventData?.logoUrl ? (
-            <div className={styles.logoWrapper}>
-              <Image 
-                src={eventData.logoUrl} 
-                alt={eventData.name || "Logo do evento"} 
-                className={styles.eventLogo}
-                width={300}
-                height={150}
-                priority
-                quality={90}
-                onLoad={() => setDataReady(true)} // Garantir que a imagem esteja carregada
-              />
-              <div className={styles.subtitle}>
-                Sistema de Submissão de Trabalhos
-              </div>
-            </div>
-          ) : (
-            <h1 className={styles.titleFallback}>
-              Sistema de Submissão de Trabalhos Científicos
-            </h1>
-          )}
-        </div>
-      </header>
+      <HeaderContentTitle
+        eventData={eventData}
+        onImageLoad={() => setDataReady(true)}
+        subtitle="Sistema de Submissão de Trabalhos"
+        fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
+      />
 
       <div className={styles.content}>
         {authStatus === 'authenticated' ? (
@@ -132,7 +120,10 @@ const Home = () => {
               <h2 className={styles.sectionTitle}>
                 Bem-vindo, {session?.user?.name || 'Pesquisador'}
               </h2>
-              <p className={styles.sectionDescription}>{eventData?.description}</p>
+              {/* Usar descrição do evento, se disponível */}
+              <p className={styles.sectionDescription}>
+                {eventData?.description || 'Bem-vindo ao sistema de submissão de trabalhos. Utilize o menu abaixo para enviar seus trabalhos ou consultar submissões anteriores.'}
+              </p>
             </div>
 
             <div className={styles.actionsGrid}>
@@ -157,10 +148,12 @@ const Home = () => {
           </div>
         ) : (
           <div className={styles.unauthenticatedContent}>
-            <h2 className={styles.sectionTitle}>Submeta Seu Trabalho Científico</h2>
+            <h2 className={styles.sectionTitle}>
+              {eventData?.name ? `Participe do ${eventData.name}` : 'Submeta Seu Trabalho Científico'}
+            </h2>
             <p className={styles.sectionDescription}>
-              Junte-se à nossa plataforma para submeter seus trabalhos para revisão e publicação.
-              Nossa plataforma oferece um processo de submissão simplificado e revisão especializada.
+              {eventData?.description || 
+                'Junte-se à nossa plataforma para submeter seus trabalhos para revisão e publicação. Nossa plataforma oferece um processo de submissão simplificado e revisão especializada.'}
             </p>
             <div className={styles.authLinks}>
               <Button
@@ -173,7 +166,7 @@ const Home = () => {
           </div>
         )}
       </div>
-      
+
       {eventData?.website && (
         <footer className={styles.footer}>
           <a href={eventData.website} target="_blank" rel="noopener noreferrer">
@@ -185,11 +178,14 @@ const Home = () => {
   );
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={`${styles.container} ${dataReady ? styles.fadeIn : styles.hidden}`}>
-        {loading || !dataReady ? <LoadingScreen /> : <MainContent />}
-      </div>
-    </div>
+    <>
+      {loading || !dataReady
+        ? <LoadingSpinner />
+        : <PageContainer>
+            <MainContent />
+          </PageContainer>
+      }
+    </>
   );
 };
 

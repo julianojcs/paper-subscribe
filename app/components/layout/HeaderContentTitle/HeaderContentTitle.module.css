@@ -1,0 +1,78 @@
+/* Header e Logo */
+.header {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  text-align: center;
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem;
+}
+
+.logoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.eventLogo {
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease;
+}
+
+.eventLogo:hover {
+  transform: scale(1.02);
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  margin-top: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.titleFallback {
+  font-size: 2.2rem;
+  color: white;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Adicionando estilo de loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  width: 100%;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .eventLogo {
+    max-width: 220px;
+  }
+  
+  .titleFallback {
+    font-size: 1.8rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+}

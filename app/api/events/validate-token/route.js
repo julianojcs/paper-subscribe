@@ -23,7 +23,21 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            shortName: true
+            shortName: true,
+            logoUrl: true,
+            website: true,
+            description: true,
+            startDate: true,
+            endDate: true,
+            submissionStart: true,
+            submissionEnd: true,
+            reviewStart: true,
+            reviewEnd: true,
+            maxAuthors: true,
+            maxKeywords: true,
+            minKeywords: true,
+            maxFiles: true,
+            maxFileSize: true,
           }
         },
         organization: {
@@ -40,14 +54,40 @@ export async function POST(request) {
       return NextResponse.json({ valid: false, message: 'Token inválido ou expirado' }, { status: 400 });
     }
 
-    // Token válido
+    // Token válido - retornamos os dados completos do evento e da organização
     return NextResponse.json({
       valid: true,
       message: 'Token válido',
-      eventId: orgToken.eventId,
-      eventName: orgToken.event?.name || 'Evento',
-      organizationId: orgToken.organizationId,
-      organizationName: orgToken.organization?.name || 'Organização'
+      eventData: {
+        id: orgToken.event.id,
+        name: orgToken.event.name,
+        shortName: orgToken.event.shortName,
+        logoUrl: orgToken.event.logoUrl,
+        website: orgToken.event.website,
+        description: orgToken.event.description,
+        startDate: orgToken.event.startDate,
+        endDate: orgToken.event.endDate,
+        submissionPeriod: {
+          start: orgToken.event.submissionStart,
+          end: orgToken.event.submissionEnd
+        },
+        reviewPeriod: {
+          start: orgToken.event.reviewStart,
+          end: orgToken.event.reviewEnd
+        },
+        limits: {
+          maxAuthors: orgToken.event.maxAuthors || 10,
+          maxKeywords: orgToken.event.maxKeywords || 5,
+          minKeywords: orgToken.event.minKeywords || 3,
+          maxFiles: orgToken.event.maxFiles || 3,
+          maxFileSize: orgToken.event.maxFileSize || 5, // em MB
+        }
+      },
+      organizationData: {
+        id: orgToken.organization.id,
+        name: orgToken.organization.name,
+        shortName: orgToken.organization.shortName
+      }
     });
   } catch (error) {
     console.error('Erro ao validar token:', error);

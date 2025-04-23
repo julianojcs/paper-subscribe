@@ -1,16 +1,23 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { searchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useDataContext } from '../../../context/DataContext';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import PasswordInput from '../../components/ui/PasswordInput';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/Tabs';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import Image from 'next/image';
+import { useDataContext } from '../../../../context/DataContext';
+import Button from '../../../components/ui/Button';
+import Input from '../../../components/ui/Input';
+import PasswordInput from '../../../components/ui/PasswordInput';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
 import styles from './LoginForm.module.css';
 
-export default function LoginForm() {
+// Modificar a definição do componente para aceitar props da página principal
+export default function LoginForm({ 
+  eventToken: initialToken = '', 
+  tokenValidated: initialTokenValidated = false, 
+  defaultTab = 'login',
+  eventData = null // Adicione este parâmetro
+}) {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,60 +30,10 @@ export default function LoginForm() {
   const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
   const { ip, userAgent } = useDataContext();
-  const [activeTab, setActiveTab] = useState('login');
-  const [eventToken, setEventToken] = useState('');
-
-  useEffect(() => {
-    // Verificar token na URL
-    const token = searchParams?.get('t');
-    // Verificar token em sessionStorage
-    const storedToken = sessionStorage.getItem('event_registration_token');
-
-    if (token) {
-      // Salvar token, limpar URL e atualizar estado
-      setEventToken(token);
-      setActiveTab('register');
-
-      // Limpar token da URL
-      window.history.replaceState(null, '', window.location.pathname);
-      router.replace(window.location.pathname, undefined, { shallow: true });
-
-      // Armazenar como objeto JSON
-      sessionStorage.setItem('event_registration_token', JSON.stringify({
-        token,
-        expires: Date.now() + 1000 * 60 * 10 // 10 minutos
-      }));
-    }
-    else if (storedToken) {
-      try {
-        // Tentar fazer o parsing como JSON
-        const storedData = JSON.parse(storedToken);
-        if (storedData.token && storedData.expires > Date.now()) {
-          setEventToken(storedData.token);
-          setActiveTab('register');
-        } else {
-          sessionStorage.removeItem('event_registration_token');
-        }
-      } catch (error) {
-        // Se falhar, assumir que é um token simples (compatibilidade com formato antigo)
-        setEventToken(storedToken);
-        setActiveTab('register');
-
-        // Atualizar para o novo formato
-        sessionStorage.setItem('event_registration_token', JSON.stringify({
-          token: storedToken,
-          expires: Date.now() + 1000 * 60 * 10 // 10 minutos
-        }));
-      }
-    }
-
-    // Função de limpeza
-    return () => {
-      if (success) {
-        sessionStorage.removeItem('event_registration_token');
-      }
-    };
-  }, [success, router]);
+  // Usar valores iniciais das props
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [eventToken, setEventToken] = useState(initialToken);
+  const [tokenValidated, setTokenValidated] = useState(initialTokenValidated);
 
   const validateForm = () => {
     const newErrors = {};
@@ -137,26 +94,9 @@ export default function LoginForm() {
     setSuccess('');
 
     try {
-      // Verificar se tem token
-      if (!eventToken) {
-        setServerError('Token do evento é obrigatório para registro');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Verificar o token do evento
-      const tokenResponse = await fetch('/api/events/validate-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: eventToken }),
-      });
-
-      const tokenData = await tokenResponse.json();
-
-      if (!tokenResponse.ok || !tokenData.valid) {
-        setServerError(tokenData.message || 'Token do evento inválido');
+      // Verificar se tem token validado
+      if (!eventToken || !tokenValidated) {
+        setServerError('Token do evento é inválido ou expirou');
         setIsSubmitting(false);
         return;
       }
@@ -194,7 +134,7 @@ export default function LoginForm() {
       setPassword('');
       setConfirmPassword('');
       setEventToken('');
-      sessionStorage.removeItem('event_registration_token');
+      setTokenValidated(false);
 
       // Redirecionar para a aba de login
       setActiveTab('login');
@@ -205,6 +145,13 @@ export default function LoginForm() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Validar manualmente um token inserido pelo usuário
+  const handleTokenInput = (inputToken) => {
+    setEventToken(inputToken);
+    // Nota: A validação propriamente dita deveria ser feita na página pai
+    // Aqui só atualizamos o estado local
   };
 
   const handleSubmit = async (e) => {
@@ -263,15 +210,6 @@ export default function LoginForm() {
             >
               {isSubmitting ? 'Aguarde...' : 'Entrar'}
             </Button>
-
-            {/* <SocialLogin label="Entre com o Google!" /> */}
-
-            {/* <div className={styles.loginInfo}>
-              <p className={styles.infoText}>
-                <strong>Já tem uma conta com e-mail e senha?</strong> Se você fizer login com sua conta Google usando o mesmo email
-                de uma conta existente, os métodos de login serão automaticamente vinculados.
-              </p>
-            </div> */}
           </TabsContent>
 
           <TabsContent value="register">
@@ -329,21 +267,7 @@ export default function LoginForm() {
               onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
             />
             {/* Token do evento - exibição condicional */}
-            {eventToken ? (
-              <div className={styles.tokenConfirmation}>
-                <div className={styles.tokenMessage}>
-                  <span className={styles.tokenIcon}>✓</span>
-                  <span className={styles.tokenText}>
-                    Token do evento válido aplicado automaticamente
-                  </span>
-                </div>
-                <input
-                  type="hidden"
-                  name="token"
-                  value={eventToken}
-                />
-              </div>
-            ) : (
+            {!(eventToken && tokenValidated) && (
               <Input
                 label="Token do Evento"
                 id="eventToken"
@@ -351,7 +275,7 @@ export default function LoginForm() {
                 type="text"
                 placeholder="Digite o token fornecido pelo organizador"
                 value={eventToken}
-                onChange={(e) => setEventToken(e.target.value)}
+                onChange={(e) => handleTokenInput(e.target.value)}
                 error={errors.eventToken}
                 disabled={isSubmitting}
                 helpText="Obrigatório para registro. Solicite ao organizador do evento."
@@ -361,14 +285,12 @@ export default function LoginForm() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || (!registerPasswordValid || !confirmPasswordValid)}
+              disabled={isSubmitting || !tokenValidated || !registerPasswordValid || !confirmPasswordValid}
               className={styles.submitButton}
               fullWidth
             >
               {isSubmitting ? 'Aguarde...' : 'Registrar'}
             </Button>
-
-            {/* <SocialLogin label="Registre com o Google!" /> */}
           </TabsContent>
           {serverError && (<div className={styles.error}>{serverError}</div>)}
           {success && (<div className={styles.success}>{success}</div>)}

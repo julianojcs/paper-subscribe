@@ -2,11 +2,13 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 
-// Criar o contexto
+// Criar o contexto com valores iniciais expandidos
 const DataContext = createContext({
   ip: 'unknown',
   userAgent: 'unknown',
   isLoaded: false,
+  eventData: null,
+  setEventData: () => {},
 });
 
 // Hook personalizado para usar o contexto
@@ -27,8 +29,21 @@ export function DataProvider({ children }) {
     userAgent: 'unknown',
     isLoaded: false,
   });
+  
+  // Adicionar estado para dados do evento
+  const [eventData, setEventData] = useState(null);
 
   useEffect(() => {
+    // Verificar se já temos dados do evento no localStorage
+    try {
+      const storedEventData = localStorage.getItem('event_data');
+      if (storedEventData) {
+        setEventData(JSON.parse(storedEventData));
+      }
+    } catch (error) {
+      console.error('Erro ao recuperar dados do evento do localStorage:', error);
+    }
+    
     // Função para obter o IP
     const fetchIpInfo = async () => {
       try {
@@ -86,8 +101,26 @@ export function DataProvider({ children }) {
     }
   }, []);
 
+  // Função para atualizar dados do evento com persistência
+  const handleSetEventData = (data) => {
+    setEventData(data);
+    // Salvar no localStorage para persistência
+    if (data) {
+      localStorage.setItem('event_data', JSON.stringify(data));
+    } else {
+      localStorage.removeItem('event_data');
+    }
+  };
+
+  // Combinar todos os valores e funções no contexto
+  const contextValue = {
+    ...metadata,
+    eventData,
+    setEventData: handleSetEventData,
+  };
+
   return (
-    <DataContext.Provider value={metadata}>
+    <DataContext.Provider value={contextValue}>
       {children}
     </DataContext.Provider>
   );

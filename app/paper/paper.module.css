@@ -1,5 +1,7 @@
 /* Layout principal - consistente com a página inicial */
 .pageWrapper {
+  width: 100svw;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 64px);
@@ -8,7 +10,8 @@
 }
 
 .container {
-  width: 800px;
+  max-width: 800px;
+  width: calc(100% - 2rem);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -196,6 +199,10 @@
   color: #2c5282;
 }
 
+.paperMeta, .metaItem, .metaText {
+  width: 100%;
+}
+
 .paperMeta {
   padding: 0.75rem 1.25rem;
   display: flex;
@@ -223,7 +230,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 250px; /* Ajuste conforme o layout */
   display: inline-block;
   cursor: help;
 }
@@ -334,31 +340,6 @@
   align-items: center;
 }
 
-/* Estado de carregamento */
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  color: #64748b;
-}
-
-.loadingSpinner {
-  border: 4px solid rgba(203, 213, 225, 0.3);
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 /* Estado vazio */
 .emptyState {
   text-align: center;
@@ -405,7 +386,6 @@
   }
   
   .container {
-    width: 100%;
     padding: 1rem;
     margin: 1rem auto;
   }
@@ -493,14 +473,6 @@
   .paperAbstract {
     padding: 0.75rem 1rem;
   }
-  
-  .loadingContainer, .emptyState {
-    padding: 2rem 1rem;
-  }
-  
-  .metaItem .metaText {
-    max-width: 140px;
-  }
 }
 
 @media (max-width: 374px) {
@@ -557,10 +529,6 @@
   
   .emptyState, .unauthenticatedContent {
     background-color: #1e293b;
-    color: #94a3b8;
-  }
-  
-  .loadingContainer {
     color: #94a3b8;
   }
   
