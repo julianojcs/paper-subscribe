@@ -126,7 +126,6 @@ export async function GET(request) {
             status: true,
             comment: true,
             createdAt: true,
-            reviewerId: true,
           },
           orderBy: {
             createdAt: 'desc',

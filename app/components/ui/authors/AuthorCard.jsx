@@ -2,7 +2,8 @@
 
 import { FaCheck, FaLock, FaTimes, FaUserTie } from 'react-icons/fa'; // Adicionei FaLock para indicar campos bloqueados
 import { brazilianStates } from '../../../utils/brazilianStates';
-import StateSelect from '../../ui/StateSelect';
+// import StateSelect from '../../ui/StateSelect';
+import Select from 'react-select'
 import styles from './AuthorCard.module.css';
 
 export default function AuthorCard({
@@ -126,7 +127,7 @@ export default function AuthorCard({
             <label htmlFor={`author-${author.id}-state`} className={styles.inputLabel}>
               Estado<span className={styles.requiredMark}>*</span>
             </label>
-            <StateSelect
+            {/* <StateSelect
               id={`author-${author.id}-state`}
               name={`author-${author.id}-state`}
               value={author.state || null}
@@ -139,6 +140,43 @@ export default function AuthorCard({
               disabled={isMainAuthor}
               classNames={{
                 combobox: `${styles.stateCombobox} ${isMainAuthor ? styles.disabledInput : ''}`
+              }}
+            /> */}
+            <Select
+              id={`author-${author.id}-state`}
+              name={`author-${author.id}-state`}
+              value={brazilianStates.find(option => option.value === author.state) || null}
+              onChange={(selectedOption) => handleChange('state', selectedOption?.value || null)}
+              className="basic-single"
+              classNamePrefix="select"
+              defaultValue={brazilianStates[12]}
+              placeholder="Estado"
+              isDisabled={isMainAuthor}
+              isLoading={false}
+              isClearable={false}
+              isRtl={false}
+              isSearchable={true}
+              options={brazilianStates}
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  border: state.isFocused ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.2)' : 'none',
+                  fontSize: '14px',
+                  height: '34px',
+                  minHeight: '34px',
+                }),
+                valueContainer: (base) => ({
+                  ...base,
+                  height: '34px',
+                  padding: '0 6px',
+                }),
+                input: (base) => ({
+                  ...base,
+                  margin: '0',
+                  padding: '0',
+                }),
               }}
             />
             {fieldErrors[`author-${author.id}-state`] && (

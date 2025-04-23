@@ -124,8 +124,7 @@ export async function GET(request, context) {
             id: true,
             status: true,
             comment: true,
-            createdAt: true,
-            reviewerId: true
+            createdAt: true
           },
           orderBy: {
             createdAt: 'desc',

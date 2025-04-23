@@ -9,9 +9,10 @@ import Input from '../components/ui/Input';
 import LoginHistoryTable from '../components/ui/LoginHistoryTable';
 import Modal from '../components/ui/Modal';
 import PasswordInput from '../components/ui/PasswordInput';
-import StateSelect from '../components/ui/StateSelect';
+// import StateSelect from '../components/ui/StateSelect';
 import { brazilianStates } from '../utils/brazilianStates';
 import styles from './profile.module.css';
+import Select from 'react-select';
 
 // Componente de loading consistente para reutilização
 const LoadingSpinner = ({ message = "Carregando..." }) => (
@@ -638,13 +639,33 @@ function ProfileContent() {
 
                 <div className={styles.infoField}>
                   <label htmlFor="stateId" className={styles.stateLabel}>Estado</label>
-                  <StateSelect
+                  <Select
+                    className="basic-single"
+                    classNamePrefix="select"
+                    defaultValue={brazilianStates[12]}
+                    value={formData.stateId}
+                    onChange={(selectedOption) => {
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        stateId: selectedOption
+                      }));
+                    }}
+                    isDisabled={false}
+                    isLoading={false}
+                    isClearable={true}
+                    isRtl={false}
+                    isSearchable={true}
+                    name="stateId"
+                    id='stateId'
+                    options={brazilianStates}
+                  />
+                  {/* <StateSelect
                     value={formData.stateId}
                     onChange={handleInputChange}
                     states={brazilianStates}
                     id="stateId"
                     name="stateId"
-                  />
+                  /> */}
                 </div>
                 <div className={styles.infoField + ' ' + styles.fullWidth}>
                   <Input

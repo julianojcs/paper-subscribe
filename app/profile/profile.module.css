@@ -9,8 +9,7 @@
 }
 
 .container {
-  max-width: 800px;
-  width: 100%;
+  width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -793,6 +792,7 @@
 /* Responsivity */
 /* @media (max-width: 768px) {
   .container {
+    width: 100%;
     margin: 20px;
     padding: 15px;
   }
@@ -805,6 +805,7 @@
 @media (max-width: 767px) {
   /* Ajustes gerais do container */
   .container {
+    width: 100%;
     padding: 1rem;
     margin: 8px auto;
     gap: 8px;
@@ -913,6 +914,7 @@
 
 @media (max-width: 374px) {
   .container {
+    width: 100%;
     padding: 0.75rem;
     margin: 0.5rem auto;
   }
