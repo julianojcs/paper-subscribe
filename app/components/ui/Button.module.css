@@ -123,7 +123,7 @@
 }
 
 /* Modo escuro */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .outline {
     border-color: var(--paper-secondary-700);
     color: var(--paper-secondary-200);
@@ -136,4 +136,4 @@
   .outline:active:not(:disabled) {
     background-color: var(--paper-secondary-700);
   }
-}
+} */

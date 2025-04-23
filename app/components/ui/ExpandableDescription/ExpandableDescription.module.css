@@ -70,7 +70,7 @@
 }
 
 /* Para suportar modo escuro, se aplicável */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .description {
     color: #cbd5e0;
   }
@@ -94,7 +94,7 @@
   .inlineToggleButton:hover {
     color: #90cdf4;
   }
-}
+} */
 
 /* Para tornar o componente responsivo */
 @media (max-width: 640px) {

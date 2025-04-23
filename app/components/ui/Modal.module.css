@@ -81,7 +81,7 @@
 }
 
 /* Dark mode */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .modalContent {
     background-color: #1e293b;
   }
@@ -106,7 +106,7 @@
   .modalFooter {
     border-color: #334155;
   }
-}
+} */
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {

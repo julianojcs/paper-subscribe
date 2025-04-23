@@ -35,29 +35,29 @@ export default function AuthorsList({
   const ensureStableIds = (authorsList) => {
     // Cria um novo mapa se necessário
     const newMap = new Map(authorIdsMap);
-    
+
     // Atualiza o mapa com autores que têm userId ou id
     const updatedAuthors = authorsList.map((author, index) => {
       // Se o autor já tem um ID real (userId ou id), use-o
       if (author.userId || author.id) {
         return author;
       }
-      
+
       // Se não tem ID, gerar um estável baseado no índice
       if (!newMap.has(index)) {
         newMap.set(index, generateStableId(index));
       }
-      
+
       // Retornar autor com ID estável
       return {
         ...author,
         id: newMap.get(index)
       };
     });
-    
+
     // Atualiza o mapa de IDs
     setAuthorIdsMap(newMap);
-    
+
     return updatedAuthors;
   };
 
@@ -66,13 +66,13 @@ export default function AuthorsList({
     if (authors.length > 0) {
       // Primeiro, garanta que todos os autores têm IDs estáveis
       const authorsWithIds = ensureStableIds(authors);
-      
+
       // Se os autores foram atualizados com IDs, propague a mudança
       if (JSON.stringify(authorsWithIds) !== JSON.stringify(authors)) {
         onChange(authorsWithIds);
         return;
       }
-      
+
       // Depois, trate da lógica do apresentador
       if (!presenterId) {
         // Encontrar um autor existente que seja apresentador
@@ -100,7 +100,7 @@ export default function AuthorsList({
 
     // Encontrar próximo índice disponível para o novo autor
     const newIndex = authors.length;
-    
+
     // Garantir um ID estável para o novo autor
     const newMap = new Map(authorIdsMap);
     const newId = generateStableId(newIndex);
@@ -122,7 +122,7 @@ export default function AuthorsList({
 
   const handleUpdateAuthor = (updatedAuthor) => {
     onChange(
-      authors.map(author => 
+      authors.map(author =>
         author.id === updatedAuthor.id ? updatedAuthor : author
       )
     );
@@ -138,7 +138,7 @@ export default function AuthorsList({
     const isMainAuthor = authors.some(
       author => author.id === authorId && author.userId === currentUserId
     );
-    
+
     if (isMainAuthor) {
       alert('O autor principal não pode ser removido.');
       return;
@@ -146,7 +146,7 @@ export default function AuthorsList({
 
     // Se estiver removendo o apresentador, define o primeiro autor restante como apresentador
     let newAuthors = authors.filter(author => author.id !== authorId);
-    
+
     if (authorId === presenterId && newAuthors.length > 0) {
       const newPresenterId = newAuthors[0].id;
       setPresenterId(newPresenterId);
@@ -163,7 +163,7 @@ export default function AuthorsList({
     }));
 
     onChange(newAuthors);
-    
+
     // Limpar o mapa de IDs para evitar vazamentos de memória
     const newMap = new Map();
     newAuthors.forEach((author, index) => {
@@ -184,17 +184,21 @@ export default function AuthorsList({
     );
   };
 
+  // Antes de enviar para a API
+  const authorsToSave = authors.map(author => ({
+    ...author,
+    // Extrair só o valor do estado se for um objeto
+    state: author.state && typeof author.state === 'object' ? author.state.value : author.state
+  }));
+
   return (
     <div className={styles.authorsListContainer}>
       <div className={styles.authorList}>
         {authors.map(author => {
           const isMainAuthor = author.userId === currentUserId;
-          
+
           return (
-            <div
-              key={author.id || `fallback-${author.authorOrder}`}
-              className={`${styles.authorCard} ${!isAuthorComplete(author) ? styles.incompleteAuthor : ''}`}
-            >
+            <div key={author.id || `fallback-${author.authorOrder}`}>
               <AuthorCard
                 author={author}
                 onUpdate={handleUpdateAuthor}
@@ -206,6 +210,7 @@ export default function AuthorsList({
                 isMainAuthor={isMainAuthor}
                 brazilianStates={brazilianStates}
                 statesLoading={statesLoading}
+                isAuthorComplete={isAuthorComplete(author)}
               />
               {!isAuthorComplete(author) && (
                 <div className={styles.warningMessage}>
@@ -216,7 +221,7 @@ export default function AuthorsList({
           );
         })}
       </div>
-      
+
       {authors.length < maxAuthors && (
         <div className={styles.addAuthorContainer}>
           <Button
@@ -225,7 +230,7 @@ export default function AuthorsList({
             onClick={handleAddAuthor}
             className={styles.addAuthorButton}
           >
-            <FaUserPlus className={styles.addIcon} /> 
+            <FaUserPlus className={styles.addIcon} />
             Adicionar Autor ({authors.length}/{maxAuthors})
           </Button>
         </div>

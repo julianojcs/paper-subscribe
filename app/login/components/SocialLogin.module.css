@@ -193,7 +193,7 @@
   border-color: var(--paper-neutral-400);
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .divider::before {
     background-color: #333;
   }
@@ -212,4 +212,4 @@
   .socialButton:hover {
     background-color: #222;
   }
-}
+} */

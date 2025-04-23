@@ -98,7 +98,7 @@
   margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .tabButtons {
     border-bottom-color: #333;
   }
@@ -130,4 +130,4 @@
   .infoText {
     color: #38bdf8;
   }
-}
+} */

@@ -521,7 +521,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .pageWrapper {
     background-color: #0f172a;
   }
@@ -573,4 +573,4 @@
     background-color: rgba(16, 185, 129, 0.1);
     color: #34d399;
   }
-}
+} */

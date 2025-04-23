@@ -73,7 +73,7 @@
 }
 
 /* Para tela escura */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .modalContent {
     background: #1a202c;
   }
@@ -89,4 +89,4 @@
   .modalFooter {
     border-top-color: #2d3748;
   }
-}
+} */

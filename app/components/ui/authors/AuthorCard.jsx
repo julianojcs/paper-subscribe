@@ -1,9 +1,9 @@
 'use client';
 
-import { FaCheck, FaLock, FaTimes, FaUserTie } from 'react-icons/fa'; // Adicionei FaLock para indicar campos bloqueados
+import { FaCheck, FaLock, FaTimes, FaUserTie } from 'react-icons/fa';
+import Tooltip from '../../ui/Tooltip';
 import { brazilianStates } from '../../../utils/brazilianStates';
-// import StateSelect from '../../ui/StateSelect';
-import Select from 'react-select'
+import Select from 'react-select';
 import styles from './AuthorCard.module.css';
 
 export default function AuthorCard({
@@ -14,55 +14,75 @@ export default function AuthorCard({
   onSetPresenter,
   canDelete,
   fieldErrors = {},
-  isMainAuthor = false
+  isMainAuthor = false,
+  isAuthorComplete = true
 }) {
   const handleChange = (field, value) => {
     // Se for o autor principal, não permite mudanças
     if (isMainAuthor) return;
-    
+
     onUpdate({
       ...author,
-      [field]: value
+      [field]: value // Agora passamos o objeto completo do estado
     });
   };
 
   return (
-    <div className={`${styles.authorCard} ${isPresenter ? styles.presenterCard : ''} ${isMainAuthor ? styles.mainAuthorCard : ''}`}>
+    <div className={`${styles.authorCard} ${isPresenter ? styles.presenterCard : ''} ${isMainAuthor ? styles.mainAuthorCard : ''} ${!isAuthorComplete ? styles.incompleteAuthorCard : ''}`}>
       <div className={styles.cardHeader}>
         <h4 className={styles.authorTitle}>
           {isMainAuthor ? (
             <>
               <FaUserTie className={styles.mainAuthorIcon} /> Autor Principal
-              <span className={styles.lockedBadge} title="Dados vinculados ao seu perfil">
-                <FaLock /> Bloqueado
-              </span>
+              <Tooltip
+                content="Dados vinculados ao seu perfil"
+                position="top"
+                arrow={true}
+              >
+                <span className={styles.lockedBadge}>
+                  <FaLock />
+                </span>
+              </Tooltip>
             </>
           ) : (
             'Autor'
           )}
         </h4>
         <div className={styles.cardActions}>
-          <button
-            type="button"
-            onClick={() => onSetPresenter(author.id)}
-            className={`${styles.presenterButton} ${isPresenter ? styles.isPresenter : ''}`}
-            title={isPresenter ? "Autor apresentador" : "Definir como apresentador"}
-            aria-label={isPresenter ? "Autor apresentador" : "Definir como apresentador"}
+          <Tooltip
+            content={isPresenter ? "Autor apresentador" : "Definir como apresentador"}
+            position="top"
+            arrow={true}
           >
-            <FaCheck />
-            {isPresenter && <span className={styles.presenterLabel}>Apresentador</span>}
-          </button>
-          
-          {canDelete && (
             <button
               type="button"
-              onClick={() => onDelete(author.id)}
-              className={styles.deleteButton}
-              title="Remover autor"
-              aria-label="Remover autor"
+              onClick={() => onSetPresenter(author.id)}
+              className={`${styles.presenterButton} ${isPresenter ? styles.isPresenter : ''}`}
+              aria-label={isPresenter ? "Autor apresentador" : "Definir como apresentador"}
             >
-              <FaTimes />
+              <FaCheck />
+              {isPresenter
+                ? <span className={styles.presenterLabel}>Apresentador</span>
+                : <span className={styles.presenterLabel}>Tornar apresentador</span>
+              }
             </button>
+          </Tooltip>
+
+          {canDelete && (
+            <Tooltip
+              content="Remover autor"
+              position="top"
+              arrow={true}
+            >
+              <button
+                type="button"
+                onClick={() => onDelete(author.id)}
+                className={styles.deleteButton}
+                aria-label="Remover autor"
+              >
+                <FaTimes />
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -127,26 +147,16 @@ export default function AuthorCard({
             <label htmlFor={`author-${author.id}-state`} className={styles.inputLabel}>
               Estado<span className={styles.requiredMark}>*</span>
             </label>
-            {/* <StateSelect
-              id={`author-${author.id}-state`}
-              name={`author-${author.id}-state`}
-              value={author.state || null}
-              onChange={(e) => handleChange('state', e.target.value)}
-              states={brazilianStates}
-              placeholder="Estado"
-              listboxPosition="right"
-              textDisplay="ellipsis"
-              showUF={true}
-              disabled={isMainAuthor}
-              classNames={{
-                combobox: `${styles.stateCombobox} ${isMainAuthor ? styles.disabledInput : ''}`
-              }}
-            /> */}
             <Select
               id={`author-${author.id}-state`}
               name={`author-${author.id}-state`}
-              value={brazilianStates.find(option => option.value === author.state) || null}
-              onChange={(selectedOption) => handleChange('state', selectedOption?.value || null)}
+              value={
+                // Normaliza o valor para o formato esperado pelo Select
+                author.state && typeof author.state === 'string' 
+                  ? brazilianStates.find(option => option.value === author.state)
+                  : author.state
+              }
+              onChange={(selectedOption) => handleChange('state', selectedOption)}
               className="basic-single"
               classNamePrefix="select"
               defaultValue={brazilianStates[12]}
@@ -176,6 +186,37 @@ export default function AuthorCard({
                   ...base,
                   margin: '0',
                   padding: '0',
+                }),
+                // Adicionar estilos para o menu dropdown para garantir que apareça acima de outros elementos
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999, // Valor alto para garantir que fique acima de outros elementos
+                  overflow: 'visible', // Permitir que o menu apareça fora do container pai
+                  position: 'absolute', // Garantir posicionamento absoluto
+                  width: '100%',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Sombra mais pronunciada para destacar o dropdown
+                }),
+                // Estilizar o container para garantir que o posicionamento relativo não interfira
+                container: (base) => ({
+                  ...base,
+                  position: 'relative', // Garantir posicionamento relativo para o menu absoluto
+                  zIndex: 3, // Valor para garantir que este elemento esteja acima dos outros campos do form
+                }),
+                // Garantir que os itens do menu não sejam cortados
+                menuList: (base) => ({
+                  ...base,
+                  padding: '4px 0',
+                  maxHeight: '200px', // Limitar altura do dropdown
+                }),
+                // Melhorar a aparência das opções
+                option: (base, state) => ({
+                  ...base,
+                  padding: '8px 12px',
+                  backgroundColor: state.isFocused ? '#f0f7ff' : 'white',
+                  color: state.isFocused ? '#3b82f6' : '#334155',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: state.isSelected ? '500' : 'normal',
                 }),
               }}
             />

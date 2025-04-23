@@ -10,6 +10,8 @@
 
 .authorCard:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
 }
 
 .presenterCard {
@@ -199,6 +201,11 @@
   border-left: 4px solid #3b82f6;
 }
 
+.incompleteAuthorCard {
+  border: 1px solid #ef4444;
+  border-left: 4px solid #ef4444;
+}
+
 .mainAuthorIcon {
   font-size: 14px;
   margin-right: 6px;
@@ -255,4 +262,19 @@
   height: 38px;
   display: flex;
   align-items: center;
+}
+
+/* Estilo existente para o ícone de cadeado com pequenos ajustes */
+.lockedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: #64748b;
+  font-size: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.lockedBadge:hover {
+  color: #3b82f6;
 }

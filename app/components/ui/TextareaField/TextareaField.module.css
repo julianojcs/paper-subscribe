@@ -272,7 +272,7 @@
 }
 
 /* Estilos para tema escuro */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .label {
     color: #e2e8f0;
   }
@@ -312,4 +312,4 @@
   .counter {
     color: #94a3b8;
   }
-}
+} */

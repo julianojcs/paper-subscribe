@@ -1,13 +1,13 @@
 .header {
-  background-color: #1e293b;
+  background-color: #ffffff;
   padding: 0 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: fixed; /* Mudança de sticky para fixed */
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  width: 100%; /* Garantir que ocupe toda a largura */
+  width: 100%;
 }
 
 .headerContent {
@@ -18,7 +18,7 @@
   margin: 0 auto;
   height: 64px;
   position: relative;
-  overflow: visible; /* Garantir que não haja scrollbar */
+  overflow: visible;
 }
 
 /* Remover estilos relacionados ao logo que não estamos usando */
@@ -29,36 +29,28 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  overflow: visible; /* Garantir que não tenha scrollbar */
+  height: 100%;
 }
 
-.navLink, 
-.signOutButton {
-  color: #cbd5e1;
-  text-decoration: none;
-  font-size: 0.95rem;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s;
+.navLink {
   display: flex;
   align-items: center;
+  padding: 0 1rem;
+  height: 100%;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.3s;
   position: relative;
 }
 
-.navIcon {
-  margin-right: 0.5rem;
-  font-size: 1rem;
-}
-
-.navLink:hover, 
-.signOutButton:hover {
-  color: #f8fafc;
-  background-color: rgba(255, 255, 255, 0.1);
+.navLink:hover {
+  color: #0f172a;
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .activeLink {
-  color: #38bdf8;
+  color: #0284c7;
   font-weight: 500;
 }
 
@@ -69,277 +61,45 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #38bdf8;
-  border-radius: 1px;
+  background-color: #0284c7;
+}
+
+.navIcon {
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
 }
 
 .signOutButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
   display: flex;
   align-items: center;
-}
-
-/* Posicionamento do botão de menu */
-.menuToggle {
-  display: none;
+  padding: 0 1rem;
+  height: 100%;
   background: none;
   border: none;
-  color: #f8fafc;
-  font-size: 1.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-family: inherit;
   cursor: pointer;
-  padding: 0.5rem;
-  z-index: 201; /* Maior z-index para ficar acima de tudo */
+  transition: color 0.3s;
 }
 
-/* Modificar o estilo base do menu móvel para garantir que comece escondido */
-.mobileNav {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 75%;
-  max-width: 300px;
-  background-color: #1e293b;
-  flex-direction: column;
-  align-items: stretch;
-  
-  /* Configuração de scrolling */
-  padding-top: 5rem; /* Espaço para o cabeçalho */
-  padding-bottom: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  
-  /* Configuração de scroll apenas para o conteúdo */
-  display: flex;
-  overflow-y: auto; /* Adiciona scrollbar apenas quando necessário */
-  overscroll-behavior: contain; /* Previne scroll "bouncing" em alguns navegadores */
-  
-  /* Animação e visualização */
-  transform: translateX(100%);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
-  z-index: 200;
-
-  /* Configuração de conteúdo */
-  display: flex;
-  flex-direction: column;
+.signOutButton:hover {
+  color: #0f172a;
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* Ajustar os links dentro do menu mobile para não causarem scroll horizontal */
-.mobileNav .navLink,
-.mobileNav .signOutButton {
-  width: calc(100% - 16px); /* Largura total menos padding horizontal */
-  box-sizing: border-box;
-  margin: 4px 0;
-}
-
-/* Estilização da scrollbar para navegadores compatíveis */
-.mobileNav::-webkit-scrollbar {
-  width: 4px;
-}
-
-.mobileNav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.mobileNav::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-}
-
-/* Adicionar esta classe no arquivo CSS */
-.hiddenOnLoad {
-  display: none !important;
-}
-
-/* Responsividade */
-@media (max-width: 767px) {
-  .menuToggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative; /* Mudar para relativo para acompanhar o fluxo normal */
-  }
-
-  .mobileNav {
-    display: flex; /* Agora exibe o contêiner, mas ainda está fora da tela */
-  }
-
-  .menuOpen {
-    transform: translateX(0);
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .navLink, 
-  .signOutButton {
-    padding: 1rem;
-    margin: 0.25rem 0;
-    border-radius: 6px;
-    border-left: transparent solid 3px;
-  }
-
-  .navLink:last-child,
-  .signOutButton:last-child {
-    border-bottom: none;
-  }
-
-  .activeLink::after {
-    display: none;
-  }
-
-  .activeLink {
-    background-color: rgba(56, 189, 248, 0.1);
-    border-left: 3px solid #38bdf8;
-  }
-}
-
-/* Overlay para fechar menu ao clicar fora */
-.menuOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 190; /* Menor que o menu, mas maior que o conteúdo da página */
-}
-
-.menuOpen + .menuOverlay {
-  display: block;
-}
-
-/* Modo claro (opcional) */
-@media (prefers-color-scheme: light) {
-  .header {
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .logoLink {
-    color: #0f172a;
-  }
-
-  .logoLink:hover {
-    color: #0284c7;
-  }
-
-  .navLink, 
-  .signOutButton {
-    color: #64748b;
-  }
-
-  .navLink:hover, 
-  .signOutButton:hover {
-    color: #0f172a;
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-
-  .activeLink {
-    color: #0284c7;
-  }
-
-  .activeLink::after {
-    background-color: #0284c7;
-  }
-
-  .menuToggle {
-    color: #0f172a;
-  }
-
-  @media (max-width: 767px) {
-    .mobileNav {
-      background-color: #ffffff;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .navLink, 
-    .signOutButton {
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .activeLink {
-      background-color: rgba(2, 132, 199, 0.1);
-      border-left: 3px solid #0284c7;
-    }
-  }
-}
-
-/* Adicione estes estilos ao seu arquivo CSS existente */
-
+/* Administrador submenu */
 .adminMenuContainer {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  height: 100%;
 }
 
-.submenuContainer {
-  display: none;
-  flex-direction: column;
-  background-color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  min-width: 200px;
-  z-index: 100;
-}
-
-/* No desktop, posicionado abaixo do menu */
-@media (min-width: 768px) {
-  .submenuContainer {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 0.5rem;
-  }
-}
-
-/* No mobile, integrado com o menu principal */
-@media (max-width: 767px) {
-  .submenuContainer {
-    position: relative;
-    box-shadow: none;
-    margin-left: 1.5rem;
-    border-left: 2px solid var(--color-primary-light);
-  }
-}
-
-.submenuVisible {
-  display: flex;
-}
-
-.submenuLink {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  color: var(--color-text);
-  text-decoration: none;
-  transition: background-color 0.2s;
-}
-
-.submenuLink:hover {
-  background-color: var(--color-background-light);
-}
-
-.activeSubmenuLink {
-  background-color: var(--color-primary-lighter);
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-.submenuIcon {
-  margin-right: 0.75rem;
-  font-size: 0.875rem;
+.adminLink {
+  cursor: pointer;
 }
 
 .submenuIndicator {
-  margin-left: 0.5rem;
-  font-size: 0.875rem;
+  margin-left: 0.25rem;
   transition: transform 0.2s;
 }
 
@@ -347,8 +107,157 @@
   transform: rotate(180deg);
 }
 
-/* Destaque para o menu admin */
-.adminLink {
-  color: var(--color-primary);
+.submenuContainer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s;
+  z-index: 10;
+  border-radius: 0 0 4px 4px;
+}
+
+.submenuVisible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.submenuLink {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.submenuIcon {
+  margin-right: 0.5rem;
+}
+
+.submenuLink:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+.activeSubmenuLink {
+  background-color: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
   font-weight: 500;
+}
+
+/* Menu Mobile */
+.menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0;
+  margin: 0 0.5rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.hiddenOnLoad {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+@media (max-width: 767px) {
+  .menuToggle {
+    display: block;
+  }
+
+  .mobileNav {
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100vh;
+    background-color: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s;
+    z-index: 100;
+    padding-top: 60px;
+    overflow-y: auto;
+  }
+
+  .mobileNav::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .mobileNav::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .menuOpen {
+    right: 0;
+  }
+
+  .nav {
+    flex-direction: column;
+    align-items: stretch;
+    height: 100svh;
+    height: -webkit-fill-available;
+  }
+
+  .navLink, 
+  .signOutButton {
+    padding: 1rem 1.5rem;
+    height: auto;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .activeLink::after {
+    display: none;
+  }
+
+  .activeLink {
+    border-left: 3px solid #0284c7;
+    background-color: rgba(2, 132, 199, 0.1);
+  }
+
+  .adminMenuContainer {
+    height: auto;
+  }
+
+  .submenuContainer {
+    position: static;
+    box-shadow: none;
+    border: none;
+    min-width: auto;
+    transform: none;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  .submenuVisible {
+    padding-left: 1rem;
+    max-height: 300px;
+  }
+
+  .submenuLink {
+    padding: 0.75rem 1rem;
+  }
+
+  .menuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
 }

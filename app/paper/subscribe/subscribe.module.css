@@ -428,7 +428,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .pageWrapper {
     background-color: #0f172a;
   }
@@ -487,7 +487,7 @@
     background-color: rgba(239, 68, 68, 0.1);
     color: #fca5a5;
   }
-}
+} */
 
 /* Responsividade */
 @media (max-width: 767px) {
@@ -775,7 +775,7 @@
 }
 
 /* Esquema de cores dark para o Loading Spinner */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .loadingSpinner {
     border-color: rgba(255, 255, 255, 0.1);
     border-top-color: #60a5fa;
@@ -785,7 +785,6 @@
     color: #e2e8f0;
   }
 
-  /* Complemento do esquema de cores dark para outros elementos */
   .pageWrapper {
     background-color: #0f172a;
   }
@@ -868,7 +867,6 @@
     color: #cbd5e1;
   }
 
-  /* Estilização para o modal */
   .profileModal {
     background-color: #1e293b;
     border-color: #475569;
@@ -882,7 +880,7 @@
   .profileModalText {
     color: #cbd5e1;
   }
-}
+} */
 
 /* Corrigir o problema com múltiplas definições de @media */
 @media (max-width: 767px) {

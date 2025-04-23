@@ -19,7 +19,7 @@ export default function Tooltip({
   const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
   const [tooltipElement, setTooltipElement] = useState(null);
-  
+
   const targetRef = useRef(null);
   const tooltipRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -28,7 +28,7 @@ export default function Tooltip({
   useEffect(() => {
     setMounted(true);
     setTooltipElement(document.getElementById('tooltip-root') || createTooltipRoot());
-    
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
@@ -47,14 +47,14 @@ export default function Tooltip({
     if (isVisible && targetRef.current && tooltipRef.current) {
       const targetRect = targetRef.current.getBoundingClientRect();
       const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      
+
       // Calculate tooltip position based on the 'position' prop
       const newPosition = calculatePosition(
         targetRect,
         tooltipRect,
         position,
       );
-      
+
       setTooltipPosition(newPosition.tooltip);
       setArrowPosition(newPosition.arrow);
     }
@@ -64,25 +64,25 @@ export default function Tooltip({
   const calculatePosition = (targetRect, tooltipRect, pos) => {
     const scrollY = window.scrollY || document.documentElement.scrollTop;
     const scrollX = window.scrollX || document.documentElement.scrollLeft;
-    
+
     const spacing = 8; // Space between target and tooltip
-    
+
     let tooltipPos = { top: 0, left: 0 };
     let arrowPos = { top: '100%', left: '50%' };
-    
+
     // Initial position calculation based on desired position
     switch (pos) {
       case 'top':
         tooltipPos = {
           top: targetRect.top + scrollY - tooltipRect.height - spacing,
-          left: targetRect.left + scrollX + (targetRect.width / 2) - (tooltipRect.width / 2)
+          left: targetRect.left + scrollX + (targetRect.width / 2) - (tooltipRect.width / 2) -10
         };
         arrowPos = { top: '100%', left: '50%' };
         break;
       case 'bottom':
         tooltipPos = {
           top: targetRect.bottom + scrollY + spacing,
-          left: targetRect.left + scrollX + (targetRect.width / 2) - (tooltipRect.width / 2)
+          left: targetRect.left + scrollX + (targetRect.width / 2) - (tooltipRect.width / 2) -10
         };
         arrowPos = { top: '0%', left: '50%' };
         break;
@@ -101,11 +101,11 @@ export default function Tooltip({
         arrowPos = { top: '50%', left: '0%' };
         break;
     }
-    
+
     // Adjust if tooltip would go off screen
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
+
     // Check right edge
     if (tooltipPos.left + tooltipRect.width > viewportWidth) {
       tooltipPos.left = viewportWidth - tooltipRect.width - spacing;
@@ -113,7 +113,7 @@ export default function Tooltip({
         arrowPos.left = ((targetRect.left + targetRect.width / 2) - tooltipPos.left) / tooltipRect.width * 100 + '%';
       }
     }
-    
+
     // Check left edge
     if (tooltipPos.left < 0) {
       tooltipPos.left = spacing;
@@ -121,7 +121,7 @@ export default function Tooltip({
         arrowPos.left = ((targetRect.left + targetRect.width / 2) - tooltipPos.left) / tooltipRect.width * 100 + '%';
       }
     }
-    
+
     // Check bottom edge
     if (tooltipPos.top + tooltipRect.height > viewportHeight + scrollY) {
       tooltipPos.top = targetRect.top + scrollY - tooltipRect.height - spacing;
@@ -130,7 +130,7 @@ export default function Tooltip({
         arrowPos = { top: '100%', left: '50%' };
       }
     }
-    
+
     // Check top edge
     if (tooltipPos.top < scrollY) {
       tooltipPos.top = targetRect.bottom + scrollY + spacing;
@@ -139,7 +139,7 @@ export default function Tooltip({
         arrowPos = { top: '0%', left: '50%' };
       }
     }
-    
+
     return {
       tooltip: tooltipPos,
       arrow: arrowPos,
@@ -171,11 +171,11 @@ export default function Tooltip({
   // SOLUÇÃO MAIS SEGURA: usar verificação baseada em tipo em vez de isValidElement
   const renderChildrenWithProps = () => {
     // Verificação segura para elementos React válidos sem usar isValidElement
-    const isReactElement = children && typeof children === 'object' && 
-                          'type' in children && 
+    const isReactElement = children && typeof children === 'object' &&
+                          'type' in children &&
                           'props' in children &&
                           children !== null;
-    
+
     // Se não parece ser um elemento React válido, envolva em um span
     if (!isReactElement) {
       return (
@@ -190,7 +190,7 @@ export default function Tooltip({
         </span>
       );
     }
-    
+
     // Usar cloneElement diretamente com o elemento React
     try {
       return React.cloneElement(children, {
@@ -222,7 +222,7 @@ export default function Tooltip({
     if (!isVisible || !mounted || !tooltipElement) return null;
 
     return createPortal(
-      <div 
+      <div
         ref={tooltipRef}
         className={`${styles.tooltip} ${styles[position]} ${className}`}
         style={{
@@ -239,8 +239,8 @@ export default function Tooltip({
           content
         )}
         {arrow && (
-          <span 
-            className={styles.arrow} 
+          <span
+            className={styles.arrow}
             style={{
               top: arrowPosition.top,
               left: arrowPosition.left

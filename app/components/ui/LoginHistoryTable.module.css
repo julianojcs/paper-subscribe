@@ -210,7 +210,7 @@
   font-size: 0.9em;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .historyTable th {
     background-color: #1e293b;
   }
@@ -250,4 +250,4 @@
   .ipValue {
     color: #cbd5e1;
   }
-}
+} */
