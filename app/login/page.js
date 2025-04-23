@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDataContext } from '../../context/DataContext';
 import LoginForm from './components/LoginForm';
@@ -9,7 +9,8 @@ import HeaderContentTitle from '../components/layout/HeaderContentTitle';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import styles from './page.module.css';
 
-export default function LoginPage() {
+// Componente wrapper para lidar com o useSearchParams
+function LoginPageContent() {
   const [error, setError] = useState('');
   const [eventToken, setEventToken] = useState('');
   const [tokenValidated, setTokenValidated] = useState(false);
@@ -19,6 +20,10 @@ export default function LoginPage() {
   const { setEventData, eventData } = useDataContext();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Constantes para armazenamento no localStorage
+  const TOKEN_STORAGE_KEY = 'event_registration_token';
+  const TOKEN_EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 horas
 
   const validateEventToken = useCallback(async (token) => {
     console.log('Validando token do evento:', token);
@@ -37,7 +42,7 @@ export default function LoginPage() {
       const tokenData = await tokenResponse.json();
 
       if (!tokenResponse.ok || !tokenData.valid) {
-        sessionStorage.removeItem('event_registration_token');
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
         setError(tokenData.message || 'Token do evento inválido');
         setEventToken('');
         setTokenValidating(false);
@@ -61,15 +66,83 @@ export default function LoginPage() {
     }
   }, [setEventData]);
 
+  // Função para buscar dados do evento de forma inteligente
+  const fetchEventData = useCallback(async () => {
+    // Se já temos dados no contexto, use-os
+    if (eventData && eventData.logoUrl) {
+      console.log('Usando dados de evento do contexto:', eventData);
+      return true;
+    }
+    
+    // Verifique se temos um token válido armazenado
+    const storedTokenData = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!storedTokenData) {
+      console.log('Sem token armazenado, não é possível buscar dados do evento');
+      return false;
+    }
+    
+    try {
+      // Analisar o token armazenado
+      const storedData = JSON.parse(storedTokenData);
+      
+      // Verificar se o token é válido e não está expirado
+      if (!storedData.token || !storedData.validated || storedData.expires <= Date.now()) {
+        console.log('Token inválido ou expirado no localStorage');
+        return false;
+      }
+      
+      console.log('Token válido encontrado, buscando dados do evento com token:', storedData.token);
+      
+      // Buscar dados do evento usando o token
+      const response = await fetch('/api/events/validate-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: storedData.token }),
+      });
+      
+      const tokenData = await response.json();
+      
+      if (!response.ok || !tokenData.valid || !tokenData.eventData) {
+        console.error('Falha ao validar token armazenado:', tokenData.message || 'Token inválido');
+        return false;
+      }
+      
+      // Se os dados do evento foram retornados com sucesso
+      if (tokenData.eventData) {
+        console.log('Dados do evento recuperados através do token armazenado:', tokenData.eventData);
+        setEventData(tokenData.eventData);
+        
+        // Como o token foi validado novamente com sucesso:
+        setEventToken(storedData.token);
+        setTokenValidated(true);
+        
+        // Atualize o token no localStorage para renovar sua validade
+        localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
+          ...storedData,
+          validated: true,
+          expires: Date.now() + TOKEN_EXPIRATION_MS
+        }));
+        
+        return true;
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do evento:', error);
+    }
+    
+    return false;
+  }, [eventData, setEventData, TOKEN_STORAGE_KEY, TOKEN_EXPIRATION_MS]);
+
   useEffect(() => {
     console.log('Inicializando página de login e verificando tokens');
     setLoading(true);
     
     const token = searchParams?.get('t');
-    const storedToken = sessionStorage.getItem('event_registration_token');
+    const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
     console.log('Token na URL:', token, 'Token armazenado:', storedToken);
 
     const checkToken = async () => {
+      let tokenProcessed = false;
+      
       if (token) {
         console.log('Token encontrado na URL, processando...');
         window.history.replaceState(null, '', window.location.pathname);
@@ -79,15 +152,17 @@ export default function LoginPage() {
         
         if (isValid) {
           setEventToken(token);
-          sessionStorage.setItem('event_registration_token', JSON.stringify({
+          localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
             token: token,
-            expires: Date.now() + 1000 * 60 * 10,
-            validated: true
+            expires: Date.now() + TOKEN_EXPIRATION_MS,
+            validated: true,
+            createdAt: Date.now()
           }));
         }
+        tokenProcessed = true;
       }
       else if (storedToken) {
-        console.log('Token encontrado no sessionStorage');
+        console.log('Token encontrado no localStorage');
         try {
           const storedData = JSON.parse(storedToken);
           
@@ -96,21 +171,28 @@ export default function LoginPage() {
               console.log('Token já validado anteriormente');
               setEventToken(storedData.token);
               setTokenValidated(true);
+              
+              // Atualizar o timestamp de expiração para renovar a validade
+              localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
+                ...storedData,
+                expires: Date.now() + TOKEN_EXPIRATION_MS
+              }));
             } else {
               console.log('Token não validado anteriormente, validando agora');
               const isValid = await validateEventToken(storedData.token);
               
               if (isValid) {
                 setEventToken(storedData.token);
-                sessionStorage.setItem('event_registration_token', JSON.stringify({
+                localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
                   ...storedData,
-                  validated: true
+                  validated: true,
+                  expires: Date.now() + TOKEN_EXPIRATION_MS
                 }));
               }
             }
           } else {
             console.log('Token expirado');
-            sessionStorage.removeItem('event_registration_token');
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
           }
         } catch (error) {
           console.log('Erro ao analisar token, tratando como formato antigo:', error);
@@ -118,39 +200,42 @@ export default function LoginPage() {
           
           if (isValid) {
             setEventToken(storedToken);
-            sessionStorage.setItem('event_registration_token', JSON.stringify({
+            localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
               token: storedToken,
-              expires: Date.now() + 1000 * 60 * 10,
-              validated: true
+              expires: Date.now() + TOKEN_EXPIRATION_MS,
+              validated: true,
+              createdAt: Date.now()
             }));
           }
         }
+        tokenProcessed = true;
       }
       
-      // Finalizar o carregamento após processar o token
+      // Se não temos um token válido, tentar buscar os dados do evento mesmo assim
+      if (!tokenProcessed || !eventData) {
+        await fetchEventData();
+      }
+      
+      // Finalizar o carregamento após processar o token e/ou buscar dados do evento
       setTimeout(() => {
-        // Se não temos token para validar ou a validação já terminou,
-        // podemos exibir o formulário de login
-        if ((!token && !storedToken) || !tokenValidating) {
-          setLoading(false);
-        }
-      }, 300); // Pequeno atraso para garantir uma transição suave
+        setLoading(false);
+      }, 300);
     };
 
     checkToken();
-  }, [searchParams, router, setEventData, validateEventToken, tokenValidating]);
+  }, [searchParams, router, setEventData, validateEventToken, tokenValidating, TOKEN_EXPIRATION_MS, fetchEventData, eventData]);
 
   // Manipulador para o carregamento da imagem
   const handleImageLoad = () => {
     setDataReady(true);
-    // Quando a imagem terminar de carregar, não estamos mais carregando
     setLoading(false);
   };
 
   // Componente de conteúdo principal
   const MainContent = () => (
-    <div className={`${styles.card} ${dataReady || !tokenValidated ? styles.ready : ''}`}>
-      {tokenValidated && eventData ? (
+    <div className={`${styles.card} ${dataReady || !eventData?.logoUrl ? styles.ready : ''}`}>
+      {/* Exibe HeaderContentTitle se houver dados de evento, independentemente do token */}
+      {eventData?.logoUrl ? (
         <HeaderContentTitle
           eventData={eventData}
           onImageLoad={handleImageLoad}
@@ -164,6 +249,7 @@ export default function LoginPage() {
         </div>
       )}
       
+      {/* Restante do conteúdo do card */}
       <div className={styles.cardContent}>
         {error && <p className={styles.error}>{error}</p>}
 
@@ -172,7 +258,7 @@ export default function LoginPage() {
             eventToken={eventToken}
             tokenValidated={tokenValidated}
             defaultTab={tokenValidated ? 'register' : 'login'}
-            eventData={eventData} // Adicione esta propriedade
+            eventData={eventData}
           />
         </div>
 
@@ -194,8 +280,6 @@ export default function LoginPage() {
 
   // Effect para quando o token foi validado mas não tem imagem
   useEffect(() => {
-    // Se o token foi validado mas não temos logo, ou se não temos token,
-    // podemos exibir a página
     if ((tokenValidated && !eventData?.logoUrl) || (!tokenValidated && !tokenValidating)) {
       setLoading(false);
     }
@@ -205,5 +289,20 @@ export default function LoginPage() {
     <div className={styles.container}>
       {loading ? <LoadingContent /> : <MainContent />}
     </div>
+  );
+}
+
+// Componente principal com Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.container}>
+        <div className={styles.loadingWrapper}>
+          <LoadingSpinner message="Carregando..." />
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
