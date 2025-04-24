@@ -54,7 +54,7 @@ function LoginPageContent() {
         setEventData(tokenData.eventData);
         console.log('Dados do evento armazenados no contexto:', tokenData.eventData);
       }
-      
+
       setTokenValidated(true);
       setTokenValidating(false);
       return true;
@@ -73,83 +73,83 @@ function LoginPageContent() {
       console.log('Usando dados de evento do contexto:', eventData);
       return true;
     }
-    
+
     // Verifique se temos um token válido armazenado
     const storedTokenData = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!storedTokenData) {
       console.log('Sem token armazenado, não é possível buscar dados do evento');
       return false;
     }
-    
+
     try {
       // Analisar o token armazenado
       const storedData = JSON.parse(storedTokenData);
-      
+
       // Verificar se o token é válido e não está expirado
       if (!storedData.token || !storedData.validated || storedData.expires <= Date.now()) {
         console.log('Token inválido ou expirado no localStorage');
         return false;
       }
-      
+
       console.log('Token válido encontrado, buscando dados do evento com token:', storedData.token);
-      
+
       // Buscar dados do evento usando o token
       const response = await fetch('/api/events/validate-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: storedData.token }),
       });
-      
+
       const tokenData = await response.json();
-      
+
       if (!response.ok || !tokenData.valid || !tokenData.eventData) {
         console.error('Falha ao validar token armazenado:', tokenData.message || 'Token inválido');
         return false;
       }
-      
+
       // Se os dados do evento foram retornados com sucesso
       if (tokenData.eventData) {
         console.log('Dados do evento recuperados através do token armazenado:', tokenData.eventData);
         setEventData(tokenData.eventData);
-        
+
         // Como o token foi validado novamente com sucesso:
         setEventToken(storedData.token);
         setTokenValidated(true);
-        
+
         // Atualize o token no localStorage para renovar sua validade
         localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
           ...storedData,
           validated: true,
           expires: Date.now() + TOKEN_EXPIRATION_MS
         }));
-        
+
         return true;
       }
     } catch (error) {
       console.error('Erro ao buscar dados do evento:', error);
     }
-    
+
     return false;
   }, [eventData, setEventData, TOKEN_STORAGE_KEY, TOKEN_EXPIRATION_MS]);
 
   useEffect(() => {
     console.log('Inicializando página de login e verificando tokens');
     setLoading(true);
-    
+
     const token = searchParams?.get('t');
     const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
     console.log('Token na URL:', token, 'Token armazenado:', storedToken);
 
     const checkToken = async () => {
       let tokenProcessed = false;
-      
+
       if (token) {
         console.log('Token encontrado na URL, processando...');
         window.history.replaceState(null, '', window.location.pathname);
         router.replace(window.location.pathname, undefined, { shallow: true });
-        
+
         const isValid = await validateEventToken(token);
-        
+
         if (isValid) {
           setEventToken(token);
           localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
@@ -165,13 +165,13 @@ function LoginPageContent() {
         console.log('Token encontrado no localStorage');
         try {
           const storedData = JSON.parse(storedToken);
-          
+
           if (storedData.token && storedData.expires > Date.now()) {
             if (storedData.validated) {
               console.log('Token já validado anteriormente');
               setEventToken(storedData.token);
               setTokenValidated(true);
-              
+
               // Atualizar o timestamp de expiração para renovar a validade
               localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
                 ...storedData,
@@ -180,7 +180,7 @@ function LoginPageContent() {
             } else {
               console.log('Token não validado anteriormente, validando agora');
               const isValid = await validateEventToken(storedData.token);
-              
+
               if (isValid) {
                 setEventToken(storedData.token);
                 localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
@@ -197,7 +197,7 @@ function LoginPageContent() {
         } catch (error) {
           console.log('Erro ao analisar token, tratando como formato antigo:', error);
           const isValid = await validateEventToken(storedToken);
-          
+
           if (isValid) {
             setEventToken(storedToken);
             localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
@@ -210,12 +210,12 @@ function LoginPageContent() {
         }
         tokenProcessed = true;
       }
-      
+
       // Se não temos um token válido, tentar buscar os dados do evento mesmo assim
       if (!tokenProcessed || !eventData) {
         await fetchEventData();
       }
-      
+
       // Finalizar o carregamento após processar o token e/ou buscar dados do evento
       setTimeout(() => {
         setLoading(false);
@@ -248,13 +248,13 @@ function LoginPageContent() {
           <h1 className={styles.title}>Envio de Trabalho Científico</h1>
         </div>
       )}
-      
+
       {/* Restante do conteúdo do card */}
       <div className={styles.cardContent}>
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.tabs}>
-          <LoginForm 
+          <LoginForm
             eventToken={eventToken}
             tokenValidated={tokenValidated}
             defaultTab={tokenValidated ? 'register' : 'login'}

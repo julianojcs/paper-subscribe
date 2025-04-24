@@ -20,7 +20,7 @@ function RedirectHandler() {
 
     if (token) {
       // Salvar o token em sessionStorage temporariamente
-      sessionStorage.setItem('event_registration_token', JSON.stringify({
+      localStorage.setItem('event_registration_token', JSON.stringify({
         token,
         expires: Date.now() + 1000 * 60 * 10 // 10 minutos
       }));
