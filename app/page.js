@@ -338,7 +338,7 @@ const Home = () => {
               key={index}
               className={`${styles.timelineItem} ${item.isPast ? styles.past : styles.future}`}
             >
-              <div className={styles.timelineMarker}></div>
+              <div className={`${styles.timelineMarker} ${item.isPast ? styles.markerPast : styles.markerFuture}`}></div>
               <div className={styles.timelineContent}>
                 <div className={styles.timelineDate}>{formatEventDate(item.date)}</div>
                 <div className={styles.timelineLabel}>

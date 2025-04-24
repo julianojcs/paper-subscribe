@@ -405,6 +405,60 @@
   font-weight: 400;
 }
 
+/* Adicionar estilos para estados passado e futuro dos itens de cronograma */
+
+/* Estilo para itens passados */
+.past .timelineDate {
+  color: #94a3b8;
+}
+
+.past .timelineLabel {
+  color: #64748b;
+  font-weight: normal;
+}
+
+.past .timelineMarker {
+  background-color: #cbd5e1;
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+/* Estilo para itens futuros */
+.future .timelineMarker {
+  background-color: #60a5fa;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.future .timelineLabel {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* Marcar visual dentro da linha do tempo */
+.timelineItem.past::after {
+  opacity: 0.4;
+}
+
+.timelineItem.future::after {
+  opacity: 1;
+}
+
+/* Estilos específicos para o marcador */
+.markerPast {
+  background-color: #cbd5e1 !important;
+  box-shadow: 0 0 0 1px #cbd5e1 !important;
+}
+
+.markerFuture {
+  background-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Destaque para o próximo evento */
+.future .timelineLabel .highlight {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
 /* Próximo marco importante - versão minimalista */
 .nextMilestoneBox {
   display: flex;

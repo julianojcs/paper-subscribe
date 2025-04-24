@@ -3,6 +3,7 @@
   background: linear-gradient(135deg, #3b82f6 0%,rgb(17, 76, 204) 100%);
   text-align: center;
   box-shadow: 0 10px 20px rgba(0, 0, 0, .19), 0 6px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
 }
 
 .headerContent {
