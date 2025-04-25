@@ -193,31 +193,51 @@ model Event {
   logoUrl         String?
   website         String?
   description     String?
-  startDate       DateTime?
-  endDate         DateTime?
-  submissionStart DateTime?
-  submissionEnd   DateTime?
-  reviewStart     DateTime?
-  reviewEnd       DateTime?
+  startDate       DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
+  endDate         DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
+  submissionStart DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
+  submissionEnd   DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
+  reviewStart     DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
+  reviewEnd       DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
   maxAuthors      Int                   @default(5)
   minKeywords     Int                   @default(1)
   maxKeywords     Int                   @default(5)
-  maxFileSize     Int?                   @default(3) // em MB
-  maxFiles        Int?                   @default(0)
+  maxFileSize     Int?                  @default(3) // em MB
+  maxFiles        Int?                  @default(0)
   organizationId  String
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   isActive        Boolean               @default(true)
 
-  evaluators      EvaluatorAssignment[] // Avaliadores do evento
+  timelines       EventTimeline[]      // Nova relação com timeline
+  evaluators      EvaluatorAssignment[]
   organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   areas           EventArea[]
   paperTypes      EventPaperType[]
   eventTokens     OrganizationToken[]
   papers          Paper[]
-  eventFields     EventField[]          // Campos personalizados do evento
+  eventFields     EventField[]
 
   @@unique([organizationId, shortName])
+}
+
+model EventTimeline {
+  id              String    @id @default(cuid())
+  eventId         String
+  name            String
+  description     String?
+  date            DateTime
+  type            TimelineType
+  isPublic        Boolean   @default(true)
+  isCompleted     Boolean   @default(false)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([type])
 }
 
 model EvaluatorAssignment {
@@ -355,6 +375,8 @@ model State {
 
 enum UserRole {
   ADMIN
+  MANAGER
+  REVIEWER
   MEMBER
 }
 
@@ -387,4 +409,14 @@ enum FieldType {
   NUMBER
   EMAIL
   FILE
+}
+
+enum TimelineType {
+  SUBMISSION_START
+  SUBMISSION_END
+  REVIEW_START
+  REVIEW_END
+  EVENT_START
+  EVENT_END
+  CUSTOM
 }

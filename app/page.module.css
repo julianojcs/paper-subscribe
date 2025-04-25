@@ -52,7 +52,7 @@
 }
 
 .welcome {
-  margin-bottom: 2rem;
+  margin-block: 2rem;
 }
 
 .sectionTitle {
@@ -79,71 +79,6 @@
   margin-right: auto;
 }
 
-.actionCard {
-  display: flex;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  width: 100%;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  text-align: left;
-  position: relative;
-  overflow: hidden;
-}
-
-.actionCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 100%;
-  background-color: currentColor;
-  opacity: 0.8;
-}
-
-.actionCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.actionCard:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.actionIcon {
-  font-size: 1.75rem;
-  margin-right: 1.25rem;
-  flex-shrink: 0;
-  color: inherit;
-}
-
-.actionText {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #eff6ff;
-}
-
-/* Estilos específicos por variante */
-.actionCard[class*="primary"] {
-  color: #2563eb;
-}
-
-.actionCard[class*="primary"]:hover {
-  background-color: #eff6ff;
-}
-
-.actionCard[class*="secondary"] {
-  color: #6366f1;
-}
-
-.actionCard[class*="secondary"]:hover {
-  background-color: #f5f3ff;
-}
-
 /* Botão principal para não autenticados */
 .mainButton, .secondaryButton {
   display: inline-flex;
@@ -166,6 +101,7 @@
   background-color: rgba(var(--paper-info-rgb), 0.9);
   box-shadow: 0 4px 12px rgba(var(--paper-info-rgb), 0.3);
 }
+
 .secondaryButton {
   background-color: rgba(var(--paper-secondary-rgb), 0.9);
   box-shadow: 0 4px 12px rgba(var(--paper-secondary-rgb), 0.3);
@@ -198,13 +134,19 @@
   font-size: 1.1rem;
 }
 
+.actionText {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #eff6ff;
+}
+
 /* Área não autenticada */
 .unauthenticatedContent {
-  display: flex;
+  /* display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 1rem 0;
+  padding: 1rem 0; */
 }
 
 .authLinks {
@@ -238,26 +180,17 @@
   .header {
     padding: 1.5rem 1rem;
   }
-  
+
   .sectionTitle {
     font-size: 1.5rem;
   }
-  
+
   .eventLogo {
     max-width: 220px;
   }
-  
-  .actionIcon {
-    font-size: 1.5rem;
-    margin-right: 1rem;
-  }
-  
+
   .actionText {
     font-size: 1rem;
-  }
-  
-  .actionCard {
-    padding: 1rem 1.25rem;
   }
 }
 
@@ -266,41 +199,28 @@
   .pageWrapper {
     background-color: #0f172a;
   }
-  
+
   .container {
     background-color: #1e293b;
   }
-  
+
   .sectionTitle {
     color: #e2e8f0;
   }
-  
+
   .sectionDescription {
     color: #94a3b8;
   }
-  
-  .actionCard {
-    background-color: #1e293b;
-    border-color: #334155;
-  }
-  
-  .actionCard[class*="primary"]:hover {
-    background-color: #172554;
-  }
-  
-  .actionCard[class*="secondary"]:hover {
-    background-color: #1e1b4b;
-  }
-  
+
   .mainButton {
     background-color: #3b82f6;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
   }
-  
+
   .mainButton:hover {
     background-color: #2563eb;
   }
-  
+
   .footer {
     border-top-color: #334155;
   }
@@ -313,6 +233,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   margin: 1.5rem 0;
   padding: 1rem;
   background-color: #f9fafb;
@@ -324,7 +245,7 @@
 .timelineTitle {
   display: flex;
   align-items: center;
-  font-size: 0.95rem;
+  font-size: 1.25rem;
   color: #1f2937;
   margin-bottom: 1rem;
   gap: 0.35rem;
@@ -346,8 +267,8 @@
 .timeline::before {
   content: '';
   position: absolute;
-  left: 5px;
-  top: 0;
+  left: 6px;
+  top: 2px;
   height: 100%;
   width: 1px;
   background-color: #e5e7eb;
@@ -365,6 +286,7 @@
 .timelineMarker {
   position: absolute;
   left: -1.25rem;
+  top: 2px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -385,8 +307,6 @@
 
 .timelineDate {
   font-size: 0.75rem;
-  color: #6b7280;
-  margin-bottom: 0.15rem;
 }
 
 .timelineLabel {
@@ -394,8 +314,8 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.6rem;
+  font-weight: 400;
   color: #1f2937;
   gap: 0.35rem;
 }
@@ -405,7 +325,7 @@
   font-weight: 400;
 }
 
-/* Adicionar estilos para estados passado e futuro dos itens de cronograma */
+/* Estilos para estados passado e futuro dos itens de cronograma */
 
 /* Estilo para itens passados */
 .past .timelineDate {
@@ -430,7 +350,7 @@
 
 .future .timelineLabel {
   color: #1e293b;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* Marcar visual dentro da linha do tempo */
@@ -453,50 +373,6 @@
   box-shadow: 0 0 0 1px #3b82f6 !important;
 }
 
-/* Destaque para o próximo evento */
-.future .timelineLabel .highlight {
-  background-color: #dbeafe;
-  color: #2563eb;
-}
-
-/* Próximo marco importante - versão minimalista */
-.nextMilestoneBox {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background-color: #f0f9ff;
-  border-left: 2px solid #3b82f6;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-}
-
-.alertIcon {
-  font-size: 0.85rem;
-  color: #3b82f6;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-
-.nextMilestoneContent {
-  display: flex;
-  flex-direction: column;
-}
-
-.daysRemaining {
-  font-weight: 600;
-  color: #3b82f6;
-  margin-top: 0.15rem;
-  font-size: 0.8rem;
-}
-
-.milestoneDate {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.15rem;
-}
-
 /* Status de submissão - versão minimalista */
 .submissionStatus {
   display: flex;
@@ -517,9 +393,9 @@
 
 /* Cores específicas para cada status */
 .statusBadge.open {
-  background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid rgba(21, 128, 61, 0.2);
+  background-color: rgba(var(--paper-danger-rgb), 0.15);
+  color: rgba(var(--paper-danger-rgb), 1);
+  border: 1px solid rgba(var(--paper-danger-rgb), 1);
 }
 
 .statusBadge.closed {
@@ -553,7 +429,6 @@
 }
 
 /* Estilo para o ícone dentro do badge */
-
 .statusIcon {
   margin-right: 0.35rem;
   display: flex;
@@ -566,27 +441,17 @@
   .timelineSection {
     padding: 1rem;
   }
-  
+
   .timeline {
     padding-left: 1.5rem;
   }
-  
+
   .timelineMarker {
     left: -1.5rem;
     width: 12px;
     height: 12px;
   }
-  
-  .nextMilestoneBox {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-  
-  .statusIndicator {
-    font-size: 0.65rem;
-    padding: 0.1rem 0.3rem;
-  }
-  
+
   .timelineContent {
     line-height: 1.3;
   }

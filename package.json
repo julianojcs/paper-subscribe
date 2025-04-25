@@ -18,7 +18,8 @@
     "prisma:check": "prisma validate --schema=./prisma/schema.prisma",
     "prisma:db-push": "prisma db push --force --skip-seed --schema=./prisma/schema.prisma",
     "prisma:db-pull": "prisma db pull --force --schema=./prisma/schema.prisma",
-    "prisma:db-push-apply": "prisma db push --force --skip-seed --schema=./prisma/schema.prisma && prisma db pull --force --schema=./prisma/schema.prisma"
+    "prisma:db-push-apply": "prisma db push --force --skip-seed --schema=./prisma/schema.prisma && prisma db pull --force --schema=./prisma/schema.prisma",
+    "seed-timeline": "node ./prisma/seed/seed-event-timeline.js"
   },
   "prisma": {
     "seed": "node --experimental-modules prisma/seed.js"

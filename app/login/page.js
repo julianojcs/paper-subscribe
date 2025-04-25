@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useDataContext } from '../../context/DataContext';
 import LoginForm from './components/LoginForm';
 import HeaderContentTitle from '../components/layout/HeaderContentTitle';
@@ -14,24 +14,42 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [eventToken, setEventToken] = useState('');
   const [tokenValidated, setTokenValidated] = useState(false);
-  const [tokenValidating, setTokenValidating] = useState(false);
   const [dataReady, setDataReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const { setEventData, eventData } = useDataContext();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Estado para controlar a tab padrão
+  const [defaultTab, setDefaultTab] = useState('login');
 
   // Constantes para armazenamento no localStorage
   const TOKEN_STORAGE_KEY = 'event_registration_token';
-  const TOKEN_EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 horas
+  const EVENT_DATA_KEY = 'event_data';
 
+  const saveEventDataToLocalStorage = (eventDataToSave, token) => {
+    // Salvar dados no localStorage
+    try {
+      localStorage.setItem(EVENT_DATA_KEY, JSON.stringify(eventDataToSave));
+      console.log('Dados do evento salvos em localStorage:', EVENT_DATA_KEY);
+
+      // Se foi fornecido um token, salvar também o token com os mesmos dados
+      if (token) {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        console.log('Token do evento excluido de localStorage: ', TOKEN_STORAGE_KEY);
+      }
+    } catch (storageError) {
+      console.error('Erro ao salvar no localStorage:', storageError);
+    }
+  }
+
+  // Função para validar o token de evento usando a API existente
   const validateEventToken = useCallback(async (token) => {
-    console.log('Validando token do evento:', token);
     if (!token) return false;
-    setTokenValidating(true);
 
     try {
-      const tokenResponse = await fetch('/api/events/validate-token', {
+      // Verificar qual é o endpoint correto para validação de token
+      const tokenResponse = await fetch('/api/events/validate-token', { // Ajuste este caminho para o endpoint correto
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,190 +58,106 @@ function LoginPageContent() {
       });
 
       const tokenData = await tokenResponse.json();
+      console.log('Resposta da validação de token:', tokenData);
 
       if (!tokenResponse.ok || !tokenData.valid) {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
         setError(tokenData.message || 'Token do evento inválido');
-        setEventToken('');
-        setTokenValidating(false);
         console.error('Token inválido:', tokenData.message);
         return false;
       }
 
-      if (tokenData.eventData) {
-        setEventData(tokenData.eventData);
-        console.log('Dados do evento armazenados no contexto:', tokenData.eventData);
-      }
-
+      setEventData(tokenData.eventData);
+      saveEventDataToLocalStorage(tokenData.eventData, token);
       setTokenValidated(true);
-      setTokenValidating(false);
       return true;
     } catch (error) {
       console.error('Erro ao validar token:', error);
       setError('Erro ao validar o token do evento');
-      setTokenValidating(false);
       return false;
     }
   }, [setEventData]);
 
-  // Função para buscar dados do evento de forma inteligente
-  const fetchEventData = useCallback(async () => {
-    // Se já temos dados no contexto, use-os
-    if (eventData && eventData.logoUrl) {
-      console.log('Usando dados de evento do contexto:', eventData);
-      return true;
-    }
-
-    // Verifique se temos um token válido armazenado
-    const storedTokenData = localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (!storedTokenData) {
-      console.log('Sem token armazenado, não é possível buscar dados do evento');
-      return false;
-    }
-
-    try {
-      // Analisar o token armazenado
-      const storedData = JSON.parse(storedTokenData);
-
-      // Verificar se o token é válido e não está expirado
-      if (!storedData.token || !storedData.validated || storedData.expires <= Date.now()) {
-        console.log('Token inválido ou expirado no localStorage');
-        return false;
-      }
-
-      console.log('Token válido encontrado, buscando dados do evento com token:', storedData.token);
-
-      // Buscar dados do evento usando o token
-      const response = await fetch('/api/events/validate-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: storedData.token }),
-      });
-
-      const tokenData = await response.json();
-
-      if (!response.ok || !tokenData.valid || !tokenData.eventData) {
-        console.error('Falha ao validar token armazenado:', tokenData.message || 'Token inválido');
-        return false;
-      }
-
-      // Se os dados do evento foram retornados com sucesso
-      if (tokenData.eventData) {
-        console.log('Dados do evento recuperados através do token armazenado:', tokenData.eventData);
-        setEventData(tokenData.eventData);
-
-        // Como o token foi validado novamente com sucesso:
-        setEventToken(storedData.token);
-        setTokenValidated(true);
-
-        // Atualize o token no localStorage para renovar sua validade
-        localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-          ...storedData,
-          validated: true,
-          expires: Date.now() + TOKEN_EXPIRATION_MS
-        }));
-
-        return true;
-      }
-    } catch (error) {
-      console.error('Erro ao buscar dados do evento:', error);
-    }
-
-    return false;
-  }, [eventData, setEventData, TOKEN_STORAGE_KEY, TOKEN_EXPIRATION_MS]);
-
+  // Verificar token na URL e localStorage ao carregar o componente
   useEffect(() => {
-    console.log('Inicializando página de login e verificando tokens');
-    setLoading(true);
+    const checkTokenAndInit = async () => {
+      setLoading(true);
+      const tokenFromUrl = searchParams.get('t');
+      const storedTokenStr = localStorage.getItem(TOKEN_STORAGE_KEY);
 
-    const token = searchParams?.get('t');
-    const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-    console.log('Token na URL:', token, 'Token armazenado:', storedToken);
-
-    const checkToken = async () => {
-      let tokenProcessed = false;
-
-      if (token) {
-        console.log('Token encontrado na URL, processando...');
-        window.history.replaceState(null, '', window.location.pathname);
-        router.replace(window.location.pathname, undefined, { shallow: true });
-
-        const isValid = await validateEventToken(token);
+      if (tokenFromUrl) {
+        // Se temos token na URL, validar e definir registro como padrão
+        setEventToken(tokenFromUrl);
+        const isValid = await validateEventToken(tokenFromUrl);
 
         if (isValid) {
-          setEventToken(token);
-          localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-            token: token,
-            expires: Date.now() + TOKEN_EXPIRATION_MS,
-            validated: true,
-            createdAt: Date.now()
-          }));
+          setDefaultTab('register');
+          // Remover o token da URL para evitar compartilhamento acidental
+          router.replace('/login', undefined, { shallow: true });
         }
-        tokenProcessed = true;
-      }
-      else if (storedToken) {
-        console.log('Token encontrado no localStorage');
-        try {
-          const storedData = JSON.parse(storedToken);
+      } else {
+        if (storedTokenStr) {
+          try {
+            const storedToken = JSON.parse(storedTokenStr);
 
-          if (storedData.token && storedData.expires > Date.now()) {
-            if (storedData.validated) {
-              console.log('Token já validado anteriormente');
-              setEventToken(storedData.token);
-              setTokenValidated(true);
+            // Verificar se o token não expirou
+            if (storedToken.token && storedToken.expires && storedToken.expires > Date.now()) {
+              // Configurar o token para o formulário
+              setEventToken(storedToken.token);
 
-              // Atualizar o timestamp de expiração para renovar a validade
-              localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-                ...storedData,
-                expires: Date.now() + TOKEN_EXPIRATION_MS
-              }));
-            } else {
-              console.log('Token não validado anteriormente, validando agora');
-              const isValid = await validateEventToken(storedData.token);
+              // Validar o token com o backend
+              const isValid = await validateEventToken(storedToken.token);
 
               if (isValid) {
-                setEventToken(storedData.token);
-                localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-                  ...storedData,
-                  validated: true,
-                  expires: Date.now() + TOKEN_EXPIRATION_MS
-                }));
+                // Se o token for válido, definir a tab padrão como registro
+                setDefaultTab('register');
               }
+            } else {
+              // Token expirado, remover do localStorage
+              localStorage.removeItem(TOKEN_STORAGE_KEY);
             }
-          } else {
-            console.log('Token expirado');
+          } catch (error) {
+            console.error('Erro ao processar token do localStorage:', error);
             localStorage.removeItem(TOKEN_STORAGE_KEY);
           }
-        } catch (error) {
-          console.log('Erro ao analisar token, tratando como formato antigo:', error);
-          const isValid = await validateEventToken(storedToken);
-
-          if (isValid) {
-            setEventToken(storedToken);
-            localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-              token: storedToken,
-              expires: Date.now() + TOKEN_EXPIRATION_MS,
-              validated: true,
-              createdAt: Date.now()
-            }));
-          }
         }
-        tokenProcessed = true;
       }
 
-      // Se não temos um token válido, tentar buscar os dados do evento mesmo assim
-      if (!tokenProcessed || !eventData) {
-        await fetchEventData();
-      }
+      if (!tokenFromUrl && !storedTokenStr) {
+        // Se não houver token na URL ou localStorage, definir a tab padrão como login
+        setDefaultTab('login');
+        // Verificar se há dados salvos do evento, independente do token
+        const storedEventDataStr = localStorage.getItem(EVENT_DATA_KEY);
 
-      // Finalizar o carregamento após processar o token e/ou buscar dados do evento
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
+        if (storedEventDataStr) {
+          try {
+            const storedEventData = JSON.parse(storedEventDataStr);
+
+            // Verificar se os dados não expiraram
+            if (storedEventData.expires && storedEventData.expires > Date.now()) {
+              // Usar os dados do evento do localStorage no contexto
+              console.log('Usando dados do evento do localStorage:', storedEventData);
+              setEventData(storedEventData);
+            } else {
+              // Dados expirados, remover do localStorage
+              console.log('Dados do evento expirados, removendo do localStorage');
+            }
+          } catch (error) {
+            console.error('Erro ao processar dados do evento do localStorage:', error);
+          }
+        } else {
+          console.log(`Nenhum dado do evento encontrado no localStorage (chave '${EVENT_DATA_KEY}')`);
+        }
+
+        // Finalizar carregamento com um pequeno delay para animação suave
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
+      }
     };
 
-    checkToken();
-  }, [searchParams, router, setEventData, validateEventToken, tokenValidating, TOKEN_EXPIRATION_MS, fetchEventData, eventData]);
+    checkTokenAndInit();
+  }, [searchParams, router, validateEventToken, setEventData, eventData, eventToken]);
 
   // Manipulador para o carregamento da imagem
   const handleImageLoad = () => {
@@ -257,14 +191,14 @@ function LoginPageContent() {
           <LoginForm
             eventToken={eventToken}
             tokenValidated={tokenValidated}
-            defaultTab={tokenValidated ? 'register' : 'login'}
+            defaultTab={defaultTab}
             eventData={eventData}
           />
         </div>
 
         <div className={styles.footer}>
           <p>
-            Ao fazer login, você concorda com nossos <Link href="/terms">Termos de Serviço</Link> e <Link href="/privacy">Política de Privacidade</Link>.
+            Ao se registrar, você concorda com nossos <Link href="https://www.canva.com/design/DAGjujtuRg8/UE46Fq6VPopeumkfxUrFZw/view"  target="_blank" rel="noopener noreferrer">Termos de Serviço/Regulamento</Link>.
           </p>
         </div>
       </div>
@@ -278,12 +212,12 @@ function LoginPageContent() {
     </div>
   );
 
-  // Effect para quando o token foi validado mas não tem imagem
+  // Effect para detectar quando carregar mesmo sem eventData
   useEffect(() => {
-    if ((tokenValidated && !eventData?.logoUrl) || (!tokenValidated && !tokenValidating)) {
-      setLoading(false);
+    if (!loading && !eventData?.logoUrl) {
+      setDataReady(true);
     }
-  }, [tokenValidated, eventData, tokenValidating]);
+  }, [loading, eventData]);
 
   return (
     <div className={styles.container}>

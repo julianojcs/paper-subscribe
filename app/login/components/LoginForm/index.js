@@ -12,9 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui
 import styles from './LoginForm.module.css';
 
 // Modificar a definição do componente para aceitar props da página principal
-export default function LoginForm({ 
-  eventToken: initialToken = '', 
-  tokenValidated: initialTokenValidated = false, 
+export default function LoginForm({
+  eventToken: initialToken = '',
+  tokenValidated: initialTokenValidated = false,
   defaultTab = 'login',
   eventData = null // Adicione este parâmetro
 }) {
@@ -120,6 +120,24 @@ export default function LoginForm({
       if (!response.ok) {
         setServerError(data.message || 'Erro ao registrar usuário');
         return;
+      }
+
+      // Salvar dados do evento para uso persistente
+      if (data.eventId && data.eventData) {
+        // Remover o token de registro
+        localStorage.removeItem('event_registration_token');
+
+        // Salvar os dados do evento com validade até a data de fim do evento
+        const eventEndDate = data.eventData.endDate ? new Date(data.eventData.endDate).getTime() :
+                            (Date.now() + 1000 * 60 * 60 * 24 * 365); // Default: 1 ano
+
+        localStorage.setItem('user_event_data', JSON.stringify({
+          eventId: data.eventId,
+          logoUrl: data.eventData.logoUrl,
+          name: data.eventData.name,
+          timeline: data.eventData.timeline || [],
+          expires: eventEndDate
+        }));
       }
 
       if (data.linkToExistingAccount) {
