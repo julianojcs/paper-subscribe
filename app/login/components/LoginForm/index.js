@@ -10,6 +10,7 @@ import PasswordInput from '../../../components/ui/PasswordInput';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
 import styles from './LoginForm.module.css';
 import { formatName } from '../../../utils';
+import { FaEnvelope, FaLock, FaTicketAlt, FaUser } from 'react-icons/fa';
 
 // Modificar a definição do componente para aceitar props da página principal
 export default function LoginForm({
@@ -205,6 +206,13 @@ export default function LoginForm({
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
               disabled={isSubmitting}
+              autoComplete="email"
+              autoFocus={true}
+              autoCorrect="off"
+              spellCheck="false"
+              maxLength={100}
+              minLength={5}
+              leftIcon={<FaEnvelope />}
             />
             {/* Campo de senha simples para login (sem validação complexa) */}
             <PasswordInput
@@ -216,6 +224,9 @@ export default function LoginForm({
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}
               disabled={isSubmitting}
+              minLength={8}
+              maxLength={50}
+              autoComplete="current-password"
             />
 
             <Button
@@ -240,6 +251,14 @@ export default function LoginForm({
               onChange={(e) => setName(e.target.value)}
               error={errors.name}
               disabled={isSubmitting}
+              autoComplete="name"
+              autoCorrect="off"
+              spellCheck="true"
+              maxLength={100}
+              minLength={3}
+              autoFocus={true}
+              leftIcon={<FaUser />}
+              autoCapitalize="off"
             />
             <Input
               label="Email"
@@ -247,6 +266,14 @@ export default function LoginForm({
               name="email"
               type="email"
               placeholder="seu@email.com"
+              autoComplete="email"
+              autoCorrect="off"
+              spellCheck="false"
+              maxLength={100}
+              minLength={5}
+              leftIcon={<FaEnvelope />}
+              autoCapitalize="off"
+              autoFocus={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -295,6 +322,7 @@ export default function LoginForm({
                 onChange={(e) => handleTokenInput(e.target.value)}
                 error={errors.eventToken}
                 disabled={isSubmitting}
+                leftIcon={<FaTicketAlt />}
                 helpText="Obrigatório para registro. Solicite ao organizador do evento."
               />
             )}

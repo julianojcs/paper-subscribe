@@ -50,6 +50,9 @@
 }
 
 .tabsContent {
+  display: flex;
+  flex-direction: column;
+  row-gap: .5rem;
   flex-grow: 1;
   outline: none;
   animation: fadeIn 0.2s ease;
