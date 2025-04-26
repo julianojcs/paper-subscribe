@@ -3,9 +3,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
   padding: 2rem 1rem;
   animation: fadeIn 0.3s ease-in-out;
+  position: relative;
 }
 
 .card {
@@ -119,7 +120,7 @@
     width: 100%;
     border-radius: 8px;
   }
-  
+
   .fullWidthHeader :global(.eventLogo) {
     max-width: 180px;
     max-height: 90px;
@@ -129,12 +130,42 @@
 /* Adicione estes estilos */
 
 .loadingWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease;
+  opacity: 1;
+  z-index: 10;
+}
+
+/* Estilos para animações de transição */
+.fadeOut {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+
+.fadeIn {
+  opacity: 1;
+  transition: opacity 0.5s ease-in;
+}
+
+.contentWrapper {
+  width: 100%;
+  opacity: 0; /* Iniciar invisível */
+}
+
+/* Garantir que o container mantenha altura consistente */
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 /* Animação de transição suave */

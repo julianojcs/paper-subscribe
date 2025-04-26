@@ -3,20 +3,19 @@
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Image from 'next/image';
 import { useDataContext } from '../../../../context/DataContext';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import PasswordInput from '../../../components/ui/PasswordInput';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
 import styles from './LoginForm.module.css';
+import { formatName } from '../../../utils';
 
 // Modificar a definição do componente para aceitar props da página principal
 export default function LoginForm({
   eventToken: initialToken = '',
   tokenValidated: initialTokenValidated = false,
-  defaultTab = 'login',
-  eventData = null // Adicione este parâmetro
+  defaultTab = 'login'
 }) {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -29,7 +28,7 @@ export default function LoginForm({
   const [success, setSuccess] = useState('');
   const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
-  const { ip, userAgent } = useDataContext();
+  const { ip, userAgent, eventData } = useDataContext();
   // Usar valores iniciais das props
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [eventToken, setEventToken] = useState(initialToken);
@@ -108,8 +107,8 @@ export default function LoginForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
-          email,
+          name: formatName(name.trim()),
+          email: email.replace(/\s+/g, '').toLowerCase(),
           password,
           eventToken,
         }),
@@ -285,7 +284,7 @@ export default function LoginForm({
               onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
             />
             {/* Token do evento - exibição condicional */}
-            {!(eventToken && tokenValidated) && (
+            {!(eventToken || tokenValidated || eventData) && (
               <Input
                 label="Token do Evento"
                 id="eventToken"

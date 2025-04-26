@@ -8,14 +8,33 @@
 }
 
 .inputWrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
+/* Estilo para quando há erro - usado para o pseudo-elemento */
+/* Pseudo-elemento para mostrar o erro */
+.hasError::after {
+  content: attr(data-error-message);
+  display: block;
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  color: #ef4444; /* Vermelho para erro */
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 4px;
+  pointer-events: none;
+  text-align: right;
+  z-index: 2;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
 .label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #4b5563;
@@ -23,7 +42,7 @@
 
 .required {
   color: #ef4444 !important;
-  margin-left: -0.2rem;
+  margin-left: 2px;
 }
 
 .inputContainer {
@@ -35,13 +54,20 @@
 
 .input {
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 0.625rem 2.2rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   color: #111827;
   background-color: white;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  padding-right: 30px; /* Espaço para o indicador */
+
+  &:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
 }
 
 .input:focus {
@@ -67,6 +93,22 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
+/* Estilo para o input com erro */
+.error {
+  border-color: #ef4444 !important;
+}
+
+/* Estilo para o input válido */
+.valid {
+  /* border-color: #10b981 !important; */
+}
+
+/* Input com ícone à esquerda */
+.withLeftIcon {
+  padding-left: 2.25rem;
+}
+
+/* Container do ícone à esquerda */
 .leftIconContainer {
   position: absolute;
   left: 0.75rem;
@@ -76,24 +118,99 @@
   pointer-events: none;
   display: flex;
   align-items: center;
-}
-
-.withLeftIcon {
-  padding-left: 2.5rem;
+  justify-content: center;
+  z-index: 1;
 }
 
 .helpText {
   display: block;
   font-size: 0.75rem;
   color: #64748b;
-  margin-top: 0.375rem;
+  margin-top: 0.25rem;
 }
 
 .errorText {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #ef4444;
-  margin-top: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+/* Ajustando os estilos dos indicadores para incluir transições */
+
+/* Base comum para os indicadores */
+.indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+
+  /* Adicionar transições */
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease,
+    color 0.5s ease;
+
+  /* Estado inicial para animação de entrada */
+  opacity: 0;
+  transform: translateY(-50%) scale(0.8);
+}
+
+/* Estilos para o indicador de validação */
+.validIndicator {
+  composes: indicator;
+  color: #10b981; /* Verde */
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Estilos para o indicador de erro */
+.invalidIndicator {
+  composes: indicator;
+  color: #ef4444; /* Vermelho */
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Estilos para o indicador de carregamento */
+.loadingIndicator {
+  composes: indicator;
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Animar o spinner de carregamento */
+.spinner {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #3b82f6; /* Cor azul */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animação para o texto de erro */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsividade */
@@ -101,21 +218,35 @@
   .container {
     margin-bottom: 0.75rem;
   }
-  
+
   .label {
     font-size: 0.9rem;
     margin-bottom: 0.3rem;
   }
-  
+
   .input {
-    padding: 0.6rem;
     font-size: 0.9rem;
   }
-  
-  .helpText, 
+
+  .helpText,
   .errorText {
     font-size: 0.7rem;
     margin-top: 0.25rem;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+  }
+
+  .validIndicator {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hasError::after {
+    font-size: 0.7rem;
   }
 }
 

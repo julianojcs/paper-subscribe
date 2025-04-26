@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchUserEvents, fetchUserEventDetails } from '../lib/eventsClient';
+import { fetchUserEvents, fetchUserEventDetails } from '../lib/services/eventsClient';
 import { useSession } from 'next-auth/react';
 
 /**

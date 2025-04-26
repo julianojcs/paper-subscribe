@@ -147,6 +147,13 @@
   align-items: center;
   text-align: center;
   padding: 1rem 0; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  margin-block-start: 4rem;
+  margin-block-end: 1rem;
 }
 
 .authLinks {

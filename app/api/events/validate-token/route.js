@@ -1,6 +1,42 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '/app/lib/db';
 
+// Retorno esperado:
+// {
+// 	"valid": true,
+// 	"message": "Token válido",
+// 	"eventData": {
+// 		"id": "cac5c8cd5447baace99183d47",
+// 		"name": "JMR & CIM 2025",
+// 		"shortName": "JMR/CIM2025",
+// 		"logoUrl": "https://firebasestorage.googleapis.com/v0/b/paper-submission-10013.firebasestorage.app/o/Events%2FJMR-CIM2025%2Fjmr2025.png?alt=media&token=a0bfa920-fb56-46f5-a92c-b11a97ecd03b",
+// 		"website": "https://jornada.srmg.org.br/2025",
+// 		"description": "Envie seu trabalho cientifico. Preencha os dados pessoais e dos coautores, selecione o tipo de trabalho e prossiga no envio do seu resumo.",
+// 		"startDate": "2025-06-27T03:00:00.000Z",
+// 		"endDate": "2025-06-28T03:00:00.000Z",
+// 		"submissionPeriod": {
+// 			"start": "2025-04-15T03:00:00.000Z",
+// 			"end": "2025-05-15T03:00:00.000Z"
+// 		},
+// 		"reviewPeriod": {
+// 			"start": "2025-06-05T03:00:00.000Z",
+// 			"end": "2025-06-28T03:00:00.000Z"
+// 		},
+// 		"limits": {
+// 			"maxAuthors": 6,
+// 			"maxKeywords": 5,
+// 			"minKeywords": 5,
+// 			"maxFiles": 3,
+// 			"maxFileSize": 3
+// 		}
+// 	},
+// 	"organizationData": {
+// 		"id": "c4b47eeb63945d0da252915ce",
+// 		"name": "Sociedade Mineira de Radiologia",
+// 		"shortName": "SRMG"
+// 	}
+// }
+
 export async function POST(request) {
   try {
     const { token } = await request.json();

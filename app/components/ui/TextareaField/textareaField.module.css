@@ -17,6 +17,7 @@
 
 .requiredMark {
   color: #e53935;
+  font-size: 0.875rem;
   margin-left: 2px;
 }
 
@@ -260,11 +261,11 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .counter {
     align-self: flex-end;
   }
-  
+
   .textarea {
     font-size: 0.9375rem;
     padding: 0.625rem 0.875rem;
@@ -276,39 +277,39 @@
   .label {
     color: #e2e8f0;
   }
-  
+
   .textarea {
     color: #e2e8f0;
     background-color: #1e293b;
     border-color: #475569;
   }
-  
+
   .textarea::placeholder {
     color: #64748b;
   }
-  
+
   .textarea:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
-  
+
   .textarea:hover:not(.disabled):not(.error) {
     border-color: #64748b;
   }
-  
+
   .textarea.disabled {
     background-color: #0f172a;
     color: #94a3b8;
   }
-  
+
   .textarea.readOnly {
     background-color: #0f172a;
   }
-  
+
   .helperText {
     color: #94a3b8;
   }
-  
+
   .counter {
     color: #94a3b8;
   }

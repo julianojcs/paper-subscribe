@@ -1,154 +1,69 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDataContext } from '../../context/DataContext';
+import { useEventDataService } from '../lib/services/eventDataService';
 import LoginForm from './components/LoginForm';
 import HeaderContentTitle from '../components/layout/HeaderContentTitle';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import styles from './page.module.css';
 
-// Componente wrapper para lidar com o useSearchParams
 function LoginPageContent() {
   const [error, setError] = useState('');
   const [eventToken, setEventToken] = useState('');
   const [tokenValidated, setTokenValidated] = useState(false);
-  const [dataReady, setDataReady] = useState(false);
+  const [imageReady, setImageReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { setEventData, eventData } = useDataContext();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { eventData } = useDataContext();
+  const [ isDataLoadinfFinished, setIsDataLoadinfFinished ] = useState(false);
 
   // Estado para controlar a tab padrão
   const [defaultTab, setDefaultTab] = useState('login');
 
-  // Constantes para armazenamento no localStorage
-  const TOKEN_STORAGE_KEY = 'event_registration_token';
-  const EVENT_DATA_KEY = 'event_data';
+  // Usar o serviço de dados do evento
+  const {getEventData} = useEventDataService();
 
-  const saveEventDataToLocalStorage = (eventDataToSave, token) => {
-    // Salvar dados no localStorage
-    try {
-      localStorage.setItem(EVENT_DATA_KEY, JSON.stringify(eventDataToSave));
-      console.log('Dados do evento salvos em localStorage:', EVENT_DATA_KEY);
-
-      // Se foi fornecido um token, salvar também o token com os mesmos dados
-      if (token) {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        console.log('Token do evento excluido de localStorage: ', TOKEN_STORAGE_KEY);
-      }
-    } catch (storageError) {
-      console.error('Erro ao salvar no localStorage:', storageError);
-    }
-  }
-
-  // Função para validar o token de evento usando a API existente
-  const validateEventToken = useCallback(async (token) => {
-    if (!token) return false;
-
-    try {
-      // Verificar qual é o endpoint correto para validação de token
-      const tokenResponse = await fetch('/api/events/validate-token', { // Ajuste este caminho para o endpoint correto
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const tokenData = await tokenResponse.json();
-      console.log('Resposta da validação de token:', tokenData);
-
-      if (!tokenResponse.ok || !tokenData.valid) {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        setError(tokenData.message || 'Token do evento inválido');
-        console.error('Token inválido:', tokenData.message);
-        return false;
-      }
-
-      setEventData(tokenData.eventData);
-      saveEventDataToLocalStorage(tokenData.eventData, token);
-      setTokenValidated(true);
-      return true;
-    } catch (error) {
-      console.error('Erro ao validar token:', error);
-      setError('Erro ao validar o token do evento');
-      return false;
-    }
-  }, [setEventData]);
-
-  // Verificar token na URL e localStorage ao carregar o componente
+  // Carregar dados do evento ao iniciar o componente
   useEffect(() => {
-    const checkTokenAndInit = async () => {
-      setLoading(true);
-      const tokenFromUrl = searchParams.get('t');
-      const storedTokenStr = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const loadEventData = async () => {
+      try {
+        setLoading(true);
 
-      if (tokenFromUrl) {
-        // Se temos token na URL, validar e definir registro como padrão
-        setEventToken(tokenFromUrl);
-        const isValid = await validateEventToken(tokenFromUrl);
 
-        if (isValid) {
-          setDefaultTab('register');
-          // Remover o token da URL para evitar compartilhamento acidental
-          router.replace('/login', undefined, { shallow: true });
-        }
-      } else {
-        if (storedTokenStr) {
-          try {
-            const storedToken = JSON.parse(storedTokenStr);
+        // Obter dados do evento usando o serviço
+        const result = await getEventData();
 
-            // Verificar se o token não expirou
-            if (storedToken.token && storedToken.expires && storedToken.expires > Date.now()) {
-              // Configurar o token para o formulário
-              setEventToken(storedToken.token);
+        console.log('Dados do evento carregados de:', result.sourceDataEvent);
+        setIsDataLoadinfFinished(true);
 
-              // Validar o token com o backend
-              const isValid = await validateEventToken(storedToken.token);
+        if (result.dataEvent) {
+          // Se os dados vieram de um token, definir a tab de registro como padrão
+          // e configurar o estado do token
+          if (result.sourceDataEvent === 'token') {
+            setDefaultTab('register');
 
-              if (isValid) {
-                // Se o token for válido, definir a tab padrão como registro
-                setDefaultTab('register');
+            // Extrair o token do localStorage se disponível
+            const tokenStr = localStorage.getItem('event_registration_token');
+            if (tokenStr) {
+              try {
+                const tokenData = JSON.parse(tokenStr);
+                setEventToken(tokenData.token);
+                setTokenValidated(true);
+              } catch (error) {
+                console.error('Erro ao processar token:', error);
               }
-            } else {
-              // Token expirado, remover do localStorage
-              localStorage.removeItem(TOKEN_STORAGE_KEY);
             }
-          } catch (error) {
-            console.error('Erro ao processar token do localStorage:', error);
-            localStorage.removeItem(TOKEN_STORAGE_KEY);
-          }
-        }
-      }
-
-      if (!tokenFromUrl && !storedTokenStr) {
-        // Se não houver token na URL ou localStorage, definir a tab padrão como login
-        setDefaultTab('login');
-        // Verificar se há dados salvos do evento, independente do token
-        const storedEventDataStr = localStorage.getItem(EVENT_DATA_KEY);
-
-        if (storedEventDataStr) {
-          try {
-            const storedEventData = JSON.parse(storedEventDataStr);
-
-            // Verificar se os dados não expiraram
-            if (storedEventData.expires && storedEventData.expires > Date.now()) {
-              // Usar os dados do evento do localStorage no contexto
-              console.log('Usando dados do evento do localStorage:', storedEventData);
-              setEventData(storedEventData);
-            } else {
-              // Dados expirados, remover do localStorage
-              console.log('Dados do evento expirados, removendo do localStorage');
-            }
-          } catch (error) {
-            console.error('Erro ao processar dados do evento do localStorage:', error);
           }
         } else {
-          console.log(`Nenhum dado do evento encontrado no localStorage (chave '${EVENT_DATA_KEY}')`);
+          console.log('Nenhum dado de evento encontrado');
+          setIsDataLoadinfFinished(true);
         }
-
+      } catch (error) {
+        console.error('Erro ao carregar dados do evento:', error);
+        setError('Ocorreu um erro ao carregar os dados do evento');
+      } finally {
         // Finalizar carregamento com um pequeno delay para animação suave
         setTimeout(() => {
           setLoading(false);
@@ -156,19 +71,20 @@ function LoginPageContent() {
       }
     };
 
-    checkTokenAndInit();
-  }, [searchParams, router, validateEventToken, setEventData, eventData, eventToken]);
+    if (isDataLoadinfFinished) return; // Evita chamadas repetidas
+    loadEventData();
+  }, [getEventData, isDataLoadinfFinished]);
 
   // Manipulador para o carregamento da imagem
   const handleImageLoad = () => {
-    setDataReady(true);
+    setImageReady(true);
     setLoading(false);
   };
 
   // Componente de conteúdo principal
   const MainContent = () => (
-    <div className={`${styles.card} ${dataReady || !eventData?.logoUrl ? styles.ready : ''}`}>
-      {/* Exibe HeaderContentTitle se houver dados de evento, independentemente do token */}
+    <div className={`${styles.card} ${imageReady || !eventData?.logoUrl ? styles.ready : ''}`}>
+      {/* Exibe HeaderContentTitle se houver dados de evento */}
       {eventData?.logoUrl ? (
         <HeaderContentTitle
           eventData={eventData}
@@ -215,7 +131,7 @@ function LoginPageContent() {
   // Effect para detectar quando carregar mesmo sem eventData
   useEffect(() => {
     if (!loading && !eventData?.logoUrl) {
-      setDataReady(true);
+      setImageReady(true);
     }
   }, [loading, eventData]);
 

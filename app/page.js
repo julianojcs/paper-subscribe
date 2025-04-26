@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import React from 'react'; // Importe o React explicitamente
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import styles from './page.module.css';
@@ -14,6 +14,7 @@ import PageContainer from './components/layout/PageContainer';
 import HeaderContentTitle from './components/layout/HeaderContentTitle';
 import { useDataContext } from '../context/DataContext';
 import Timeline from './components/ui/Timeline';
+import { useEventDataService } from '/app/lib/services/eventDataService';
 
 const Home = () => {
   const { data: session, status: authStatus } = useSession();
@@ -21,9 +22,13 @@ const Home = () => {
   const { eventData: contextEventData, setEventData } = useDataContext();
 
   const [loading, setLoading] = useState(true);
-  const [dataReady, setDataReady] = useState(false);
+  const [imageReady, setImageReady] = useState(false);
   const [eventData, setLocalEventData] = useState(null);
   const [timelineItems, setTimelineItems] = useState([]);
+  const [sourceData, setSourceData] = useState(null);
+
+  // Importar o serviço de dados de evento
+  const { getEventData } = useEventDataService();
 
   // Função para formatar datas do evento
   const formatEventDate = (dateString) => {
@@ -37,99 +42,47 @@ const Home = () => {
     }
   };
 
-  // Função para buscar dados do evento e timeline
-  const fetchEventData = async (eventId) => {
-    // Buscar os dados básicos do evento
-    const eventRes = await fetch(`/api/organization/events/${eventId}`);
-    const eventData = await eventRes.json();
-
-    // Buscar os dados da timeline do evento
-    const timelineRes = await fetch(`/api/organization/events/${eventId}/timeline`);
-    const timelineData = await timelineRes.json();
-
-    return {
-      event: eventData.event,
-      timelineItems: timelineData.timeline
-    };
-  };
-
-  // Função para registrar login
-  const logUserLogin = useCallback(async () => {
-    const storedMetadata = sessionStorage.getItem('auth_metadata');
-    if (storedMetadata) {
-      try {
-        const { ip, userAgent, provider } = JSON.parse(storedMetadata);
-        if (provider && provider !== 'credentials') {
-          sessionStorage.removeItem('auth_metadata');
-          await fetch('/api/auth/log-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ provider, ip, userAgent })
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao registrar login:', error);
-      }
-    }
-  }, []);
-
-  // Efeito para inicialização e carregamento de dados
+  // Efeito para inicialização e carregamento de dados - sem usar useCallback
   useEffect(() => {
-    const initializeData = async () => {
-      if (authStatus === 'loading') return;
+    // Verificar se authStatus não está carregando antes de executar
+    if (authStatus === 'loading') return;
 
-      setLoading(true);
+    // Função de carregamento definida diretamente no useEffect
+    const loadEventData = async () => {
+      if (loading === false) return; // Evita chamadas repetidas
 
       try {
-        // Verificar primeiro no contexto
-        let eventId = contextEventData?.id;
+        console.log("Carregando dados do evento...");
 
-        // Se não tiver no contexto, buscar o evento padrão
-        if (!eventId) {
-          const defaultRes = await fetch('/api/organization/events/default');
-          if (defaultRes.ok) {
-            const defaultData = await defaultRes.json();
-            eventId = defaultData.event?.id;
-          }
-        }
+        // Usar o serviço para obter dados do evento
+        const result = await getEventData();
 
-        // Se ainda não tiver um ID, não podemos continuar
-        if (!eventId) {
-          console.error('Nenhum evento disponível');
-          setLoading(false);
-          return;
-        }
+        console.log("Dados obtidos:", result);
 
-        // Buscar os dados do evento e timeline
-        const data = await fetchEventData(eventId);
-
-        setLocalEventData(data.event);
-        setTimelineItems(data.timelineItems || []);
-
-        // Atualizar o contexto global se o evento não estava lá
-        if (!contextEventData?.id && data.event) {
-          setEventData(data.event);
-        }
-
-        // Registrar login se autenticado
-        if (authStatus === 'authenticated') {
-          await logUserLogin();
+        // Se temos dados, usar eles para atualizar o estado local
+        if (result.dataEvent) {
+          setLocalEventData(result.dataEvent);
+          setTimelineItems(result.dataEvent.timelines || []);
+          setSourceData(result.sourceDataEvent);
+          setEventData(result.dataEvent); // Atualiza o contexto
+        } else {
+          console.log('Nenhum dado de evento disponível');
         }
       } catch (error) {
         console.error('Erro ao inicializar dados:', error);
       } finally {
-        // Finalizar carregamento
         setLoading(false);
-
-        // Atrasar levemente a exibição do conteúdo para garantir que tudo esteja pronto
-        setTimeout(() => {
-          setDataReady(true);
-        }, 100);
+        setImageReady(true);
       }
     };
 
-    initializeData();
-  }, [authStatus, contextEventData?.id, logUserLogin, setEventData]);
+    loadEventData();
+
+    // Retorna uma função de limpeza que não faz nada,
+    // apenas para mostrar que não precisamos limpar nada
+    return () => {};
+
+  }, [authStatus, getEventData, loading, setEventData]); // Apenas depende do status de autenticação
 
   // Status de submissão - versão melhorada
   const SubmissionStatus = () => {
@@ -187,7 +140,7 @@ const Home = () => {
     <>
       <HeaderContentTitle
         eventData={eventData}
-        onImageLoad={() => setDataReady(true)}
+        onImageLoad={() => setImageReady(true)}
         subtitle="Sistema de Submissão de Trabalhos"
         fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
       />
@@ -271,7 +224,7 @@ const Home = () => {
 
   return (
     <>
-      {loading || !dataReady
+      {loading || !imageReady
         ? <LoadingSpinner />
         : <PageContainer>
             <MainContent />

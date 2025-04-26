@@ -9,16 +9,6 @@ import styles from './AuthorsList.module.css';
 // Função para gerar IDs estáveis para autores temporários
 const generateStableId = (index) => `temp-author-${index}`;
 
-// Função para verificar se um autor está completo
-const isAuthorComplete = (author) => {
-  return (
-    author.name?.trim() &&
-    author.institution?.trim() &&
-    author.city?.trim() &&
-    author.state
-  );
-};
-
 export default function AuthorsList({
   authors,
   onChange,
@@ -210,13 +200,7 @@ export default function AuthorsList({
                 isMainAuthor={isMainAuthor}
                 brazilianStates={brazilianStates}
                 statesLoading={statesLoading}
-                isAuthorComplete={isAuthorComplete(author)}
               />
-              {!isAuthorComplete(author) && (
-                <div className={styles.warningMessage}>
-                  <FaExclamationTriangle /> Informações incompletas
-                </div>
-              )}
             </div>
           );
         })}

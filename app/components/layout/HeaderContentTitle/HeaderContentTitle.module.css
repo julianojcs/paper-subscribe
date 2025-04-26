@@ -18,11 +18,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* width: 300px;
+  height: 100px; */
 }
 
 .eventLogo {
-  height: auto;
-  max-width: 100%;
+  /* position: relative !important; */
   object-fit: contain;
   border-radius: 8px;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
@@ -36,7 +37,7 @@
 .subtitle {
   font-size: 1.1rem;
   color: #e2e8f0;
-  margin-top: 1rem;
+  margin-top: .35rem;
   font-weight: 500;
   letter-spacing: 0.5px;
 }
@@ -65,15 +66,15 @@
   .header {
     padding: 1.5rem 1rem;
   }
-  
+
   .eventLogo {
     max-width: 220px;
   }
-  
+
   .titleFallback {
     font-size: 1.8rem;
   }
-  
+
   .subtitle {
     font-size: 1rem;
   }

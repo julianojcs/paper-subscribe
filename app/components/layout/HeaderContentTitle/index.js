@@ -37,7 +37,7 @@ const HeaderContentTitle = ({
               alt={eventData.name || "Logo do evento"}
               className={styles.eventLogo}
               width={300}
-              height={150}
+              height={92}
               priority
               quality={90}
               onLoad={handleImageLoad}

@@ -6,7 +6,7 @@ import { prisma } from "/app/lib/db"; // Ajuste para o caminho correto
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
@@ -18,9 +18,7 @@ export async function GET(request) {
 
     // Buscar usuário completo do banco de dados
     const user = await prisma.user.findUnique({
-      where: {
-        email: session.user.email,
-      },
+      where: { id: session.user.id },
       select: {
         id: true,
         name: true,
@@ -165,7 +163,7 @@ export async function GET(request) {
           address: org.address,
           role: membership.role
         });
-        
+
         if (org.events && org.events.length > 0) {
           org.events.forEach(event => {
             let submissionStatus;
@@ -178,7 +176,7 @@ export async function GET(request) {
             } else {
               submissionStatus = 'closed';
             }
-            
+
             let daysRemaining = null;
             if (submissionStatus === 'open' && event.submissionEnd) {
               const endDate = new Date(event.submissionEnd);
@@ -232,11 +230,11 @@ export async function GET(request) {
 
       const sortedEvents = events.sort((a, b) => {
         const statusOrder = { open: 0, upcoming: 1, closed: 2, unknown: 3 };
-        
+
         if (statusOrder[a.submissionStatus] !== statusOrder[b.submissionStatus]) {
           return statusOrder[a.submissionStatus] - statusOrder[b.submissionStatus];
         }
-        
+
         const dateA = a.submissionStart ? new Date(a.submissionStart) : new Date(0);
         const dateB = b.submissionStart ? new Date(b.submissionStart) : new Date(0);
         return dateB - dateA;
@@ -266,66 +264,211 @@ export async function PUT(request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-    }
+    // if (!session?.user?.email) {
+    //   return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    // }
 
     const data = await request.json();
-    const { name, email, cpf, phone, institution, city, stateId } = data;
+    const { userId, name, email, cpf, phone, institution, city, stateId } = data;
+
+    // Validações básicas dos dados
+    if (name && name.trim().length < 3) {
+      return NextResponse.json({
+        message: "O nome deve ter pelo menos 3 caracteres",
+        field: "name"
+      }, { status: 400 });
+    }
+
+    // Validação de CPF (se fornecido)
+    if (cpf) {
+      // Se quiser adicionar validação de formato de CPF
+      const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+      if (!cpfRegex.test(cpf)) {
+        return NextResponse.json({
+          message: "Formato de CPF inválido. Use 000.000.000-00",
+          field: "cpf"
+        }, { status: 400 });
+      }
+
+    if (email) {
+      // Verificar se email já existe (se foi alterado)
+      const existingUserWithEmail = await prisma.user.findFirst({
+        where: {
+          email,
+          id: { not: session.user.id || userId }
+        }
+      });
+
+      if (existingUserWithEmail) {
+        return NextResponse.json({
+          message: "Este e-mail já está em uso por outro usuário",
+          field: "email"
+        }, { status: 409 });
+      }
+    }
+
+      // Verificar se CPF já existe (se foi alterado)
+      const existingUserWithCpf = await prisma.user.findFirst({
+        where: {
+          cpf,
+          id: { not: session.user.id || userId }
+        }
+      });
+
+      if (existingUserWithCpf) {
+        return NextResponse.json({
+          message: "Este CPF já está em uso por outro usuário",
+          field: "cpf"
+        }, { status: 409 });
+      }
+    }
+
+    // Validação de telefone (se fornecido)
+    if (phone) {
+      const phoneRegex = /^\(\d{2}\) \d{5}-\d{4}$/;
+      if (!phoneRegex.test(phone)) {
+        return NextResponse.json({
+          message: "Formato de telefone inválido. Use (00) 00000-0000",
+          field: "phone"
+        }, { status: 400 });
+      }
+    }
+
+    // Validação de estado (se fornecido)
+    if (stateId) {
+      // Verificar se o estado existe
+      const stateIdToUse = stateId?.value || stateId;
+      const stateExists = await prisma.state.findUnique({
+        where: { id: stateIdToUse }
+      });
+
+      if (!stateExists) {
+        return NextResponse.json({
+          message: "Estado inválido",
+          field: "stateId"
+        }, { status: 400 });
+      }
+    }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id || userId }
     });
 
     if (!user) {
       return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { email: session.user.email },
-      data: {
-        name,
-        cpf,
-        phone,
-        institution,
-        city,
-        stateId: stateId?.value || stateId
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        cpf: true,
-        phone: true,
-        institution: true,
-        city: true,
-        stateId: true,
-        state: {
-          select: {
-            id: true,
-            name: true,
-            flag: true
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: session.user.id || userId },
+        data: {
+          name,
+          cpf,
+          phone,
+          institution,
+          city,
+          stateId: stateId?.value || stateId
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          cpf: true,
+          phone: true,
+          institution: true,
+          city: true,
+          stateId: true,
+          state: {
+            select: {
+              id: true,
+              name: true,
+              flag: true
+            }
           }
         }
+      });
+
+      const response = {
+        ...updatedUser,
+        state: updatedUser.state ? {
+          id: updatedUser.state.id,
+          name: updatedUser.state.name,
+          flag: updatedUser.state.flag
+        } : null,
+        stateName: updatedUser.state?.name || null
+      };
+
+      return NextResponse.json(response);
+
+    } catch (dbError) {
+      // Tratamento específico para erros de Prisma
+      if (dbError.code === 'P2002') { // Código do Prisma para unique constraint violation
+        const field = dbError.meta?.target[0]; // Obter o campo que causou o erro
+
+        // Mensagens específicas para cada campo com restrição única
+        switch(field) {
+          case 'cpf':
+            return NextResponse.json({
+              message: "Este CPF já está em uso por outro usuário",
+              field: "cpf",
+            }, { status: 409 }); // 409 Conflict
+
+          case 'phone':
+            return NextResponse.json({
+              message: "Este número de telefone já está em uso",
+              field: "phone",
+            }, { status: 409 });
+
+          default:
+            return NextResponse.json({
+              message: `O valor informado para ${field} já está em uso`,
+              field,
+            }, { status: 409 });
+        }
       }
-    });
 
-    const response = {
-      ...updatedUser,
-      state: updatedUser.state ? {
-        id: updatedUser.state.id,
-        name: updatedUser.state.name,
-        flag: updatedUser.state.flag
-      } : null,
-      stateName: updatedUser.state?.name || null
-    };
+      if (dbError.code === 'P2003') { // Foreign key constraint failed
+        return NextResponse.json({
+          message: "Referência inválida. Verifique os dados informados.",
+          field: dbError.meta?.field_name?.split('_').pop() || null,
+        }, { status: 400 });
+      }
 
-    return NextResponse.json(response);
+      if (dbError.code === 'P2025') { // Record not found
+        return NextResponse.json({
+          message: "Registro não encontrado para atualização",
+        }, { status: 404 });
+      }
+
+      // Log do erro completo para debugging
+      console.error("Erro de banco de dados:", dbError.code, dbError.message, dbError.meta);
+
+      // Erro genérico de banco de dados
+      return NextResponse.json({
+        message: "Erro ao processar sua solicitação no banco de dados",
+        error: dbError.message
+      }, { status: 500 });
+    }
+
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error);
-    return NextResponse.json(
-      { message: "Erro ao atualizar perfil", error: error.message },
-      { status: 500 }
-    );
+
+    // Determinar o tipo de erro e fornecer respostas apropriadas
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      return NextResponse.json({
+        message: "Formato de dados inválido",
+      }, { status: 400 });
+    }
+
+    // Erros gerais do sistema
+    return NextResponse.json({
+      message: "Erro ao atualizar perfil. Por favor, tente novamente mais tarde.",
+      errorType: error.name,
+      // Em ambiente de desenvolvimento, retorne mais detalhes
+      ...(process.env.NODE_ENV === 'development' && {
+        details: error.message,
+        stack: error.stack?.split('\n')
+      })
+    }, { status: 500 });
   }
 }

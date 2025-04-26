@@ -5,6 +5,15 @@ import { prisma } from '/app/lib/db';
  * Manipulador da rota GET para buscar o evento padrão/ativo
  * Esta API retorna o evento mais recente ativo para uso quando nenhum evento específico é selecionado
  */
+// Retorno Esperado:
+// {
+// 	"event": {
+// 		"id": "cac5c8cd5447baace99183d47",
+// 		"name": "JMR & CIM 2025",
+// 		"shortName": "JMR/CIM2025"
+// 	}
+// }
+
 export async function GET() {
   try {
     // Buscar o evento mais recente que está ativo

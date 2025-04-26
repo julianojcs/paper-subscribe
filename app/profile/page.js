@@ -3,22 +3,30 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { FaEnvelope, FaGoogle, FaKey } from 'react-icons/fa';
+import { FaEnvelope, FaGoogle, FaKey, FaExclamationTriangle, FaUser, FaRegIdCard, FaPhone, FaCity, FaUniversity } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import LoginHistoryTable from '../components/ui/LoginHistoryTable';
 import Modal from '../components/ui/Modal';
 import PasswordInput from '../components/ui/PasswordInput';
-// import StateSelect from '../components/ui/StateSelect';
 import { brazilianStates } from '../utils/brazilianStates';
 import styles from './profile.module.css';
 import Select from 'react-select';
+import { validateCPF, formatPhone, formatCPF, formatName } from '@/utils';
 
 // Componente de loading consistente para reutilização
 const LoadingSpinner = ({ message = "Carregando..." }) => (
   <div className={styles.loadingContainer}>
     <div className={styles.loadingSpinner}></div>
     <p>{message}</p>
+  </div>
+);
+
+// Componente para exibir mensagens de erro
+const ErrorMessage = ({ message }) => (
+  <div className={styles.error}>
+    <FaExclamationTriangle className={styles.errorIcon} />
+    <span>{message}</span>
   </div>
 );
 
@@ -29,10 +37,13 @@ function ProfileContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+
+  // Substituindo o erro único por um objeto de erros por campo
+  const [fieldErrors, setFieldErrors] = useState({});
+
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
-  const [contentReady, setContentReady] = useState(false); // Novo estado para controlar quando o conteúdo está pronto
+  const [loading, setLoading] = useState(true);
+  const [contentReady, setContentReady] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
@@ -54,41 +65,180 @@ function ProfileContent() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  // Função para processar erros da API
+  const processApiErrors = useCallback((data) => {
+    // Limpar erros anteriores
+    const newErrors = {};
+
+    // Se o erro tem um campo específico
+    if (data.field && data.message) {
+      newErrors[data.field] = data.message;
+    }
+    // Se temos um objeto de erros
+    else if (data.errors && typeof data.errors === 'object') {
+      Object.keys(data.errors).forEach(key => {
+        newErrors[key] = data.errors[key];
+      });
+    }
+    // Se temos apenas uma mensagem de erro geral
+    else if (data.message) {
+      newErrors.general = data.message;
+    }
+    // Fallback para erros desconhecidos
+    else {
+      newErrors.general = 'Ocorreu um erro inesperado';
+    }
+
+    return newErrors;
+  }, []);
+
+  // Função para validar e definir erros de campo
+  const validateField = (field, value) => {
+    // Limpar erro anterior do campo
+    const updatedErrors = { ...fieldErrors };
+
+    // Remover o erro do backend para este campo, pois o usuário está modificando o valor
+    delete updatedErrors[field];
+
+    // Validações específicas por campo
+    switch (field) {
+      case 'name':
+        if (value.trim().length > 0 && value.trim().length < 3) {
+          updatedErrors.name = 'Nome deve ter pelo menos 3 caracteres';
+        }
+        break;
+
+      case 'cpf':
+        // Validar CPF apenas quando tem o formato completo
+        if (value && value.length === 14 && !validateCPF(value)) {
+          updatedErrors.cpf = 'CPF inválido';
+        } else if (value && value.length > 0 && value.length < 14) {
+          updatedErrors.cpf = 'CPF incompleto';
+        }
+        break;
+
+      case 'phone':
+        const phoneRegex = /^\(\d{2}\) \d{5}-\d{4}$/;
+        if (value && value.length > 0 && !phoneRegex.test(value)) {
+          if (value.length < 15) {
+            updatedErrors.phone = 'Telefone incompleto';
+          } else {
+            updatedErrors.phone = 'Formato de telefone inválido';
+          }
+        }
+        break;
+
+      case 'institution':
+        if (value && value.trim().length > 0 && value.trim().length < 3) {
+          updatedErrors.institution = 'Instituição deve ter pelo menos 3 caracteres';
+        }
+        break;
+
+      case 'city':
+        if (value && value.trim().length > 0 && value.trim().length < 2) {
+          updatedErrors.city = 'Cidade deve ter pelo menos 2 caracteres';
+        }
+        break;
+    }
+
+    setFieldErrors(updatedErrors);
+  };
+
+  // Verifica se há erros de validação
+  const hasValidationErrors = () => {
+    return Object.keys(fieldErrors).filter(key => key !== 'general').length > 0;
+  };
+
+  // Funções para buscar dados - definidas antes do useEffect
   const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch('/api/user/profile');
-      const userData = await response.json();
 
-      if (response.ok) {
-        setFormData({
-          name: userData.name || '',
-          email: userData.email || '',
-          cpf: userData.cpf || '',
-          phone: userData.phone || '',
-          institution: userData.institution || '',
-          city: userData.city || '',
-          stateId: userData.stateId
-            ? brazilianStates.find(s => s.value === userData.stateId) || null
-            : null
-        });
-        return true;
-      } else {
-        setError('Erro ao carregar dados do perfil');
+      if (!response.ok) {
+        const errorData = await response.json();
+        setFieldErrors(processApiErrors(errorData));
         return false;
       }
+
+      const userData = await response.json();
+      const formattedData = {
+        name: userData.name || '',
+        email: userData.email || '',
+        cpf: userData.cpf || '',
+        phone: userData.phone || '',
+        institution: userData.institution || '',
+        city: userData.city || '',
+        stateId: userData.stateId
+          ? brazilianStates.find(s => s.value === userData.stateId) || null
+          : null
+      };
+
+      // Atualizar o form data
+      setFormData(formattedData);
+      return true;
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      setError('Erro de conexão ao carregar seus dados');
+      setFieldErrors(prev => ({
+        ...prev,
+        general: 'Erro de conexão ao carregar seus dados. Verifique sua internet e tente novamente.'
+      }));
       return false;
     }
-  }, []);
+  }, [processApiErrors]);
 
+  const fetchLinkedAccounts = useCallback(async () => {
+    try {
+      setAccountsLoading(true);
+      const res = await fetch('/api/user/linked-accounts');
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        setFieldErrors(prev => ({ ...prev, ...processApiErrors(errorData) }));
+        return false;
+      }
+
+      const data = await res.json();
+      setAccounts(data.accounts);
+      return true;
+    } catch (error) {
+      console.error('Erro ao carregar contas vinculadas:', error);
+      setFieldErrors(prev => ({ ...prev, linkedAccounts: 'Falha ao carregar métodos de login' }));
+      return false;
+    } finally {
+      setAccountsLoading(false);
+    }
+  }, [processApiErrors]);
+
+  const fetchLoginHistory = useCallback(async () => {
+    try {
+      setHistoryLoading(true);
+      const res = await fetch('/api/user/login-history?limit=5');
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        setFieldErrors(prev => ({ ...prev, ...processApiErrors(errorData) }));
+        return false;
+      }
+
+      const data = await res.json();
+      setLoginHistory(data.loginLogs);
+      return true;
+    } catch (error) {
+      console.error('Erro ao carregar histórico de login:', error);
+      setFieldErrors(prev => ({ ...prev, loginHistory: 'Falha ao carregar histórico de login' }));
+      return false;
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [processApiErrors]);
+
+  // useEffect agora usa funções já definidas
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
-    } 
-    
+    }
+
     if (status === 'authenticated') {
       // Carregar dados em paralelo
       Promise.all([
@@ -110,59 +260,25 @@ function ProfileContent() {
         setMessage(`Conta ${token.provider.charAt(0).toUpperCase() + token.provider.slice(1)} vinculada com sucesso à sua conta existente.`);
       }
     }
-  }, [status, router, session, fetchUserData]);
-
-  const fetchLinkedAccounts = async () => {
-    try {
-      setAccountsLoading(true);
-      const res = await fetch('/api/user/linked-accounts');
-      const data = await res.json();
-
-      if (res.ok) {
-        setAccounts(data.accounts);
-      }
-      return true;
-    } catch (error) {
-      console.error('Erro ao carregar contas vinculadas:', error);
-      return false;
-    } finally {
-      setAccountsLoading(false);
-    }
-  };
-
-  const fetchLoginHistory = async () => {
-    try {
-      setHistoryLoading(true);
-      const res = await fetch('/api/user/login-history?limit=5');
-      const data = await res.json();
-
-      if (res.ok) {
-        setLoginHistory(data.loginLogs);
-      }
-      return true;
-    } catch (error) {
-      console.error('Erro ao carregar histórico de login:', error);
-      return false;
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
+  }, [status, router, session, fetchUserData, fetchLinkedAccounts, fetchLoginHistory]);
 
   const handleAddPassword = async (e) => {
     e.preventDefault();
 
     if (!passwordValid) {
-      setError('Sua senha não atende aos requisitos de segurança');
+      setFieldErrors(prev => ({ ...prev, password: 'Sua senha não atende aos requisitos de segurança' }));
       return;
     }
 
     if (!confirmPasswordValid) {
-      setError('As senhas não correspondem');
+      setFieldErrors(prev => ({ ...prev, confirmPassword: 'As senhas não correspondem' }));
       return;
     }
 
     setLoading(true);
-    setError('');
+
+    // Limpar mensagens anteriores
+    setFieldErrors({});
     setMessage('');
 
     try {
@@ -182,10 +298,14 @@ function ProfileContent() {
         setConfirmPassword('');
         fetchLinkedAccounts();
       } else {
-        setError(data.message || 'Ocorreu um erro ao adicionar senha');
+        setFieldErrors(processApiErrors(data));
       }
     } catch (error) {
-      setError('Erro de conexão. Tente novamente.');
+      console.error('Erro ao adicionar senha:', error);
+      setFieldErrors(prev => ({
+        ...prev,
+        general: 'Erro de conexão ao adicionar senha. Verifique sua internet e tente novamente.'
+      }));
     } finally {
       setLoading(false);
     }
@@ -200,7 +320,9 @@ function ProfileContent() {
     if (!accountToRemove) return;
 
     setUnlinkLoading(true);
-    setError('');
+
+    // Limpar mensagens anteriores
+    setFieldErrors({});
     setMessage('');
 
     try {
@@ -220,10 +342,14 @@ function ProfileContent() {
         setMessage(`Método de login removido com sucesso`);
         fetchLinkedAccounts();
       } else {
-        setError(data.message || 'Ocorreu um erro ao remover método de login');
+        setFieldErrors(processApiErrors(data));
       }
     } catch (error) {
-      setError('Erro de conexão. Tente novamente.');
+      console.error('Erro ao desvincular conta:', error);
+      setFieldErrors(prev => ({
+        ...prev,
+        general: 'Erro de conexão ao remover método de login. Verifique sua internet e tente novamente.'
+      }));
     } finally {
       setUnlinkLoading(false);
       setModalIsOpen(false);
@@ -233,36 +359,85 @@ function ProfileContent() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let formattedValue = value;
 
+    // Formatação específica para cada campo
+    switch (name) {
+      case 'phone':
+        formattedValue = formatPhone(value);
+        break;
+
+      case 'cpf':
+        formattedValue = formatCPF(value);
+        break;
+    }
+
+    // Atualizar o valor do campo
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: formattedValue
     }));
+
+    // Validar o campo após a alteração
+    validateField(name, formattedValue);
   };
 
   const handleCancelEdit = () => {
-    if (session?.user) {
-      setFormData({
-        name: session.user.name || '',
-        email: session.user.email || '',
-        cpf: session.user.cpf || '',
-        phone: session.user.phone || '',
-        institution: session.user.institution || '',
-        city: session.user.city || '',
-        stateId: session.user.stateId
-          ? brazilianStates.find(s => s.value === session.user.stateId) || null
-          : null
-      });
-    }
-    setError('');
+    // Recarregar os dados do usuário do banco de dados
+    fetchUserData();
+
+    // Limpar erros e mensagens
+    setFieldErrors({});
     setSuccess('');
     setIsEditing(false);
   };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+
+    // Validar campos obrigatórios antes de enviar
+    const requiredFields = {
+      name: formData.name,
+      cpf: formData.cpf,
+      phone: formData.phone,
+      city: formData.city,
+      institution: formData.institution,
+    };
+
+    const updatedErrors = { ...fieldErrors };
+
+    // Verificar campos obrigatórios
+    Object.entries(requiredFields).forEach(([field, value]) => {
+      if (!value || value.trim() === '') {
+        updatedErrors[field] = `${field === 'name' ? 'Nome' :
+                               field === 'cpf' ? 'CPF' :
+                               field === 'phone' ? 'Telefone' :
+                               field === 'city' ? 'Cidade' :
+                               'Instituição'} é obrigatório`;
+      } else {
+        // Se tem valor, valida conforme as regras específicas
+        validateField(field, value);
+      }
+    });
+
+    // Verificar estado (é um caso especial por ser um objeto)
+    if (!formData.stateId) {
+      updatedErrors.stateId = 'Estado é obrigatório';
+    }
+
+    // Atualizar erros
+    setFieldErrors(updatedErrors);
+
+    // Verificar se há erros
+    if (Object.keys(updatedErrors).length > 0) {
+      return; // Não prosseguir com o envio se houver erros
+    }
+
+    // Resto da função permanece igual
     setIsSaving(true);
-    setError('');
+
+    // Limpar mensagens anteriores
+    setFieldErrors({});
     setSuccess('');
 
     try {
@@ -271,12 +446,13 @@ function ProfileContent() {
         : formData.stateId;
 
       const dataToUpdate = {
-        name: formData.name,
+        userId: session?.user?.id,
+        name: formatName(formData.name.trim()),
         email: formData.email,
         cpf: formData.cpf,
         phone: formData.phone,
-        institution: formData.institution,
-        city: formData.city,
+        institution: formData.institution.trim(),
+        city: formatName(formData.city.trim()),
         stateId: stateIdValue
       };
 
@@ -294,15 +470,29 @@ function ProfileContent() {
         setSuccess('Perfil atualizado com sucesso!');
         setIsEditing(false);
 
-        if (fetchLinkedAccounts && typeof fetchLinkedAccounts === 'function') {
-          await fetchLinkedAccounts();
-        }
+        // Recarregar dados relacionados
+        await fetchUserData();
+        await fetchLinkedAccounts();
       } else {
-        setError(data.message || 'Erro ao atualizar o perfil');
+        // Processar erros retornados do servidor
+        const errors = processApiErrors(data);
+        setFieldErrors(errors);
+        console.log('Erro ao atualizar perfil:', errors);
+
+        // Se houver erro de campo específico, manter edição ativa
+        if (Object.keys(errors).some(key => key !== 'general')) {
+          // Manter no modo edição
+        } else {
+          // Se for só erro geral, podemos sair do modo edição
+          setIsEditing(false);
+        }
       }
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
-      setError('Erro de conexão. Tente novamente.');
+      setFieldErrors(prev => ({
+        ...prev,
+        general: 'Erro de conexão ao atualizar perfil. Verifique sua internet e tente novamente.'
+      }));
     } finally {
       setIsSaving(false);
     }
@@ -312,16 +502,21 @@ function ProfileContent() {
     if (session?.user?.organization === 'SRMG') {
       return null;
     }
+
     return (
       <div className={styles.loginHistory}>
         <h2>Histórico de Login Recente</h2>
 
+        {fieldErrors.loginHistory && (
+          <ErrorMessage message={fieldErrors.loginHistory} />
+        )}
+
         {historyLoading ? (
           <p>Carregando histórico...</p>
         ) : loginHistory.length > 0 ? (
-          <LoginHistoryTable 
-            loginHistory={loginHistory} 
-            compactMode={true} 
+          <LoginHistoryTable
+            loginHistory={loginHistory}
+            compactMode={true}
           />
         ) : (
           <p>Nenhum registro de login encontrado</p>
@@ -345,10 +540,15 @@ function ProfileContent() {
     if (session?.user?.organization === 'SRMG') {
       return null;
     }
+
     return (
       <>
         <div className={styles.linkedAccounts}>
           <h2>Métodos de Login</h2>
+
+          {fieldErrors.linkedAccounts && (
+            <ErrorMessage message={fieldErrors.linkedAccounts} />
+          )}
 
           {accountsLoading ? (
             <p>Carregando métodos de login...</p>
@@ -370,7 +570,7 @@ function ProfileContent() {
                       )}
                     </div>
                     <div className={styles.accountName}>
-                      {account.type === 'credentials' ? 'Email e Senha' : 
+                      {account.type === 'credentials' ? 'Email e Senha' :
                       account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
                     </div>
                   </div>
@@ -433,13 +633,14 @@ function ProfileContent() {
     if (session?.user?.organization === 'SRMG') {
       return null;
     }
+
     return (
       <>
         {!accountsLoading && !accounts.some(acc => acc.type === 'credentials') && (
           <div className={styles.addPasswordSection}>
             <h2>Adicionar Login com Email e Senha</h2>
             <p className={styles.sectionDescription}>
-              Atualmente você só pode acessar sua conta usando provedores sociais. 
+              Atualmente você só pode acessar sua conta usando provedores sociais.
               Adicione uma senha para também poder fazer login diretamente com seu email.
             </p>
 
@@ -455,7 +656,16 @@ function ProfileContent() {
                 label="Nova Senha"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) {
+                    setFieldErrors(prev => {
+                      const updated = {...prev};
+                      delete updated.password;
+                      return updated;
+                    });
+                  }
+                }}
                 placeholder="Crie uma senha forte"
                 disabled={loading}
                 showValidation={true}
@@ -465,13 +675,23 @@ function ProfileContent() {
                 requireNumber={true}
                 requireSpecial={true}
                 onValidationChange={(state) => setPasswordValid(state.isValid)}
+                error={fieldErrors.password}
               />
 
               <PasswordInput
                 label="Confirmar Senha"
                 id="confirmPassword"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors(prev => {
+                      const updated = {...prev};
+                      delete updated.confirmPassword;
+                      return updated;
+                    });
+                  }
+                }}
                 placeholder="Confirme sua senha"
                 disabled={loading}
                 showValidation={true}
@@ -482,6 +702,7 @@ function ProfileContent() {
                 requireSpecial={true}
                 confirmPassword={password}
                 onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
+                error={fieldErrors.confirmPassword}
               />
 
               <Button
@@ -533,152 +754,219 @@ function ProfileContent() {
             ) : null}
           </div>
 
-          {error && <div className={styles.error}>{error}</div>}
+          {/* Mensagens gerais */}
+          {fieldErrors.general && (
+            <ErrorMessage message={fieldErrors.general} />
+          )}
+
           {success && <div className={styles.success}>{success}</div>}
 
-          {!isEditing ? (
+          <form onSubmit={handleProfileUpdate} className={styles.editForm}>
             <div className={styles.infoGrid}>
               <div className={styles.infoField}>
-                <span className={styles.label}>Nome:</span>
-                <span>{formData.name || 'Não informado'}</span>
+                <Input
+                  label="Nome Completo"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  autoComplete="name"
+                  autoCorrect="off"
+                  spellCheck="true"
+                  type="text"
+                  maxLength={100}
+                  minLength={3}
+                  autoFocus={true}
+                  leftIcon={<FaUser />}
+                  autoCapitalize="off"
+                  onChange={handleInputChange}
+                  onBlur={() => { formatName(formData.name) }}
+                  placeholder="Seu nome completo"
+                  required
+                  disabled={!isEditing}
+                  error={fieldErrors.name}
+                  isValid={!fieldErrors.name}
+                  isLoading={loading}
+                />
+              </div>
+
+              <div className={styles.infoField + ' ' + styles.inputDisabled}>
+                <Input
+                  label="Email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="seu@email.com"
+                  autoComplete="email"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  maxLength={100}
+                  minLength={5}
+                  type="email"
+                  leftIcon={<FaEnvelope />}
+                  autoCapitalize="off"
+                  autoFocus={false}
+                  disabled={!isEditing}
+                  // disabled={true} // Email sempre desabilitado
+                  required
+                  error={fieldErrors.email}
+                  isValid={!fieldErrors.email}
+                  isLoading={loading}
+                />
               </div>
 
               <div className={styles.infoField}>
-                <span className={styles.label}>Email:</span>
-                <span>{formData.email || session?.user?.email || 'Não informado'}</span>
+                <Input
+                  label="CPF"
+                  id="cpf"
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleInputChange}
+                  placeholder="000.000.000-00"
+                  autoComplete="cpf"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  type="text"
+                  leftIcon={<FaRegIdCard />}
+                  autoCapitalize="off"
+                  autoFocus={false}
+                  disabled={!isEditing}
+                  required
+                  maxLength={14}
+                  error={fieldErrors.cpf}
+                  isValid={!fieldErrors.cpf}
+                  isLoading={loading}
+                />
               </div>
 
               <div className={styles.infoField}>
-                <span className={styles.label}>CPF:</span>
-                <span>{formData.cpf || 'Não informado'}</span>
+                <Input
+                  label="Celular"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="(00) 00000-0000"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  type="text"
+                  leftIcon={<FaPhone />}
+                  autoCapitalize="off"
+                  autoFocus={false}
+                  disabled={!isEditing}
+                  maxLength={15}
+                  error={fieldErrors.phone}
+                  isValid={!fieldErrors.phone}
+                  isLoading={loading}
+                />
               </div>
 
               <div className={styles.infoField}>
-                <span className={styles.label}>Celular:</span>
-                <span>{formData.phone || 'Não informado'}</span>
+                <Input
+                  label="Cidade"
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  onBlur={() => { formatName(formData.city) }}
+                  placeholder="Sua cidade"
+                  autoComplete="address-level2"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  type="text"
+                  leftIcon={<FaCity />}
+                  autoCapitalize="words"
+                  autoFocus={false}
+                  maxLength={50}
+                  minLength={2}
+                  disabled={!isEditing}
+                  required
+                  error={fieldErrors.city}
+                  isValid={!fieldErrors.city}
+                  isLoading={loading}
+                />
               </div>
 
               <div className={styles.infoField}>
-                <span className={styles.label}>Cidade:</span>
-                <span>{formData.city || 'Não informada'}</span>
+                <label htmlFor="stateId" className={fieldErrors.stateId ? styles.labelError : styles.stateLabel}>
+                  {fieldErrors.stateId ? (
+                    <span className={styles.errorText}>{fieldErrors.stateId}</span>
+                  ) : (
+                    "Estado"
+                  )}
+                  <span className={styles.requiredMark}>*</span>
+                </label>
+                <Select
+                  className="basic-single"
+                  classNamePrefix="select"
+                  defaultValue={brazilianStates[12]}
+                  value={formData.stateId}
+                  required
+                  onChange={(selectedOption) => {
+                    setFormData((prevData) => ({
+                      ...prevData,
+                      stateId: selectedOption
+                    }));
+
+                    // Limpar erro de estado
+                    if (fieldErrors.stateId) {
+                      setFieldErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.stateId;
+                        return updated;
+                      });
+                    }
+                  }}
+                  isDisabled={!isEditing}
+                  isLoading={false}
+                  isClearable={true}
+                  isRtl={false}
+                  isSearchable={true}
+                  name="stateId"
+                  id='stateId'
+                  options={brazilianStates}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      borderColor: fieldErrors.stateId ? '#ef4444' : state.isFocused ? '#3b82f6' : '#cbd5e1',
+                      boxShadow: fieldErrors.stateId
+                        ? '0 0 0 1px #ef4444'
+                        : state.isFocused
+                          ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
+                          : 'none',
+                    }),
+                  }}
+                />
               </div>
 
-              <div className={styles.infoField}>
-                <span className={styles.label}>Estado:</span>
-                <span>
-                  {formData.stateId ? (
-                    <div className={styles.stateDisplay}>
-                      {formData.stateId.label || formData.stateId}
-                    </div>
-                  ) : 'Não informado'}
-                </span>
-              </div>
-
-              <div className={styles.infoField}>
-                <span className={styles.label}>Instituição:</span>
-                <span>{formData.institution || 'Não informada'}</span>
+              <div className={styles.infoField + ' ' + styles.fullWidth}>
+                <Input
+                  label="Instituição"
+                  id="institution"
+                  name="institution"
+                  value={formData.institution}
+                  onChange={handleInputChange}
+                  onBlur={() => { formData.institution }}
+                  placeholder="Nome da sua instituição"
+                  autoComplete="organization"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  type="text"
+                  leftIcon={<FaUniversity />}
+                  autoCapitalize="off"
+                  autoFocus={false}
+                  maxLength={100}
+                  minLength={3}
+                  disabled={!isEditing}
+                  required
+                  error={fieldErrors.institution}
+                  isValid={!fieldErrors.institution}
+                  isLoading={loading}
+                />
               </div>
             </div>
-          ) : (
-            <form onSubmit={handleProfileUpdate} className={styles.editForm}>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoField}>
-                  <Input
-                    label="Nome Completo"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Seu nome completo"
-                    required
-                  />
-                </div>
 
-                <div className={styles.infoField + ' ' + styles.inputDisabled}>
-                  <Input
-                    label="Email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    disabled={true}
-                  />
-                </div>
-
-                <div className={styles.infoField}>
-                  <Input
-                    label="CPF"
-                    id="cpf"
-                    name="cpf"
-                    value={formData.cpf}
-                    onChange={handleInputChange}
-                    placeholder="000.000.000-00"
-                  />
-                </div>
-
-                <div className={styles.infoField}>
-                  <Input
-                    label="Celular"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-
-                <div className={styles.infoField}>
-                  <Input
-                    label="Cidade"
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="Sua cidade"
-                  />
-                </div>
-
-                <div className={styles.infoField}>
-                  <label htmlFor="stateId" className={styles.stateLabel}>Estado</label>
-                  <Select
-                    className="basic-single"
-                    classNamePrefix="select"
-                    defaultValue={brazilianStates[12]}
-                    value={formData.stateId}
-                    onChange={(selectedOption) => {
-                      setFormData((prevData) => ({
-                        ...prevData,
-                        stateId: selectedOption
-                      }));
-                    }}
-                    isDisabled={false}
-                    isLoading={false}
-                    isClearable={true}
-                    isRtl={false}
-                    isSearchable={true}
-                    name="stateId"
-                    id='stateId'
-                    options={brazilianStates}
-                  />
-                  {/* <StateSelect
-                    value={formData.stateId}
-                    onChange={handleInputChange}
-                    states={brazilianStates}
-                    id="stateId"
-                    name="stateId"
-                  /> */}
-                </div>
-                <div className={styles.infoField + ' ' + styles.fullWidth}>
-                  <Input
-                    label="Instituição"
-                    id="institution"
-                    name="institution"
-                    value={formData.institution}
-                    onChange={handleInputChange}
-                    placeholder="Nome da sua instituição"
-                  />
-                </div>
-              </div>
-
+            {isEditing && (
               <div className={styles.formActions}>
                 <Button
                   type="button"
@@ -697,12 +985,11 @@ function ProfileContent() {
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
-            </form>
-          )}
+            )}
+          </form>
         </div>
 
         {message && <div className={styles.success}>{message}</div>}
-        {error && <div className={styles.error}>{error}</div>}
 
         {getLinkedAccountsSection()}
 

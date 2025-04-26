@@ -6,12 +6,17 @@
   width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .authorCard:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
   border-color: #cbd5e1;
+}
+
+.authorCard + .authorCard {
+  margin-top: 30px; /* espaço suficiente para o aviso aparecer */
 }
 
 .presenterCard {
@@ -150,8 +155,9 @@
 
 .errorText {
   color: #ef4444;
-  font-size: 11px;
-  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
 }
 
 .disabledInput {
@@ -204,6 +210,23 @@
 .incompleteAuthorCard {
   border: 1px solid #ef4444;
   border-left: 4px solid #ef4444;
+  border-color: #f59e0b;
+}
+
+.incompleteAuthorCard::after {
+  content: "⚠️ Informações incompletas";
+  display: block;
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #b45309;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2; /* acima do card mas abaixo de dropdowns */
 }
 
 .mainAuthorIcon {
