@@ -67,7 +67,7 @@ function PaperPageContent() {
         total: 0,
         pages: 0
       });
-      
+
       // Marcar que o conteúdo está pronto para ser exibido
       setContentReady(true);
     } catch (error) {
@@ -131,10 +131,11 @@ function PaperPageContent() {
 
   // Obter uma descrição detalhada dos autores para o tooltip
   const getAuthorsTooltip = (authors) => {
-    if (!authors || authors.length === 0) return 'Sem autores';
+    if (!authors || authors.length === 0) return ['Sem autores'];
 
     const sortedAuthors = [...authors].sort((a, b) => a.authorOrder - b.authorOrder);
 
+    // Refatorado para retornar diretamente o array resultante do map
     return sortedAuthors.map(author => {
       const roles = [];
       if (author.isMainAuthor) roles.push('Autor Principal');
@@ -148,12 +149,12 @@ function PaperPageContent() {
   // Obter campos dinâmicos específicos, como resumo
   const getFieldValue = (paper, fieldType) => {
     if (!paper.fieldValues || paper.fieldValues.length === 0) return '';
-    
+
     // Procurar por campos com o tipo desejado
     const field = paper.fieldValues.find(
       fv => fv.field && fv.field.fieldType.toUpperCase() === fieldType
     );
-    
+
     return field ? field.value : '';
   };
 
@@ -273,6 +274,7 @@ function PaperPageContent() {
                           <FaUsers className={styles.metaIcon} />
                           <Tooltip
                             content={getAuthorsTooltip(paper.authors)}
+                            multLine={true}
                             position="top"
                             delay={300}
                             arrow={true}

@@ -11,11 +11,14 @@ import {
   FaFileDownload, FaBuilding, FaTag, FaEdit, FaMicroscope
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
+import Tooltip from '../../components/ui/Tooltip';
 
 export default function PaperDetailPage() {
+  // Obter params diretamente - não é necessário use()
   const params = useParams();
+  const id = params.id; // Acesso direto é permitido
+
   const router = useRouter();
-  const { id } = params;
   const { data: session, status } = useSession();
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -102,12 +105,38 @@ export default function PaperDetailPage() {
       <div className={styles.authorsGrid}>
         {sortedAuthors.map((author, index) => (
           <div key={author.id || index} className={styles.authorCard}>
-            <div className={styles.authorName}>
-              {author.name}
-              {author.isMainAuthor &&
-                <span className={styles.authorMainBadge}>Principal</span>}
-              {author.isPresenter &&
-                <span className={styles.authorPresenterBadge}>Apresentador</span>}
+            <div className={styles.authorNameContainer}>
+            <Tooltip
+              content={`${author.name}`}
+              position="top"
+              delay={300}
+            >
+              <span className={styles.authorName}>
+                {author.name}
+              </span>
+            </Tooltip>
+              <div className={styles.authorStatus}>
+                {(author.isMainAuthor || author.userId) &&
+                  <Tooltip
+                    multLine={true}
+                    content={'Autor que submeteu o Trabalho.'}
+                    position="top"
+                    delay={300}
+                  >
+                    <div className={styles.authorMainBadge}><span className={styles.visibleBadgeText}>Pricipal</span></div>
+                  </Tooltip>
+                }
+                {(author.isPresenter) &&
+                  <Tooltip
+                    multLine={true}
+                    content={'Autor apresentador do Trabalho.'}
+                    position="top"
+                    delay={300}
+                  >
+                    <div className={styles.authorPresenterBadge}><span className={styles.visibleBadgeText}>Apresentador</span></div>
+                  </Tooltip>
+                }
+              </div>
             </div>
             <div className={styles.authorInfo}>
               <div className={styles.authorInstitution}>{author.institution || 'Instituição não informada'}</div>
@@ -258,7 +287,7 @@ export default function PaperDetailPage() {
             >
               &larr; Voltar
             </Button>
-            
+
             <div className={styles.statusContainer}>
               {getStatusBadge(paper.status)}
             </div>
@@ -269,7 +298,7 @@ export default function PaperDetailPage() {
 
         <div className={styles.paperContent}>
           {/* Evento e área temática */}
-          <div className={styles.eventSection}>
+          <section className={styles.eventAreaTypeSection}>
             {/* Evento */}
             <div className={styles.eventInfoRow}>
               <div className={styles.infoContainer}>
@@ -291,10 +320,10 @@ export default function PaperDetailPage() {
                     {paper.area.name}
                   </div>
                 </div>
-                
+
                 {paper.area.description && (
                   <div className={styles.descriptionContainer}>
-                    <ExpandableDescription 
+                    <ExpandableDescription
                       description={paper.area.description}
                       maxLength={100}
                     />
@@ -313,10 +342,10 @@ export default function PaperDetailPage() {
                     {paper.paperType.name}
                   </div>
                 </div>
-                
+
                 {paper.paperType.description && (
                   <div className={styles.descriptionContainer}>
-                    <ExpandableDescription 
+                    <ExpandableDescription
                       description={paper.paperType.description}
                       maxLength={100}
                     />
@@ -324,10 +353,10 @@ export default function PaperDetailPage() {
                 )}
               </div>
             )}
-          </div>
+          </section>
 
           {/* Autores */}
-          <div className={styles.paperMeta}>
+          <section className={styles.AuthorsSection}>
             <div className={`${styles.metaItem} ${styles.fullWidth}`}>
               <div className={styles.metaHeader}>
                 <FaUsers className={styles.metaIcon} />
@@ -337,10 +366,74 @@ export default function PaperDetailPage() {
                 {formatAuthors(paper.authors)}
               </div>
             </div>
-          </div>
+          </section>
+
+          {/* Resumo */}
+          <section className={styles.abstractSection}>
+            <h2 className={styles.sectionTitle}>Resumo:</h2>
+            <div className={styles.abstractContent}>
+              {getAbstract()}
+            </div>
+          </section>
+
+          {/* Palavras-chave */}
+          <section className={styles.keywordsSection}>
+            <div className={styles.keywordsHeader}>
+              <FaTag className={styles.metaIcon} />
+              <span className={styles.metaLabel}>Palavras-chave</span>
+            </div>
+            <div className={styles.keywordsTags}>
+              {paper.keywords.split(',').map(keyword => (
+                <span key={keyword.trim()} className={styles.keywordTag}>
+                  {keyword.trim()}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          {/* Campos dinâmicos adicionais */}
+          {paper.fieldValues && paper.fieldValues.length > 0 && (
+            <section className={styles.customFieldsSection}>
+              <h2 className={styles.sectionTitle}>Informações Adicionais</h2>
+              <div className={styles.fieldsGrid}>
+                {paper.fieldValues
+                  .filter(fv => fv.field && fv.field.fieldType !== 'TEXTAREA')
+                  .map(fieldValue => (
+                    <div key={fieldValue.id} className={styles.fieldItem}>
+                      <div className={styles.fieldLabel}>{fieldValue.field.label}</div>
+                      <div className={styles.fieldValue}>{fieldValue.value}</div>
+                    </div>
+                  ))}
+              </div>
+            </section>
+          )}
+
+          {/* Arquivo */}
+          {paper.fileUrl && (
+            <section className={styles.fileSection}>
+              <h2 className={styles.sectionTitle}>Arquivo</h2>
+              <div className={styles.fileInfo}>
+                <span className={styles.fileName}>
+                  <FaFileAlt className={styles.fileIcon} /> {paper.fileName || "arquivo.pdf"}
+                </span>
+                {paper.fileSize && (
+                  <span className={styles.fileSize}>
+                    {(paper.fileSize / (1024 * 1024)).toFixed(2)} MB
+                  </span>
+                )}
+                <Button
+                  variant="primary"
+                  onClick={downloadPaper}
+                  className={styles.downloadButton}
+                >
+                  <FaFileDownload className={styles.downloadIcon} /> Baixar arquivo
+                </Button>
+              </div>
+            </section>
+          )}
 
           {/* Datas */}
-          <div className={styles.metaDatesRow}>
+          <section className={styles.DatesSection}>
             <div className={styles.metaItem}>
               <div className={styles.metaHeader}>
                 <FaCalendarAlt className={styles.metaIcon} />
@@ -362,75 +455,11 @@ export default function PaperDetailPage() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Palavras-chave */}
-          <div className={styles.keywordsContainer}>
-            <div className={styles.keywordsHeader}>
-              <FaTag className={styles.metaIcon} />
-              <span className={styles.metaLabel}>Palavras-chave</span>
-            </div>
-            <div className={styles.keywordsTags}>
-              {paper.keywords.split(',').map(keyword => (
-                <span key={keyword.trim()} className={styles.keywordTag}>
-                  {keyword.trim()}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Resumo */}
-          <div className={styles.abstractSection}>
-            <h2 className={styles.sectionTitle}>Resumo:</h2>
-            <div className={styles.abstractContent}>
-              {getAbstract()}
-            </div>
-          </div>
-
-          {/* Campos dinâmicos adicionais */}
-          {paper.fieldValues && paper.fieldValues.length > 0 && (
-            <div className={styles.customFieldsSection}>
-              <h2 className={styles.sectionTitle}>Informações Adicionais</h2>
-              <div className={styles.fieldsGrid}>
-                {paper.fieldValues
-                  .filter(fv => fv.field && fv.field.fieldType !== 'TEXTAREA')
-                  .map(fieldValue => (
-                    <div key={fieldValue.id} className={styles.fieldItem}>
-                      <div className={styles.fieldLabel}>{fieldValue.field.label}</div>
-                      <div className={styles.fieldValue}>{fieldValue.value}</div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {/* Arquivo */}
-          {paper.fileUrl && (
-            <div className={styles.fileSection}>
-              <h2 className={styles.sectionTitle}>Arquivo</h2>
-              <div className={styles.fileInfo}>
-                <span className={styles.fileName}>
-                  <FaFileAlt className={styles.fileIcon} /> {paper.fileName || "arquivo.pdf"}
-                </span>
-                {paper.fileSize && (
-                  <span className={styles.fileSize}>
-                    {(paper.fileSize / (1024 * 1024)).toFixed(2)} MB
-                  </span>
-                )}
-                <Button
-                  variant="primary"
-                  onClick={downloadPaper}
-                  className={styles.downloadButton}
-                >
-                  <FaFileDownload className={styles.downloadIcon} /> Baixar arquivo
-                </Button>
-              </div>
-            </div>
-          )}
+          </section>
 
           {/* Histórico */}
           {paper.history && paper.history.length > 0 && (
-            <div className={styles.historySection}>
+            <section className={styles.historySection}>
               <h2 className={styles.sectionTitle}>Histórico</h2>
               <div className={styles.historyTimeline}>
                 {paper.history.map((item) => (
@@ -449,11 +478,11 @@ export default function PaperDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
           {/* Botões de ação */}
-          <div className={styles.actionsSection}>
+          <section className={styles.actionsSection}>
             <Button
               variant="secondary"
               onClick={handleBack}
@@ -471,7 +500,7 @@ export default function PaperDetailPage() {
                 <FaEdit className={styles.buttonIcon} /> Editar trabalho
               </Button>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>
