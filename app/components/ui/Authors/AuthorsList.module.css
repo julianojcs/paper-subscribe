@@ -1,0 +1,68 @@
+.authorsListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.authorList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: 16px;
+  row-gap: 2rem;
+  width: 100%;
+  margin-block-end: 0.5rem;
+}
+
+.addAuthorContainer {
+  margin-top: 8px;
+}
+
+.addAuthorButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.addIcon {
+  font-size: 14px;
+}
+
+.warningMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: #ef4444;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.warningMessage svg {
+  color: #ef4444;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .authorList {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Suporte para tema escuro */
+/* @media (prefers-color-scheme: dark) {
+  .warningMessage {
+    color: #fca5a5;
+    background-color: rgba(127, 29, 29, 0.4);
+    border-color: rgba(252, 165, 165, 0.2);
+  }
+
+  .warningMessage svg {
+    color: #fca5a5;
+  }
+} */
