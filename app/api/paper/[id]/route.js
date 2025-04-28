@@ -46,7 +46,9 @@ export async function GET(request, context) {
           select: {
             id: true,
             name: true,
+            cpf: true,
             email: true,
+            phone: true,
             institution: true,
             image: true,
           },
