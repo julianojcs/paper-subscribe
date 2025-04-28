@@ -8,7 +8,8 @@ import Button from '../../components/ui/Button';
 import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
-  FaFileDownload, FaBuilding, FaTag, FaEdit, FaMicroscope
+  FaFileDownload, FaBuilding, FaTag, FaEdit, FaMicroscope,
+  FaFilePdf
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
 import Tooltip from '../../components/ui/Tooltip';
@@ -23,6 +24,7 @@ export default function PaperDetailPage() {
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dynamicFields, setDynamicFields] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated' && id) {
@@ -39,7 +41,37 @@ export default function PaperDetailPage() {
         })
         .then(data => {
           console.log('Dados recebidos:', data);
-          setPaper(data.paper);
+
+          // Processar os campos dinâmicos aqui
+          if (data.paper && data.paper.fieldValues) {
+            const textareaFields = data.paper.fieldValues.filter(
+              fv => fv.field && fv.field.fieldType === 'TEXTAREA'
+            );
+
+            // Filtrar os campos TEXTAREA que não são resumos
+            const nonAbstractFields = textareaFields.filter(
+              fv => fv.field &&
+              !(fv.field.label.toLowerCase().includes('resumo') ||
+               fv.field.label.toLowerCase().includes('abstract'))
+            );
+
+            // Definir os campos dinâmicos
+            setDynamicFields(nonAbstractFields);
+
+            // Atualizar o paper com fields values sem TEXTAREA
+            const updatedPaper = {
+              ...data.paper,
+              fieldValues: data.paper.fieldValues.filter(
+                fv => fv.field && fv.field.fieldType !== 'TEXTAREA'
+              ),
+              originalFieldValues: data.paper.fieldValues // Adicionar os valores originais
+            };
+
+            setPaper(updatedPaper);
+          } else {
+            setPaper(data.paper);
+          }
+
           setError(null);
         })
         .catch(err => {
@@ -166,12 +198,14 @@ export default function PaperDetailPage() {
 
     // Tentar encontrar um campo TEXTAREA que geralmente é usado para resumos
     if (paper.fieldValues && Array.isArray(paper.fieldValues)) {
-      const textareaFields = paper.fieldValues.filter(
-        fv => fv.field && fv.field.fieldType === 'TEXTAREA'
-      );
+      // Não filtrar os fieldValues aqui, isso já foi feito no useEffect
 
-      // Se encontrarmos campos TEXTAREA, vamos buscar um que tenha "resumo" ou "abstract" no label
-      const abstractField = textareaFields.find(
+      // Procurar campos de abstract entre os textareaFields que já estão em dynamicFields
+      const allTextareaFields = paper.originalFieldValues?.filter(
+        fv => fv.field && fv.field.fieldType === 'TEXTAREA'
+      ) || [];
+
+      const abstractField = allTextareaFields.find(
         fv => fv.field &&
         (fv.field.label.toLowerCase().includes('resumo') ||
          fv.field.label.toLowerCase().includes('abstract'))
@@ -179,21 +213,16 @@ export default function PaperDetailPage() {
 
       if (abstractField) {
         return (
-          <>
-            {/* <h3 className={styles.fieldLabel}>{abstractField.field.label}</h3> */}
-            <p className={styles.abstractText}>{abstractField.value}</p>
-          </>
+          <section className={styles.dynamicFieldsSection}>
+            <div className={styles.metaHeader}>
+              <FaFileAlt className={styles.metaIcon} />
+              <span className={styles.metaLabel}>{abstractField.field.label}</span>
+            </div>
+            <div className={styles.dynamicFieldsContent}>
+              {abstractField.value}
+            </div>
+          </section>
         );
-      }
-
-      // Se não encontrarmos um campo específico, mas houver campos textarea, mostrar todos
-      if (textareaFields.length > 0) {
-        return textareaFields.map(field => (
-          <div key={field.id} className={styles.dynamicField}>
-            <h3 className={styles.fieldLabel}>{field.field.label}</h3>
-            <p className={styles.fieldValue}>{field.value}</p>
-          </div>
-        ));
       }
     }
 
@@ -203,6 +232,25 @@ export default function PaperDetailPage() {
     }
 
     return <p className={styles.noAbstract}>Nenhum resumo disponível</p>;
+  };
+
+  const getDynamicFields = () => {
+    if (!dynamicFields || dynamicFields.length === 0) return null;
+
+    const dynamicFieldsReturn = dynamicFields.map(dynamicField => {
+      return (
+        <section key={dynamicField.id || dynamicField.fieldId} className={styles.dynamicFieldsSection}>
+          <div className={styles.metaHeader}>
+            <FaFileAlt className={styles.metaIcon} />
+            <span className={styles.metaLabel}>{dynamicField.field.label}</span>
+          </div>
+          <div className={styles.dynamicFieldsContent}>
+            <div className={styles.fieldValue}>{dynamicField.value}</div>
+          </div>
+        </section>
+      );
+    });
+    return dynamicFieldsReturn;
   };
 
   if (status === 'loading') {
@@ -369,16 +417,14 @@ export default function PaperDetailPage() {
           </section>
 
           {/* Resumo */}
-          <section className={styles.abstractSection}>
-            <h2 className={styles.sectionTitle}>Resumo:</h2>
-            <div className={styles.abstractContent}>
-              {getAbstract()}
-            </div>
-          </section>
+          {getAbstract()}
+
+          {/* Campos dinâmicos */}
+          {getDynamicFields()}
 
           {/* Palavras-chave */}
           <section className={styles.keywordsSection}>
-            <div className={styles.keywordsHeader}>
+            <div className={styles.metaHeader}>
               <FaTag className={styles.metaIcon} />
               <span className={styles.metaLabel}>Palavras-chave</span>
             </div>
@@ -391,30 +437,12 @@ export default function PaperDetailPage() {
             </div>
           </section>
 
-          {/* Campos dinâmicos adicionais */}
-          {paper.fieldValues && paper.fieldValues.length > 0 && (
-            <section className={styles.customFieldsSection}>
-              <h2 className={styles.sectionTitle}>Informações Adicionais</h2>
-              <div className={styles.fieldsGrid}>
-                {paper.fieldValues
-                  .filter(fv => fv.field && fv.field.fieldType !== 'TEXTAREA')
-                  .map(fieldValue => (
-                    <div key={fieldValue.id} className={styles.fieldItem}>
-                      <div className={styles.fieldLabel}>{fieldValue.field.label}</div>
-                      <div className={styles.fieldValue}>{fieldValue.value}</div>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          )}
-
           {/* Arquivo */}
-          {paper.fileUrl && (
+          {paper.fileUrl && paper.fileName && paper.fileStoragePath && paper.fileSize && (
             <section className={styles.fileSection}>
-              <h2 className={styles.sectionTitle}>Arquivo</h2>
               <div className={styles.fileInfo}>
                 <span className={styles.fileName}>
-                  <FaFileAlt className={styles.fileIcon} /> {paper.fileName || "arquivo.pdf"}
+                  <FaFilePdf className={styles.fileIcon} /> {paper.fileName || "arquivo.pdf"}
                 </span>
                 {paper.fileSize && (
                   <span className={styles.fileSize}>

@@ -27,6 +27,20 @@ export async function GET(request, context) {
     const paper = await prisma.paper.findUnique({
       where: { id },
       include: {
+      // select: {
+      //   // Campos base do paper
+      //   id: true,
+      //   title: true,
+      //   keywords: true,
+      //   abstract: true,
+      //   status: true,
+      //   userId: true,
+      //   eventId: true,
+      //   areaId: true,
+      //   paperTypeId: true,
+      //   createdAt: true,
+      //   updatedAt: true,
+
         // Incluir dados do usuário que criou o paper
         user: {
           select: {
@@ -37,6 +51,7 @@ export async function GET(request, context) {
             image: true,
           },
         },
+
         // Incluir dados do evento
         event: {
           select: {
@@ -60,6 +75,7 @@ export async function GET(request, context) {
             }
           },
         },
+
         // Incluir dados da área temática
         area: {
           select: {
@@ -68,6 +84,7 @@ export async function GET(request, context) {
             description: true,
           },
         },
+
         // Incluir dados do tipo de paper
         paperType: {
           select: {
@@ -76,6 +93,7 @@ export async function GET(request, context) {
             description: true,
           },
         },
+
         // Incluir todos os autores com ordem de exibição correta
         authors: {
           select: {
@@ -93,6 +111,7 @@ export async function GET(request, context) {
             authorOrder: 'asc',
           },
         },
+
         // Incluir valores de campos dinâmicos com seus detalhes
         fieldValues: {
           select: {
@@ -118,6 +137,7 @@ export async function GET(request, context) {
             }
           },
         },
+
         // Incluir histórico completo
         history: {
           select: {
@@ -130,26 +150,30 @@ export async function GET(request, context) {
             createdAt: 'desc',
           },
         },
-        // Incluir avaliações, se existirem no schema
-        // reviews: {
-        //   select: {
-        //     id: true,
-        //     reviewerId: true,
-        //     score: true,
-        //     comment: true,
-        //     createdAt: true,
-        //     updatedAt: true,
-        //     reviewer: {
-        //       select: {
-        //         id: true,
-        //         name: true,
-        //       }
-        //     }
-        //   },
-        //   orderBy: {
-        //     createdAt: 'desc',
-        //   },
-        // },
+
+        // Incluir dados do evento
+        event: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            submissionStart: true,
+            submissionEnd: true,
+            reviewStart: true,
+            reviewEnd: true,
+            maxAuthors: true,
+            maxFiles: true,
+            maxFileSize: true,
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                shortName: true,
+                logoUrl: true,
+              }
+            }
+          },
+        },
       },
     });
 
@@ -174,7 +198,7 @@ export async function GET(request, context) {
       createdAt: paper.createdAt.toISOString(),
       updatedAt: paper.updatedAt.toISOString(),
       history: paper.history.map(h => ({
-        ...h, 
+        ...h,
         createdAt: h.createdAt.toISOString()
       })),
       event: paper.event ? {
@@ -248,7 +272,7 @@ export async function PUT(request, context) {
 
     // Se o método for PUT, esperamos dados JSON
     let formData;
-    
+
     if (contentType.includes('application/json')) {
       formData = await request.json();
     } else {
@@ -290,7 +314,7 @@ export async function PUT(request, context) {
         });
 
         // Criar novos autores
-        await Promise.all(authors.map(author => 
+        await Promise.all(authors.map(author =>
           tx.paperAuthor.create({
             data: {
               paperId: id,
@@ -314,7 +338,7 @@ export async function PUT(request, context) {
         });
 
         // Criar novos valores de campos
-        await Promise.all(fieldValues.map(field => 
+        await Promise.all(fieldValues.map(field =>
           tx.paperFieldValue.create({
             data: {
               paperId: id,
@@ -344,8 +368,8 @@ export async function PUT(request, context) {
       });
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       paper: result,
       message: "Trabalho atualizado com sucesso"
     }, { status: 200 });
@@ -362,7 +386,7 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const params = await context.params;
-    
+
     if (!params || !params.id) {
       return NextResponse.json({ error: "ID do paper não fornecido" }, { status: 400 });
     }
@@ -402,7 +426,7 @@ export async function DELETE(request, context) {
       await tx.paperAuthor.deleteMany({ where: { paperId: id } });
       await tx.paperFieldValue.deleteMany({ where: { paperId: id } });
       await tx.paperHistory.deleteMany({ where: { paperId: id } });
-      
+
       // Se o schema tiver revisões, remova-as também
       if (tx.paperReview) {
         await tx.paperReview.deleteMany({ where: { paperId: id } });
@@ -412,9 +436,9 @@ export async function DELETE(request, context) {
       await tx.paper.delete({ where: { id } });
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: "Trabalho excluído com sucesso" 
+      message: "Trabalho excluído com sucesso"
     }, { status: 200 });
   } catch (error) {
     console.error("Erro ao excluir paper:", error);

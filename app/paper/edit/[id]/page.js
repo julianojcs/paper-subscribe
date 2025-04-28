@@ -3,12 +3,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { 
-  FaExclamationTriangle, 
-  FaFileAlt, 
-  FaUpload, 
-  FaSpinner, 
-  FaSave, 
+import {
+  FaExclamationTriangle,
+  FaFileAlt,
+  FaUpload,
+  FaSpinner,
+  FaSave,
   FaTimes,
   FaInfoCircle,
   FaBuilding,
@@ -19,7 +19,7 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import TextareaField from '../../../components/ui/TextareaField';
 import TrashIcon from '../../../components/ui/TrashIcon';
-import AuthorsList from '../../../components/ui/authors/AuthorsList';
+import AuthorsList from '../../../components/ui/Authors/AuthorsList';
 import useBrazilianStates from '../../../hooks/useBrazilianStates';
 import { FieldType, getInputTypeFromFieldType } from '../../../utils/fieldTypes';
 import styles from './edit.module.css';
@@ -55,7 +55,7 @@ export default function EditPaperPage() {
   const [hasFileField, setHasFileField] = useState(false);
   const [fileFieldConfig, setFileFieldConfig] = useState(null);
   const [abstract, setAbstract] = useState('');
-  
+
   // Estados para controle de UI
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -74,18 +74,18 @@ export default function EditPaperPage() {
       const currentAuthorsStr = JSON.stringify(authors);
       // Construir uma representação de string dos autores originais do paper
       const originalAuthorsStr = JSON.stringify(paper.authors || []);
-      
+
       const keywordsChanged = keywords.value !== (paper.keywords || '');
       const titleChanged = title !== (paper.title || '');
       const authorsChanged = currentAuthorsStr !== originalAuthorsStr;
       const areaChanged = areaId !== (paper.area?.id || '');
       const paperTypeChanged = paperTypeId !== (paper.paperType?.id || '');
       const abstractChanged = abstract !== (paper.abstract || '');
-      
+
       // Verificar se algum campo dinâmico foi alterado
       let dynamicFieldsChanged = false;
       const paperFieldValues = paper.fieldValues || [];
-      
+
       for (const fieldId in dynamicFieldValues) {
         const fieldValue = paperFieldValues.find(fv => fv.fieldId === fieldId);
         if (!fieldValue && dynamicFieldValues[fieldId]) {
@@ -115,13 +115,13 @@ export default function EditPaperPage() {
     try {
       const response = await fetch(`/api/events/${eventId}`);
       if (!response.ok) throw new Error('Falha ao carregar detalhes do evento');
-      
+
       const data = await response.json();
       const event = data.event;
 
       if (event) {
         setEventName(event.name || 'Evento');
-        
+
         if (event.maxAuthors) {
           setMaxAuthors(event.maxAuthors);
         }
@@ -216,21 +216,21 @@ export default function EditPaperPage() {
         ...prev,
         value: data.paper.keywords || ''
       }));
-      
+
       // Definir IDs de relacionamento
       if (data.paper.event) {
         setEventId(data.paper.event.id);
         await fetchEventData(data.paper.event.id);
       }
-      
+
       if (data.paper.area) {
         setAreaId(data.paper.area.id || '');
       }
-      
+
       if (data.paper.paperType) {
         setPaperTypeId(data.paper.paperType.id || '');
       }
-      
+
       // Tratar autores
       if (Array.isArray(data.paper.authors)) {
         // Mapear os autores para o formato esperado pelo componente AuthorsList
@@ -261,7 +261,7 @@ export default function EditPaperPage() {
           authorOrder: 0
         }]);
       }
-      
+
       // Inicializar valores para os campos dinâmicos
       if (data.paper.fieldValues && data.paper.fieldValues.length > 0) {
         const initialValues = {};
@@ -554,7 +554,7 @@ export default function EditPaperPage() {
 
       if (!updateResponse.ok) {
         const errorData = await updateResponse.json();
-        
+
         if (errorData.fieldErrors) {
           setFieldErrors(errorData.fieldErrors);
           throw new Error('Por favor, corrija os erros destacados no formulário.');
@@ -568,7 +568,7 @@ export default function EditPaperPage() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('paperId', id);
-        
+
         if (fileFieldConfig) {
           formData.append('fileFieldId', fileFieldConfig.id);
         }
@@ -610,9 +610,9 @@ export default function EditPaperPage() {
   // Funções auxiliares para formatação de texto e contagem de palavras
   const getFieldHelperText = (fieldConfig) => {
     let text = fieldConfig.helpText || '';
-    
+
     const constraints = [];
-    
+
     if (fieldConfig.minLength && fieldConfig.maxLength) {
       constraints.push(`${fieldConfig.minLength} a ${fieldConfig.maxLength} caracteres`);
     } else if (fieldConfig.minLength) {
@@ -620,7 +620,7 @@ export default function EditPaperPage() {
     } else if (fieldConfig.maxLength) {
       constraints.push(`máximo de ${fieldConfig.maxLength} caracteres`);
     }
-    
+
     if (fieldConfig.minWords && fieldConfig.maxWords) {
       constraints.push(`${fieldConfig.minWords} a ${fieldConfig.maxWords} palavras`);
     } else if (fieldConfig.minWords) {
@@ -628,23 +628,23 @@ export default function EditPaperPage() {
     } else if (fieldConfig.maxWords) {
       constraints.push(`máximo de ${fieldConfig.maxWords} palavra${fieldConfig.maxWords === 1 ? '' : 's'}`);
     }
-    
+
     if (constraints.length > 0) {
       if (text) text += ' ';
       text += `(${constraints.join(', ')})`;
     }
-    
+
     return text;
   };
 
   const getWordCountText = (text, fieldConfig) => {
     if (!text) return '';
-    
+
     const wordCount = text.trim().split(/\s+/).length;
     const characterCount = text.length;
-    
+
     let message = `${wordCount} palavra${wordCount === 1 ? '' : 's'}`;
-    
+
     if (fieldConfig.minWords && fieldConfig.maxWords) {
       message += ` (mín: ${fieldConfig.minWords}, máx: ${fieldConfig.maxWords})`;
     } else if (fieldConfig.minWords) {
@@ -652,10 +652,10 @@ export default function EditPaperPage() {
     } else if (fieldConfig.maxWords) {
       message += ` (máx: ${fieldConfig.maxWords})`;
     }
-    
+
     if (fieldConfig.minLength || fieldConfig.maxLength) {
       message += ` | ${characterCount} caractere${characterCount === 1 ? '' : 's'}`;
-      
+
       if (fieldConfig.minLength && fieldConfig.maxLength) {
         message += ` (mín: ${fieldConfig.minLength}, máx: ${fieldConfig.maxLength})`;
       } else if (fieldConfig.minLength) {
@@ -664,7 +664,7 @@ export default function EditPaperPage() {
         message += ` (máx: ${fieldConfig.maxLength})`;
       }
     }
-    
+
     return message;
   };
 
@@ -860,7 +860,7 @@ export default function EditPaperPage() {
     return (
       <div className={`${styles.formGroup} ${styles.fileUploadGroup}`}>
         <label className={styles.formLabel}>
-          {fileFieldConfig?.label || "Arquivo PDF"} 
+          {fileFieldConfig?.label || "Arquivo PDF"}
           {fileFieldConfig?.isRequired && <span className={styles.requiredMark}>*</span>}
           {currentFileName && !fileChanged && (
             <span className={styles.currentFile}> (Atual: {currentFileName})</span>

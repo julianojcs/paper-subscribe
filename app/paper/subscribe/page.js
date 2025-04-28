@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { FaExclamationTriangle, FaInfoCircle, FaUpload } from 'react-icons/fa';
-import AuthorsList from '../../components/ui/authors/AuthorsList';
+import AuthorsList from '../../components/ui/Authors/AuthorsList';
 import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 import TextareaField from '../../components/ui/TextareaField';
@@ -26,10 +26,10 @@ const LoadingSpinner = ({ message = "Carregando..." }) => (
 // Funções auxiliares para formatação de texto e contagem de palavras
 const getFieldHelperText = (fieldConfig) => {
   let text = fieldConfig.helpText || '';
-  
+
   // Adicionar informações sobre limites de caracteres/palavras no texto de ajuda
   const constraints = [];
-  
+
   if (fieldConfig.minLength && fieldConfig.maxLength) {
     constraints.push(`${fieldConfig.minLength} a ${fieldConfig.maxLength} caracteres`);
   } else if (fieldConfig.minLength) {
@@ -37,7 +37,7 @@ const getFieldHelperText = (fieldConfig) => {
   } else if (fieldConfig.maxLength) {
     constraints.push(`máximo de ${fieldConfig.maxLength} caracteres`);
   }
-  
+
   if (fieldConfig.minWords && fieldConfig.maxWords) {
     constraints.push(`${fieldConfig.minWords} a ${fieldConfig.maxWords} palavras`);
   } else if (fieldConfig.minWords) {
@@ -45,23 +45,23 @@ const getFieldHelperText = (fieldConfig) => {
   } else if (fieldConfig.maxWords) {
     constraints.push(`máximo de ${fieldConfig.maxWords} palavra${fieldConfig.maxWords === 1 ? '' : 's'}`);
   }
-  
+
   if (constraints.length > 0) {
     if (text) text += ' ';
     text += `(${constraints.join(', ')})`;
   }
-  
+
   return text;
 };
 
 const getWordCountText = (text, fieldConfig) => {
   if (!text) return '';
-  
+
   const wordCount = text.trim().split(/\s+/).length;
   const characterCount = text.length;
-  
+
   let message = `${wordCount} palavra${wordCount === 1 ? '' : 's'}`;
-  
+
   if (fieldConfig.minWords && fieldConfig.maxWords) {
     message += ` (mín: ${fieldConfig.minWords}, máx: ${fieldConfig.maxWords})`;
   } else if (fieldConfig.minWords) {
@@ -69,10 +69,10 @@ const getWordCountText = (text, fieldConfig) => {
   } else if (fieldConfig.maxWords) {
     message += ` (máx: ${fieldConfig.maxWords})`;
   }
-  
+
   if (fieldConfig.minLength || fieldConfig.maxLength) {
     message += ` | ${characterCount} caractere${characterCount === 1 ? '' : 's'}`;
-    
+
     if (fieldConfig.minLength && fieldConfig.maxLength) {
       message += ` (mín: ${fieldConfig.minLength}, máx: ${fieldConfig.maxLength})`;
     } else if (fieldConfig.minLength) {
@@ -81,7 +81,7 @@ const getWordCountText = (text, fieldConfig) => {
       message += ` (máx: ${fieldConfig.maxLength})`;
     }
   }
-  
+
   return message;
 };
 
@@ -124,7 +124,7 @@ function SubmitPaperForm() {
     // Sempre começar com loading ativo
     setIsLoading(true);
     setContentReady(false);
-    
+
     if (status === 'loading') return;
 
     if (status === 'unauthenticated') {
@@ -277,7 +277,7 @@ function SubmitPaperForm() {
             };
             setAuthors([mainAuthor]);
           }
-          
+
           // Dados carregados com sucesso
           setContentReady(true);
           setIsLoading(false);
@@ -293,7 +293,7 @@ function SubmitPaperForm() {
             authorOrder: 0
           };
           setAuthors([mainAuthor]);
-          
+
           // Mesmo com erro, considerar dados carregados
           setContentReady(true);
           setIsLoading(false);

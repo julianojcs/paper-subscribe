@@ -263,7 +263,7 @@
 }
 
 /* Seção de resumo */
-.abstractSection {
+.dynamicFieldsSection {
 }
 
 /* Container específico para palavras-chave */
@@ -425,7 +425,7 @@
 .metaHeader {
   display: flex;
   align-items: center;
-  margin-block-end: 5px;
+  margin-block-end: 10px;
   color: #4a5568;
 }
 
@@ -441,13 +441,6 @@
 
 .metaContent {
   color: #2d3748;
-}
-
-.keywordsHeader {
-  display: flex;
-  align-items: center;
-  margin-block-end: 10px;
-  color: #4a5568;
 }
 
 .keywordsTags {
@@ -471,7 +464,7 @@
   font-weight: 600;
 }
 
-.abstractContent {
+.dynamicFieldsContent {
   color: #4a5568;
   line-height: 1.6;
 }
@@ -526,7 +519,7 @@
 
 .fileIcon {
   margin-right: 8px;
-  color: #e53e3e;
+  color: #3498db;
 }
 
 .fileSize {
