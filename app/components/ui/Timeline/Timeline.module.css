@@ -52,6 +52,7 @@
 .timelineMarker {
   position: absolute;
   left: -1.25rem;
+  top: 2px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -69,16 +70,17 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin-bottom: 0.15rem;
+  text-align: start;
 }
 
 .timelineLabel {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #1f2937;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 /* Classe para descrição na timeline - NOVO */

@@ -5,6 +5,7 @@
  * - Dados de evento no localStorage
  */
 import { useDataContext } from '/context/DataContext';
+import { useSession } from 'next-auth/react';
 
 const EVENT_TOKEN_KEY = 'event_registration_token';
 const EVENT_DATA_KEY = 'event_data';
@@ -13,7 +14,8 @@ const EVENT_DATA_KEY = 'event_data';
  * Hook para gerenciar dados de eventos
  */
 export const useEventDataService = () => {
-  const { eventData: contextEventData, setEventData } = useDataContext();
+  const { eventData: contextEventData, setEventData, fetchEvent } = useDataContext();
+  const { data: session, status: authStatus } = useSession();
 
   /**
    * Função principal para carregar dados do evento de diversas fontes
@@ -34,7 +36,25 @@ export const useEventDataService = () => {
       return result;
     }
 
-    // 2. Verificar token no localStorage
+    // 2. Se o usuário estiver autenticado, usar o eventId da sessão
+    if (authStatus === "authenticated" && session?.user?.eventId) {
+      try {
+        console.log('Tentando buscar dados do evento a partir da sessão:', session.user.eventId);
+        // Usar a função fetchEvent do DataContext que já lida com timeline
+        const eventData = await fetchEvent(session.user.eventId);
+
+        if (eventData) {
+          console.log('Dados do evento obtidos via API (eventId da sessão)');
+          result.sourceDataEvent = 'session';
+          result.dataEvent = eventData;
+          return result;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do evento a partir da sessão:', error);
+      }
+    }
+
+    // 3. Verificar token no localStorage
     try {
       const tokenData = await getDataFromToken();
       if (tokenData) {
@@ -54,7 +74,7 @@ export const useEventDataService = () => {
       console.error('Erro ao obter dados via token:', error);
     }
 
-    // 3. Verificar localStorage diretamente para dados do evento
+    // 4. Verificar localStorage diretamente para dados do evento
     try {
       const localData = getDataFromLocalStorage();
       if (localData) {
@@ -69,6 +89,28 @@ export const useEventDataService = () => {
       }
     } catch (error) {
       console.error('Erro ao obter dados do localStorage:', error);
+    }
+
+    // 5. Se não encontrou nada, buscar dados do evento via API (último recurso)
+    if (authStatus === "authenticated" && session?.user?.activeEventId) {
+      try {
+        const eventData = await fetchEventData(session.user.activeEventId);
+        if (eventData) {
+          console.log('Dados do evento obtidos via API (activeEventId)');
+          result.sourceDataEvent = 'api';
+          result.dataEvent = eventData;
+
+          // Atualizar o contexto global
+          setEventData(eventData.event);
+
+          // Salvar no localStorage
+          saveEventDataToLocalStorage(eventData);
+
+          return result;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do evento via API:', error);
+      }
     }
 
     // Nenhum dado encontrado
@@ -132,7 +174,8 @@ export const useEventDataService = () => {
    * @param {string} eventId Id do evento
    * @returns {Promise<Object>} Dados do evento e timeline
    */
-  const fetchEventData = async (eventId) => {
+  const fetchEventData = async (_eventId) => {
+    const eventId = _eventId || session?.user?.eventId || contextEventData?.id;
     if (!eventId) {
       throw new Error('eventId é obrigatório');
     }
@@ -152,10 +195,12 @@ export const useEventDataService = () => {
       }
       const timelineData = await timelineRes.json();
 
-      return {
+      const eventDataWithTimeline = {
         event: eventData.event,
-        timelineItems: timelineData.timeline
+        timeline: timelineData.timeline || []
       };
+      console.log('Dados do evento e timeline obtidos:', eventDataWithTimeline);
+      return eventDataWithTimeline;
     } catch (error) {
       console.error(`Erro ao buscar dados do evento ${eventId}:`, error);
       throw error;
@@ -178,14 +223,14 @@ export const useEventDataService = () => {
       // Verificar se os dados não expiraram
       if (!eventData.expires || eventData.expires < Date.now()) {
         console.log('Dados do evento expirados, removendo do localStorage');
-        localStorage.removeItem(EVENT_DATA_KEY);
+        // localStorage.removeItem(EVENT_DATA_KEY);
         return null;
       }
 
       return eventData;
     } catch (error) {
       console.error('Erro ao processar dados do evento do localStorage:', error);
-      localStorage.removeItem(EVENT_DATA_KEY);
+      // localStorage.removeItem(EVENT_DATA_KEY);
       return null;
     }
   };

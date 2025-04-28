@@ -152,7 +152,7 @@
   align-items: center;
   text-align: center;
   gap: 1rem;
-  margin-block-start: 4rem;
+  margin-block-start: 2rem;
   margin-block-end: 1rem;
 }
 
@@ -314,17 +314,19 @@
 
 .timelineDate {
   font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.15rem;
+  text-align: start;
 }
 
 .timelineLabel {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  font-size: 0.6rem;
-  font-weight: 400;
-  color: #1f2937;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .timelineItem.past .timelineLabel {

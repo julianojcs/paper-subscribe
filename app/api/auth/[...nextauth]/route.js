@@ -205,11 +205,19 @@ export const authOptions = {
         session.user.city = token.city;
         session.user.stateId = token.stateId;
         session.user.organizationMemberships = token.organizationMemberships;
-        session.user.isAdmin = token.organizationMemberships.some(membership => membership.role === 'ADMIN'); // Verifica se o usuário é admin
-        session.user.role = token.organizationMemberships[0]?.role;
-        session.user.organization = token.organizationMemberships[0]?.organization?.shortName;
-     }
-      // console.log("Session user: ", session.user);
+        session.user.isAdmin = token.organizationMemberships.some(
+          membership => membership.role === 'ADMIN'
+        );
+
+        // Dados da organização principal (primeira)
+        const primaryMembership = token.organizationMemberships[0] || {};
+        session.user.role = primaryMembership?.role;
+        session.user.organization = primaryMembership?.organization?.shortName;
+
+        // Adicionar informações do evento ativo
+        session.user.activeEventId = primaryMembership?.organization?.activeEventId || null;
+        session.user.activeEventName = primaryMembership?.organization?.activeEventName || null;
+      }
       return session;
     },
 
@@ -236,7 +244,55 @@ export const authOptions = {
                   role: true,
                   organization: {
                     select: {
+                      id: true,
                       shortName: true,
+                      events: {
+                        where: {
+                          isActive: true,
+                          // Verificar se o evento está dentro do período válido
+                          OR: [
+                            {
+                              // Verificar com base nas datas específicas
+                              startDate: { lte: new Date() },
+                              endDate: { gte: new Date() }
+                            },
+                            {
+                              // Verificar com base na timeline
+                              timelines: {
+                                some: {
+                                  type: "EVENT_START",
+                                  date: { lte: new Date() }
+                                }
+                              },
+                              timelines: {
+                                some: {
+                                  type: "EVENT_END",
+                                  date: { gte: new Date() }
+                                }
+                              }
+                            },
+                            {
+                              // Ou eventos que começam hoje
+                              OR: [
+                                { startDate: { equals: null } },
+                                { endDate: { equals: null } }
+                              ],
+                              createdAt: { lte: new Date() }
+                            }
+                          ]
+                        },
+                        select: {
+                          id: true,
+                          name: true,
+                          shortName: true,
+                          isActive: true,
+                        },
+                        orderBy: {
+                          createdAt: 'desc'
+                        },
+                        // Limitar a apenas um evento ativo mais recente
+                        take: 1
+                      }
                     }
                   }
                 }
@@ -245,9 +301,25 @@ export const authOptions = {
           });
 
           if (userDetails) {
+            // Extrair o evento ativo para cada organização
+            const organizationMemberships = userDetails.organizationMemberships.map(membership => {
+              // Obter o evento ativo (se houver)
+              const activeEvent = membership.organization.events[0] || null;
+
+              return {
+                ...membership,
+                organization: {
+                  ...membership.organization,
+                  activeEventId: activeEvent?.id || null,
+                  activeEventName: activeEvent?.shortName || null
+                }
+              };
+            });
+
             token = {
               ...token,
               ...userDetails,
+              organizationMemberships,
               sub: token.sub || user.id
             };
           }

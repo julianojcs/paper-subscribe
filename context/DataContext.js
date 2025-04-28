@@ -1,12 +1,15 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 
 // Criar o contexto
 const DataContext = createContext({
   ip: 'unknown',
   userAgent: 'unknown',
   isLoaded: false,
+  eventId: null,
+  setEventId: () => {},
   eventData: null,
   setEventData: () => {},
   loading: false,
@@ -30,6 +33,8 @@ const extractIPv4 = (ip) => {
 
 // Provider component
 export function DataProvider({ children }) {
+  const { data: session, status: authStatus } = useSession();
+
   const [metadata, setMetadata] = useState({
     ip: 'unknown',
     userAgent: 'unknown',
@@ -41,6 +46,9 @@ export function DataProvider({ children }) {
 
   // Novo estado para loading compartilhado
   const [loading, setLoading] = useState(false);
+
+  // Estado para dados do evento
+  const [eventId, setEventId] = useState(null);
 
   // Estado para dados de timeline calculados
   const [timelineData, setTimelineData] = useState(null);
@@ -312,6 +320,34 @@ export function DataProvider({ children }) {
       setTimelineData(timelineStatus);
     }
   }, [timelineItems, calculateTimelineStatus]);
+
+  useEffect(() => {
+    // Função para carregar dados do evento da sessão, se disponíveis
+    const loadSessionEvent = async () => {
+      // Verificar se temos um evento no contexto ou se não temos uma sessão válida
+      if (eventData?.id || authStatus !== 'authenticated') return;
+
+      const eventId = session?.user?.eventId || session?.user?.activeEventId;
+      if (!eventId) return;
+
+      console.log(`Carregando dados do evento ${eventId} da sessão do usuário`);
+
+      try {
+        setLoading(true);
+        await fetchEvent(eventId);
+      } catch (error) {
+        console.error('Erro ao carregar evento da sessão:', error);
+        setError('Falha ao carregar dados do evento');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Executar apenas quando a sessão mudar e estiver pronta
+    if (session && authStatus === 'authenticated') {
+      loadSessionEvent();
+    }
+  }, [authStatus, session, fetchEvent, eventData?.id]);
 
   const handleSetEventData = (data) => {
     setEventData(data);
