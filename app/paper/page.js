@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { use } from 'react';
 import styles from './paper.module.css';
 import Button from '../components/ui/Button';
 import { FaFileAlt, FaCalendarAlt, FaUsers, FaTag, FaBookmark, FaBuilding, FaDownload, FaHistory, FaFlask, FaMicroscope, FaStethoscope } from 'react-icons/fa';
@@ -11,10 +12,15 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import PageContainer from '../components/layout/PageContainer';
 import HeaderContentTitle from '../components/layout/HeaderContentTitle';
 
-const PaperPage = () => {
+export default function PaperPage({ searchParams }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+
+  const params = searchParams ? React.use(searchParams) : {};
+
+  const success = params.success;
+  const page = parseInt(params.page || '1');
+
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
   const [error, setError] = useState('');
@@ -25,9 +31,6 @@ const PaperPage = () => {
     total: 0,
     pages: 0
   });
-  // Verificar mensagem de sucesso
-  const success = searchParams ? searchParams.get('success') : null;
-  const page = parseInt(searchParams.get('page') || '1');
   const eventLogoUrl = session?.user?.activeEventLogoUrl;
   const eventName = session?.user?.activeEventName;
 
@@ -409,4 +412,3 @@ const PaperPage = () => {
     </>
   );
 }
-export default PaperPage;
