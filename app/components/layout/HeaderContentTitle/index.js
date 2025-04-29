@@ -21,7 +21,7 @@ const HeaderContentTitle = ({
   className = ""
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-
+  const { eventName, eventLogoUrl } = eventData || {};
   const handleImageLoad = () => {
     setImageLoaded(true);
     if (onImageLoad) onImageLoad();
@@ -30,11 +30,11 @@ const HeaderContentTitle = ({
   return (
     <header className={`${styles.header} ${className}`}>
       <div className={styles.headerContent}>
-        {eventData?.logoUrl ? (
+        {(eventLogoUrl && eventName) ? (
           <div className={styles.logoWrapper}>
             <Image
-              src={eventData.logoUrl}
-              alt={eventData.name || "Logo do evento"}
+              src={eventLogoUrl}
+              alt={eventName || "Logo do evento"}
               className={styles.eventLogo}
               width={300}
               height={92}

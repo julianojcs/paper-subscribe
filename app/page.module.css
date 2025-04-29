@@ -142,11 +142,6 @@
 
 /* Área não autenticada */
 .unauthenticatedContent {
-  /* display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 1rem 0; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,14 +183,32 @@
     padding: 1.5rem 1rem;
   }
 
+  .welcome {
+    margin-block: 1rem;
+  }
+
   .sectionTitle {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+
+  .sectionDescription {
+    font-size: 0.875rem;
+    line-height: 1.4;
   }
 
   .eventLogo {
     max-width: 220px;
   }
 
+  .actionsGrid {
+    margin-block-start: 1rem;
+    gap: 0rem;
+  }
+
+  .mainButton, .secondaryButton {
+    max-width: 1000%;
+  }
   .actionText {
     font-size: 1rem;
   }

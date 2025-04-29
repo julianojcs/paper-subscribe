@@ -9,9 +9,9 @@ import { FaFileAlt, FaCalendarAlt, FaUsers, FaTag, FaBookmark, FaBuilding, FaDow
 import Tooltip from '../components/ui/Tooltip';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import PageContainer from '../components/layout/PageContainer';
+import HeaderContentTitle from '../components/layout/HeaderContentTitle';
 
-// Componente que usa searchParams
-function PaperPageContent() {
+const PaperPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,10 +25,11 @@ function PaperPageContent() {
     total: 0,
     pages: 0
   });
-
   // Verificar mensagem de sucesso
   const success = searchParams ? searchParams.get('success') : null;
   const page = parseInt(searchParams.get('page') || '1');
+  const eventLogoUrl = session?.user?.activeEventLogoUrl;
+  const eventName = session?.user?.activeEventName;
 
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
@@ -162,9 +163,6 @@ function PaperPageContent() {
   if (loading || status === 'loading' || !contentReady) {
     return (
       <>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Meus Trabalhos Científicos</h1>
-        </header>
         <LoadingSpinner message="Carregando seus trabalhos..." />
       </>
     );
@@ -174,9 +172,6 @@ function PaperPageContent() {
   if (status === 'unauthenticated') {
     return (
       <>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Meus Trabalhos Científicos</h1>
-        </header>
         <div className={styles.unauthenticatedContent}>
           <h2 className={styles.sectionTitle}>Submeta Seu Trabalho Científico</h2>
           <p className={styles.sectionDescription}>
@@ -200,10 +195,13 @@ function PaperPageContent() {
   // Se chegamos aqui, o usuário está autenticado e os dados foram carregados
   return (
     <>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Meus Trabalhos Científicos</h1>
-      </header>
-
+    <PageContainer>
+      <HeaderContentTitle
+        eventData={{eventLogoUrl, eventName}}
+        onImageLoad={() => {}}
+        subtitle="Meus Trabalhos Científicos"
+        fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
+      />
       <div className={styles.content}>
         {success && (
           <div className={styles.successMessage}>
@@ -407,17 +405,8 @@ function PaperPageContent() {
           )}
         </div>
       </div>
+    </PageContainer>
     </>
   );
 }
-
-// Componente principal com Suspense
-export default function PaperPage() {
-  return (
-    <PageContainer>
-      <Suspense fallback={<LoadingSpinner message="Carregando..." />}>
-        <PaperPageContent />
-      </Suspense>
-    </PageContainer>
-  );
-}
+export default PaperPage;

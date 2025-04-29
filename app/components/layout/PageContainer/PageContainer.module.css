@@ -40,7 +40,6 @@
 
   .container {
     border-radius: 8px;
-    padding: 1rem;
-    margin: 1rem auto;
+    margin: 1.8rem auto 1rem;
   }
 }

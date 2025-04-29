@@ -13,14 +13,9 @@ import { brazilianStates } from '../utils/brazilianStates';
 import styles from './profile.module.css';
 import Select from 'react-select';
 import { validateCPF, formatPhone, formatCPF, formatName } from '@/utils';
-
-// Componente de loading consistente para reutilização
-const LoadingSpinner = ({ message = "Carregando..." }) => (
-  <div className={styles.loadingContainer}>
-    <div className={styles.loadingSpinner}></div>
-    <p>{message}</p>
-  </div>
-);
+import PageContainer from '/app/components/layout/PageContainer';
+import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
+import LoadingSpinner from '/app/components/ui/LoadingSpinner';
 
 // Componente para exibir mensagens de erro
 const ErrorMessage = ({ message }) => (
@@ -31,16 +26,13 @@ const ErrorMessage = ({ message }) => (
 );
 
 // Componente principal que usa session
-function ProfileContent() {
+const ProfilePage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
-
-  // Substituindo o erro único por um objeto de erros por campo
   const [fieldErrors, setFieldErrors] = useState({});
-
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const [contentReady, setContentReady] = useState(false);
@@ -64,6 +56,8 @@ function ProfileContent() {
     stateId: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+  const eventLogoUrl = session?.user?.activeEventLogoUrl;
+  const eventName = session?.user?.activeEventName;
 
   // Função para processar erros da API
   const processApiErrors = useCallback((data) => {
@@ -721,301 +715,278 @@ function ProfileContent() {
   // Se estiver carregando (inicial ou durante fetch), mostrar loading spinner
   if (loading || status === 'loading' || !contentReady) {
     return (
-      <div className={styles.pageWrapper}>
-        <div className={styles.container}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>Perfil do Usuário</h1>
-          </header>
-          <LoadingSpinner message="Carregando dados do perfil..." />
-        </div>
-      </div>
+      <LoadingSpinner message="Carregando dados do perfil ..." />
     );
   }
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Perfil do Usuário</h1>
-        </header>
+    <PageContainer>
+      <HeaderContentTitle
+        eventData={{eventLogoUrl, eventName}}
+        onImageLoad={() => {}}
+        subtitle='Perfil do Usuário'
+        fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
+      />
 
-        <div className={styles.profileInfo}>
-          <div className={styles.sectionHeader}>
-            <h2>Suas Informações</h2>
-            {!isEditing ? (
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                size="sm"
-                className={styles.editButton}
-              >
-                Editar
-              </Button>
-            ) : null}
-          </div>
+      <div className={styles.profileInfo}>
+        <div className={styles.sectionHeader}>
+          <h2>Suas Informações</h2>
+          {!isEditing ? (
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+              size="sm"
+              className={styles.editButton}
+            >
+              Editar
+            </Button>
+          ) : null}
+        </div>
 
-          {/* Mensagens gerais */}
-          {fieldErrors.general && (
-            <ErrorMessage message={fieldErrors.general} />
-          )}
+        {/* Mensagens gerais */}
+        {fieldErrors.general && (
+          <ErrorMessage message={fieldErrors.general} />
+        )}
 
-          {success && <div className={styles.success}>{success}</div>}
+        {success && <div className={styles.success}>{success}</div>}
 
-          <form onSubmit={handleProfileUpdate} className={styles.editForm}>
-            <div className={styles.infoGrid}>
-              <div className={styles.infoField}>
-                <Input
-                  label="Nome Completo"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  autoComplete="name"
-                  autoCorrect="off"
-                  spellCheck="true"
-                  type="text"
-                  maxLength={100}
-                  minLength={3}
-                  autoFocus={true}
-                  leftIcon={<FaUser />}
-                  autoCapitalize="off"
-                  onChange={handleInputChange}
-                  onBlur={() => { formatName(formData.name) }}
-                  placeholder="Seu nome completo"
-                  required
-                  disabled={!isEditing}
-                  error={fieldErrors.name}
-                  isValid={!fieldErrors.name}
-                  isLoading={loading}
-                />
-              </div>
-
-              <div className={styles.infoField + ' ' + styles.inputDisabled}>
-                <Input
-                  label="Email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="seu@email.com"
-                  autoComplete="email"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  maxLength={100}
-                  minLength={5}
-                  type="email"
-                  leftIcon={<FaEnvelope />}
-                  autoCapitalize="off"
-                  autoFocus={false}
-                  disabled={!isEditing}
-                  // disabled={true} // Email sempre desabilitado
-                  required
-                  error={fieldErrors.email}
-                  isValid={!fieldErrors.email}
-                  isLoading={loading}
-                />
-              </div>
-
-              <div className={styles.infoField}>
-                <Input
-                  label="CPF"
-                  id="cpf"
-                  name="cpf"
-                  value={formData.cpf}
-                  onChange={handleInputChange}
-                  placeholder="000.000.000-00"
-                  autoComplete="cpf"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  type="text"
-                  leftIcon={<FaRegIdCard />}
-                  autoCapitalize="off"
-                  autoFocus={false}
-                  disabled={!isEditing}
-                  required
-                  maxLength={14}
-                  error={fieldErrors.cpf}
-                  isValid={!fieldErrors.cpf}
-                  isLoading={loading}
-                />
-              </div>
-
-              <div className={styles.infoField}>
-                <Input
-                  label="Celular"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="(00) 00000-0000"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  type="text"
-                  leftIcon={<FaPhone />}
-                  autoCapitalize="off"
-                  autoFocus={false}
-                  disabled={!isEditing}
-                  maxLength={15}
-                  error={fieldErrors.phone}
-                  isValid={!fieldErrors.phone}
-                  isLoading={loading}
-                />
-              </div>
-
-              <div className={styles.infoField}>
-                <Input
-                  label="Cidade"
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  onBlur={() => { formatName(formData.city) }}
-                  placeholder="Sua cidade"
-                  autoComplete="address-level2"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  type="text"
-                  leftIcon={<FaCity />}
-                  autoCapitalize="words"
-                  autoFocus={false}
-                  maxLength={50}
-                  minLength={2}
-                  disabled={!isEditing}
-                  required
-                  error={fieldErrors.city}
-                  isValid={!fieldErrors.city}
-                  isLoading={loading}
-                />
-              </div>
-
-              <div className={styles.infoField}>
-                <label htmlFor="stateId" className={fieldErrors.stateId ? styles.labelError : styles.stateLabel}>
-                  {fieldErrors.stateId ? (
-                    <span className={styles.errorText}>{fieldErrors.stateId}</span>
-                  ) : (
-                    "Estado"
-                  )}
-                  <span className={styles.requiredMark}>*</span>
-                </label>
-                <Select
-                  className="basic-single"
-                  classNamePrefix="select"
-                  defaultValue={brazilianStates[12]}
-                  value={formData.stateId}
-                  required
-                  onChange={(selectedOption) => {
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      stateId: selectedOption
-                    }));
-
-                    // Limpar erro de estado
-                    if (fieldErrors.stateId) {
-                      setFieldErrors(prev => {
-                        const updated = { ...prev };
-                        delete updated.stateId;
-                        return updated;
-                      });
-                    }
-                  }}
-                  isDisabled={!isEditing}
-                  isLoading={false}
-                  isClearable={true}
-                  isRtl={false}
-                  isSearchable={true}
-                  name="stateId"
-                  id='stateId'
-                  options={brazilianStates}
-                  styles={{
-                    control: (base, state) => ({
-                      ...base,
-                      borderColor: fieldErrors.stateId ? '#ef4444' : state.isFocused ? '#3b82f6' : '#cbd5e1',
-                      boxShadow: fieldErrors.stateId
-                        ? '0 0 0 1px #ef4444'
-                        : state.isFocused
-                          ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
-                          : 'none',
-                    }),
-                  }}
-                />
-              </div>
-
-              <div className={styles.infoField + ' ' + styles.fullWidth}>
-                <Input
-                  label="Instituição"
-                  id="institution"
-                  name="institution"
-                  value={formData.institution}
-                  onChange={handleInputChange}
-                  onBlur={() => { formData.institution }}
-                  placeholder="Nome da sua instituição"
-                  autoComplete="organization"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  type="text"
-                  leftIcon={<FaUniversity />}
-                  autoCapitalize="off"
-                  autoFocus={false}
-                  maxLength={100}
-                  minLength={3}
-                  disabled={!isEditing}
-                  required
-                  error={fieldErrors.institution}
-                  isValid={!fieldErrors.institution}
-                  isLoading={loading}
-                />
-              </div>
+        <form onSubmit={handleProfileUpdate} className={styles.editForm}>
+          <div className={styles.infoGrid}>
+            <div className={styles.infoField}>
+              <Input
+                label="Nome Completo"
+                id="name"
+                name="name"
+                value={formData.name}
+                autoComplete="name"
+                autoCorrect="off"
+                spellCheck="true"
+                type="text"
+                maxLength={100}
+                minLength={3}
+                autoFocus={true}
+                leftIcon={<FaUser />}
+                autoCapitalize="off"
+                onChange={handleInputChange}
+                onBlur={() => { formatName(formData.name) }}
+                placeholder="Seu nome completo"
+                required
+                disabled={!isEditing}
+                error={fieldErrors.name}
+                isValid={!fieldErrors.name}
+                isLoading={loading}
+              />
             </div>
 
-            {isEditing && (
-              <div className={styles.formActions}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
-                  Cancelar
-                </Button>
+            <div className={styles.infoField + ' ' + styles.inputDisabled}>
+              <Input
+                label="Email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="seu@email.com"
+                autoComplete="email"
+                autoCorrect="off"
+                spellCheck="false"
+                maxLength={100}
+                minLength={5}
+                type="email"
+                leftIcon={<FaEnvelope />}
+                autoCapitalize="off"
+                autoFocus={false}
+                disabled={!isEditing}
+                // disabled={true} // Email sempre desabilitado
+                required
+                error={fieldErrors.email}
+                isValid={!fieldErrors.email}
+                isLoading={loading}
+              />
+            </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </Button>
-              </div>
-            )}
-          </form>
-        </div>
+            <div className={styles.infoField}>
+              <Input
+                label="CPF"
+                id="cpf"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleInputChange}
+                placeholder="000.000.000-00"
+                autoComplete="cpf"
+                autoCorrect="off"
+                spellCheck="false"
+                type="text"
+                leftIcon={<FaRegIdCard />}
+                autoCapitalize="off"
+                autoFocus={false}
+                disabled={!isEditing}
+                required
+                maxLength={14}
+                error={fieldErrors.cpf}
+                isValid={!fieldErrors.cpf}
+                isLoading={loading}
+              />
+            </div>
 
-        {message && <div className={styles.success}>{message}</div>}
+            <div className={styles.infoField}>
+              <Input
+                label="Celular"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="(00) 00000-0000"
+                autoCorrect="off"
+                spellCheck="false"
+                type="text"
+                leftIcon={<FaPhone />}
+                autoCapitalize="off"
+                autoFocus={false}
+                disabled={!isEditing}
+                maxLength={15}
+                error={fieldErrors.phone}
+                isValid={!fieldErrors.phone}
+                isLoading={loading}
+              />
+            </div>
 
-        {getLinkedAccountsSection()}
+            <div className={styles.infoField}>
+              <Input
+                label="Cidade"
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                onBlur={() => { formatName(formData.city) }}
+                placeholder="Sua cidade"
+                autoComplete="address-level2"
+                autoCorrect="off"
+                spellCheck="false"
+                type="text"
+                leftIcon={<FaCity />}
+                autoCapitalize="words"
+                autoFocus={false}
+                maxLength={50}
+                minLength={2}
+                disabled={!isEditing}
+                required
+                error={fieldErrors.city}
+                isValid={!fieldErrors.city}
+                isLoading={loading}
+              />
+            </div>
 
-        {getAddPasswordSection()}
+            <div className={styles.infoField}>
+              <label htmlFor="stateId" className={fieldErrors.stateId ? styles.labelError : styles.stateLabel}>
+                {fieldErrors.stateId ? (
+                  <span className={styles.errorText}>{fieldErrors.stateId}</span>
+                ) : (
+                  "Estado"
+                )}
+                <span className={styles.requiredMark}>*</span>
+              </label>
+              <Select
+                className="basic-single"
+                classNamePrefix="select"
+                defaultValue={brazilianStates[12]}
+                value={formData.stateId}
+                required
+                onChange={(selectedOption) => {
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    stateId: selectedOption
+                  }));
 
-        {getLoginHistorySection()}
+                  // Limpar erro de estado
+                  if (fieldErrors.stateId) {
+                    setFieldErrors(prev => {
+                      const updated = { ...prev };
+                      delete updated.stateId;
+                      return updated;
+                    });
+                  }
+                }}
+                isDisabled={!isEditing}
+                isLoading={false}
+                isClearable={true}
+                isRtl={false}
+                isSearchable={true}
+                name="stateId"
+                id='stateId'
+                options={brazilianStates}
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: fieldErrors.stateId ? '#ef4444' : state.isFocused ? '#3b82f6' : '#cbd5e1',
+                    boxShadow: fieldErrors.stateId
+                      ? '0 0 0 1px #ef4444'
+                      : state.isFocused
+                        ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
+                        : 'none',
+                  }),
+                }}
+              />
+            </div>
 
+            <div className={styles.infoField + ' ' + styles.fullWidth}>
+              <Input
+                label="Instituição"
+                id="institution"
+                name="institution"
+                value={formData.institution}
+                onChange={handleInputChange}
+                onBlur={() => { formData.institution }}
+                placeholder="Nome da sua instituição"
+                autoComplete="organization"
+                autoCorrect="off"
+                spellCheck="false"
+                type="text"
+                leftIcon={<FaUniversity />}
+                autoCapitalize="off"
+                autoFocus={false}
+                maxLength={100}
+                minLength={3}
+                disabled={!isEditing}
+                required
+                error={fieldErrors.institution}
+                isValid={!fieldErrors.institution}
+                isLoading={loading}
+              />
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className={styles.formActions}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+          )}
+        </form>
       </div>
-    </div>
+
+      {message && <div className={styles.success}>{message}</div>}
+
+      {getLinkedAccountsSection()}
+
+      {getAddPasswordSection()}
+
+      {getLoginHistorySection()}
+    </PageContainer>
   );
 }
 
-// Componente principal com Suspense
-export default function ProfilePage() {
-  return (
-    <Suspense fallback={
-      <div className={styles.pageWrapper}>
-        <div className={styles.container}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>Perfil do Usuário</h1>
-          </header>
-          <LoadingSpinner message="Carregando perfil..." />
-        </div>
-      </div>
-    }>
-      <ProfileContent />
-    </Suspense>
-  );
-}
+export default ProfilePage;

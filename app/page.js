@@ -209,7 +209,7 @@ const Home = () => {
     return (
       <>
         <HeaderContentTitle
-          eventData={currentEventData}
+          eventData={{eventLogoUrl: currentEventData.logoUrl, eventName: currentEventData.name}}
           onImageLoad={() => setImageReady(true)}
           subtitle="Sistema de Submissão de Trabalhos"
           fallbackTitle="Sistema de Submissão de Trabalhos Científicos"

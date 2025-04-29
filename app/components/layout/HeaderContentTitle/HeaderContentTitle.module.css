@@ -64,11 +64,28 @@
 /* Responsividade */
 @media (max-width: 768px) {
   .header {
-    padding: 1.5rem 1rem;
+    padding: 0.5rem;
+  }
+
+  .headerContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: unset;
+  }
+
+  .logoWrapper {
+    & img {
+      width: 200px;
+      height: 61.33px;
+    }
+
   }
 
   .eventLogo {
-    max-width: 220px;
+    /* max-width: 190px; */
+    /* transform: scale(0.8); */
   }
 
   .titleFallback {

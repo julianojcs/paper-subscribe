@@ -318,7 +318,7 @@ function TimelineContent({ eventId }) {
   const TimelineManager = () => (
     <>
       <HeaderContentTitle
-        eventData={eventData}
+        eventData={{logoUrl: eventLogoUrl.logoUrl, eventName: eventData.name}}
         subtitle="Gerenciar Cronograma do Evento"
         fallbackTitle="Gerenciar Cronograma do Evento"
       />

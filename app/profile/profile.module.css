@@ -327,6 +327,10 @@
   border: 1px solid #e2e8f0;
 }
 
+.profileInfo {
+  margin: 2rem;
+}
+
 .historyTable {
   width: 100%;
   border-collapse: collapse;
@@ -533,13 +537,17 @@
   }
 
   /* Seções */
-  .linkedAccounts, .addPasswordSection, .loginHistory, .profileInfo  {
+  .linkedAccounts, .addPasswordSection, .loginHistory, .profileInfo {
     margin-top: 1.25rem;
     padding-top: 1rem;
     margin: unset;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     background-color: #f8fafc;
+  }
+
+  .profileInfo {
+    margin: 1rem;
   }
 
   .profileInfo p {

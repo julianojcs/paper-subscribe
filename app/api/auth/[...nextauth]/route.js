@@ -214,9 +214,10 @@ export const authOptions = {
         session.user.role = primaryMembership?.role;
         session.user.organization = primaryMembership?.organization?.shortName;
 
-        // Adicionar informações do evento ativo
+        // Adicionar informações do evento ativo, incluindo o logoUrl
         session.user.activeEventId = primaryMembership?.organization?.activeEventId || null;
         session.user.activeEventName = primaryMembership?.organization?.activeEventName || null;
+        session.user.activeEventLogoUrl = primaryMembership?.organization?.activeEventLogoUrl || null; // Adicionado o logoUrl
       }
       return session;
     },
@@ -285,6 +286,7 @@ export const authOptions = {
                           id: true,
                           name: true,
                           shortName: true,
+                          logoUrl: true,
                           isActive: true,
                         },
                         orderBy: {
@@ -311,7 +313,8 @@ export const authOptions = {
                 organization: {
                   ...membership.organization,
                   activeEventId: activeEvent?.id || null,
-                  activeEventName: activeEvent?.shortName || null
+                  activeEventName: activeEvent?.shortName || null,
+                  activeEventLogoUrl: activeEvent?.logoUrl || null // Adicionando o logoUrl
                 }
               };
             });

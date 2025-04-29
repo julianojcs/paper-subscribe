@@ -14,14 +14,10 @@ import useBrazilianStates from '../../hooks/useBrazilianStates';
 import { FieldType, getInputTypeFromFieldType } from '../../utils/fieldTypes';
 import styles from './subscribe.module.css';
 import ProfileRedirectModal from './components/ProfileRedirectModal';
+import PageContainer from '/app/components/layout/PageContainer';
+import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
+import LoadingSpinner from '/app/components/ui/LoadingSpinner';
 
-// Componente de loading consistente para reutilização - igualzinho ao da página principal
-const LoadingSpinner = ({ message = "Carregando..." }) => (
-  <div className={styles.loadingContainer}>
-    <div className={styles.loadingSpinner}></div>
-    <p>{message}</p>
-  </div>
-);
 
 // Funções auxiliares para formatação de texto e contagem de palavras
 const getFieldHelperText = (fieldConfig) => {
@@ -86,10 +82,9 @@ const getWordCountText = (text, fieldConfig) => {
 };
 
 // Componente principal que utiliza useSearchParams
-function SubmitPaperForm() {
+const SubmitPaperPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const fileInputRef = useRef(null);
   const [title, setTitle] = useState('');
   const [authors, setAuthors] = useState([]);
@@ -105,6 +100,7 @@ function SubmitPaperForm() {
   const [maxAuthors, setMaxAuthors] = useState(10);
   const [eventId, setEventId] = useState(null);
   const [eventName, setEventName] = useState('');
+  const [eventLogoUrl, setEventLogoUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
   const [contentReady, setContentReady] = useState(false); // Novo estado para controlar quando o conteúdo está pronto
   const [areas, setAreas] = useState([]);
@@ -116,8 +112,6 @@ function SubmitPaperForm() {
   const [hasFileField, setHasFileField] = useState(false);
   const [fileFieldConfig, setFileFieldConfig] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profileRedirectUrl, setProfileRedirectUrl] = useState('');
-
   const { states: brazilianStates, isLoading: statesLoading } = useBrazilianStates();
 
   useEffect(() => {
@@ -166,8 +160,9 @@ function SubmitPaperForm() {
               const event = formData.events[0];
               setEventId(event.id);
 
-              // Salvar o nome do evento
+              // Salvar o nome e logoUrl do evento
               setEventName(event.name || 'Evento');
+              setEventLogoUrl(event.logoUrl || null);
 
               if (event.maxAuthors) {
                 setMaxAuthors(event.maxAuthors);
@@ -942,28 +937,21 @@ function SubmitPaperForm() {
   // Mostrar loading se estiver carregando ou se o conteúdo não estiver pronto
   if (isLoading || status === 'loading' || !contentReady) {
     return (
-      <div className={styles.pageWrapper}>
-        <div className={styles.container}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>Enviar Trabalho Científico</h1>
-          </header>
-          <LoadingSpinner message="Carregando dados do formulário..." />
-        </div>
-      </div>
+      <LoadingSpinner message="Carregando dados do formulário..." />
     );
   }
 
   return (
-    <div className={styles.pageWrapper}>
-      {/* Modal de perfil incompleto */}
-      {showProfileModal && <ProfileRedirectModal />}
+    <PageContainer>
+        {/* Modal de perfil incompleto */}
+        {showProfileModal && <ProfileRedirectModal />}
 
-      <div className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>
-            {eventName ? `Enviar Trabalho - ${eventName}` : 'Enviar Novo Trabalho Científico'}
-          </h1>
-        </header>
+        <HeaderContentTitle
+          eventData={{eventLogoUrl, eventName}}
+          onImageLoad={() => {}}
+          subtitle={eventName ? `Enviar Trabalho Científico - ${eventName}` : 'Enviar Novo Trabalho Científico'}
+          fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
+        />
 
         <div className={styles.content}>
           {error && (
@@ -1092,25 +1080,8 @@ function SubmitPaperForm() {
             </form>
           </div>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }
 
-// Componente página que envolve o form com Suspense
-export default function SubmitPaperPage() {
-  return (
-    <Suspense fallback={
-      <div className={styles.pageWrapper}>
-        <div className={styles.container}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>Enviar Trabalho Científico</h1>
-          </header>
-          <LoadingSpinner message="Carregando..." />
-        </div>
-      </div>
-    }>
-      <SubmitPaperForm />
-    </Suspense>
-  );
-}
+export default SubmitPaperPage;

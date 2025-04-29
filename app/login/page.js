@@ -87,7 +87,7 @@ function LoginPageContent() {
       {/* Exibe HeaderContentTitle se houver dados de evento */}
       {eventData?.logoUrl ? (
         <HeaderContentTitle
-          eventData={eventData}
+          eventData={{eventLogoUrl: eventData.logoUrl, eventName: eventData.name}}
           onImageLoad={handleImageLoad}
           subtitle="Sistema de Submissão de Trabalhos"
           fallbackTitle="Registro para Evento Científico"
