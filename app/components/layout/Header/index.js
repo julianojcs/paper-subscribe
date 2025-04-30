@@ -214,6 +214,8 @@ const Header = () => {
               e.stopPropagation();
               setMenuOpen(currentState => !currentState);
             }}
+            onMouseDown={(e) => e.preventDefault()} // Prevenir comportamento padrão de mouseDown
+            onTouchStart={(e) => e.preventDefault()} // Importante para dispositivos móveis
             className={`${styles.floatingMenuButton} ${menuOpen ? styles.floatingMenuButtonOpen : ''}`}
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
