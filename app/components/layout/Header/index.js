@@ -5,25 +5,26 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import styles from './Header.module.css';
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt, 
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt,
          FaHome, FaUsers, FaCog, FaBuilding, FaCaretDown, FaCalendarAlt } from 'react-icons/fa';
 
 const Header = () => {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar carregamento inicial
+  const [isLoaded, setIsLoaded] = useState(false);
   const [adminSubmenuOpen, setAdminSubmenuOpen] = useState(false);
   const pathname = usePathname();
   const adminMenuRef = useRef(null);
-  
+  const menuRef = useRef(null);
+
   const isAdmin = session?.user?.role === 'ADMIN' ||
     (session?.user?.organizationMemberships &&
     session.user.organizationMemberships.some(m => m.role === 'ADMIN'));
 
   // Verificar tamanho da tela e definir estado mobile
   useEffect(() => {
-    setIsLoaded(true); // Marcar como carregado assim que o componente montar no cliente
+    setIsLoaded(true);
 
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -32,13 +33,8 @@ const Header = () => {
       }
     };
 
-    // Verificar tamanho inicial
     checkScreenSize();
-
-    // Adicionar listener para redimensionamento
     window.addEventListener('resize', checkScreenSize);
-
-    // Cleanup
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -48,15 +44,26 @@ const Header = () => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
         setAdminSubmenuOpen(false);
       }
+
+      // Verificar se o clique NÃO foi no botão flutuante ou seus filhos
+      const isFloatingButtonClick =
+        event.target.classList.contains(styles.floatingMenuButton) ||
+        event.target.closest(`.${styles.floatingMenuButton}`);
+
+      // Fechar menu principal quando clicar fora (no mobile), exceto no botão
+      if (isMobile && menuOpen &&
+          menuRef.current &&
+          !menuRef.current.contains(event.target) &&
+          !isFloatingButtonClick) {
+        setMenuOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile, menuOpen]);
 
-  // Fechar menu ao navegar (importante para experiência móvel)
+  // Fechar menu ao navegar
   useEffect(() => {
     setMenuOpen(false);
     setAdminSubmenuOpen(false);
@@ -64,32 +71,29 @@ const Header = () => {
 
   // Verificar se o link está ativo
   const isActive = (path) => {
-    // Caso especial para a home page
     if (path === '/') {
       return pathname === '/';
     }
 
-    // Caso especial para /paper (não deve ativar para subrotas)
     if (path === '/paper') {
       return pathname === '/paper' || pathname === '/paper/';
     }
 
-    // Para outros caminhos, verificar se começam com o path
-    // e se é exatamente a rota ou uma subrota direta
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
-  // Verificar se algum submenu de admin está ativo
   const isAdminMenuActive = () => {
     return pathname.startsWith('/admin/organization');
   };
 
   const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
+    // Pequeno atraso para garantir que eventos em conflito não ocorram simultaneamente
+    setTimeout(() => {
+      setMenuOpen(prevState => !prevState);
+    }, 10);
   };
 
   const toggleAdminSubmenu = (e) => {
-    // Evitar comportamento padrão do link
     if (!isMobile) {
       e.preventDefault();
     }
@@ -97,131 +101,243 @@ const Header = () => {
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.headerContent}>
-        {/* Nav para Desktop ou Mobile com menu aberto */}
-        <nav className={`${styles.nav}
-                         ${isMobile ? styles.mobileNav : ''}
-                         ${menuOpen ? styles.menuOpen : ''}
-                         ${!isLoaded ? styles.hiddenOnLoad : ''}`}>
-          <Link
-            href="/"
-            className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
-          >
-            <FaHome className={styles.navIcon} />
-            <span>Home</span>
-          </Link>
-
-          {session ? (
-            <>
+    <>
+      {/* Versão desktop: header normal */}
+      {!isMobile && isLoaded && (
+        <header className={styles.header}>
+          <div className={styles.headerContent}>
+            <nav className={styles.nav}>
               <Link
-                href="/paper"
-                className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
+                href="/"
+                className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
               >
-                <FaFileAlt className={styles.navIcon} />
-                <span>Meus Trabalhos</span>
+                <FaHome className={styles.navIcon} />
+                <span>Home</span>
               </Link>
 
-              <Link
-                href="/paper/subscribe"
-                className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
-              >
-                <FaCloudUploadAlt className={styles.navIcon} />
-                <span>Enviar Trabalho</span>
-              </Link>
-
-              {/* Menu da Empresa para administradores */}
-              {isAdmin && (
-                <div className={styles.adminMenuContainer} ref={adminMenuRef}>
-                  <a 
-                    href="#" 
-                    className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
-                    onClick={toggleAdminSubmenu}
+              {session ? (
+                <>
+                  <Link
+                    href="/paper"
+                    className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
                   >
-                    <FaBuilding className={styles.navIcon} />
-                    <span>Empresa</span>
-                    <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
-                  </a>
+                    <FaFileAlt className={styles.navIcon} />
+                    <span>Meus Trabalhos</span>
+                  </Link>
 
-                  {/* Submenu admin - visível apenas quando aberto */}
-                  <div className={`${styles.submenuContainer} ${adminSubmenuOpen ? styles.submenuVisible : ''}`}>
-                    <Link 
-                      href="/admin/organization/users"
-                      className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
-                    >
-                      <FaUsers className={styles.submenuIcon} />
-                      <span>Usuários</span>
-                    </Link>
+                  <Link
+                    href="/paper/subscribe"
+                    className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                  >
+                    <FaCloudUploadAlt className={styles.navIcon} />
+                    <span>Enviar Trabalho</span>
+                  </Link>
 
-                    <Link 
-                      href="/admin/organization/settings"
-                      className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
-                    >
-                      <FaCog className={styles.submenuIcon} />
-                      <span>Configurações</span>
-                    </Link>
+                  {/* Menu da Empresa para administradores */}
+                  {isAdmin && (
+                    <div className={styles.adminMenuContainer} ref={adminMenuRef}>
+                      <a
+                        href="#"
+                        className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
+                        onClick={toggleAdminSubmenu}
+                      >
+                        <FaBuilding className={styles.navIcon} />
+                        <span>Empresa</span>
+                        <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
+                      </a>
 
-                    <Link 
-                      href="/admin/organization/events"
-                      className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
-                    >
-                      <FaCalendarAlt className={styles.submenuIcon} />
-                      <span>Eventos</span>
-                    </Link>
-                  </div>
-                </div>
+                      <div className={`${styles.submenuContainer} ${adminSubmenuOpen ? styles.submenuVisible : ''}`}>
+                        <Link
+                          href="/admin/organization/users"
+                          className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
+                        >
+                          <FaUsers className={styles.submenuIcon} />
+                          <span>Usuários</span>
+                        </Link>
+
+                        <Link
+                          href="/admin/organization/settings"
+                          className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
+                        >
+                          <FaCog className={styles.submenuIcon} />
+                          <span>Configurações</span>
+                        </Link>
+
+                        <Link
+                          href="/admin/organization/events"
+                          className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
+                        >
+                          <FaCalendarAlt className={styles.submenuIcon} />
+                          <span>Eventos</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  <Link
+                    href="/profile"
+                    className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                  >
+                    <FaUser className={styles.navIcon} />
+                    <span>Perfil</span>
+                  </Link>
+
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    className={styles.signOutButton}
+                  >
+                    <FaSignOutAlt className={styles.navIcon} />
+                    <span>Sair</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
+                >
+                  <FaUser className={styles.navIcon} />
+                  <span>Entrar</span>
+                </Link>
               )}
+            </nav>
+          </div>
+        </header>
+      )}
 
-              <Link
-                href="/profile"
-                className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
-              >
-                <FaUser className={styles.navIcon} />
-                <span>Perfil</span>
-              </Link>
-
-              <button
-                onClick={() => signOut({ callbackUrl: '/login' })}
-                className={styles.signOutButton}
-              >
-                <FaSignOutAlt className={styles.navIcon} />
-                <span>Sair</span>
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
-            >
-              <FaUser className={styles.navIcon} />
-              <span>Entrar</span>
-            </Link>
-          )}
-        </nav>
-
-        {/* Botão Menu Hambúrguer */}
-        {(isMobile || !isLoaded) && (
+      {/* Versão mobile: apenas botão flutuante e menu lateral quando aberto */}
+      {isMobile && isLoaded && (
+        <>
+          {/* Botão hamburger flutuante */}
           <button
-            onClick={toggleMenu}
-            className={styles.menuToggle}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMenuOpen(currentState => !currentState);
+            }}
+            className={`${styles.floatingMenuButton} ${menuOpen ? styles.floatingMenuButtonOpen : ''}`}
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
           >
-            {menuOpen ? <FaTimes /> : <FaBars />}
+            {menuOpen ? (
+              <FaTimes size={20} /> /* Tamanho em pixels */
+            ) : (
+              <FaBars size={20} />
+            )}
           </button>
-        )}
 
-        {/* Overlay para fechar menu ao clicar fora */}
-        {isMobile && menuOpen && (
-          <div
-            className={styles.menuOverlay}
-            onClick={() => setMenuOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-      </div>
-    </header>
+          {/* Menu lateral móvel */}
+          {menuOpen && (
+            <div className={styles.mobileMenuContainer} ref={menuRef}>
+              <nav className={styles.mobileNav}>
+                <Link
+                  href="/"
+                  className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
+                >
+                  <FaHome className={styles.navIcon} />
+                  <span>Home</span>
+                </Link>
+
+                {session ? (
+                  <>
+                    <Link
+                      href="/paper"
+                      className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
+                    >
+                      <FaFileAlt className={styles.navIcon} />
+                      <span>Meus Trabalhos</span>
+                    </Link>
+
+                    <Link
+                      href="/paper/subscribe"
+                      className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                    >
+                      <FaCloudUploadAlt className={styles.navIcon} />
+                      <span>Enviar Trabalho</span>
+                    </Link>
+
+                    {/* Menu da Empresa para administradores */}
+                    {isAdmin && (
+                      <>
+                        <button
+                          className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
+                          onClick={toggleAdminSubmenu}
+                        >
+                          <FaBuilding className={styles.navIcon} />
+                          <span>Empresa</span>
+                          <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
+                        </button>
+
+                        {adminSubmenuOpen && (
+                          <div className={styles.mobileSubmenu}>
+                            <Link
+                              href="/admin/organization/users"
+                              className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
+                            >
+                              <FaUsers className={styles.submenuIcon} />
+                              <span>Usuários</span>
+                            </Link>
+
+                            <Link
+                              href="/admin/organization/settings"
+                              className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
+                            >
+                              <FaCog className={styles.submenuIcon} />
+                              <span>Configurações</span>
+                            </Link>
+
+                            <Link
+                              href="/admin/organization/events"
+                              className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
+                            >
+                              <FaCalendarAlt className={styles.submenuIcon} />
+                              <span>Eventos</span>
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <Link
+                      href="/profile"
+                      className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                    >
+                      <FaUser className={styles.navIcon} />
+                      <span>Perfil</span>
+                    </Link>
+
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/login' })}
+                      className={styles.signOutButton}
+                    >
+                      <FaSignOutAlt className={styles.navIcon} />
+                      <span>Sair</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
+                  >
+                    <FaUser className={styles.navIcon} />
+                    <span>Entrar</span>
+                  </Link>
+                )}
+              </nav>
+            </div>
+          )}
+
+          {/* Overlay que cobre a tela quando o menu estiver aberto */}
+          {menuOpen && (
+            <div
+              className={styles.menuOverlay}
+              onClick={() => setMenuOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+        </>
+      )}
+    </>
   );
-}
+};
 
 export default Header;

@@ -10,3 +10,9 @@
   background-color: #f9fafb;
   justify-items: center;
 }
+
+@media (max-width: 767px) {
+  .mainContent {
+    padding-top: 0;
+  }
+}
