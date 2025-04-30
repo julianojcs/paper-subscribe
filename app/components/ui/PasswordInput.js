@@ -31,7 +31,7 @@ export default function PasswordInput({
   const [touched, setTouched] = useState(false);
   // Novo estado para controlar fixação das mensagens
   const [isPinned, setIsPinned] = useState(false);
-  
+
   // Usar o hook personalizado
   const validation = usePasswordValidation({
     password: value || '', // Garantir que password nunca é undefined
@@ -42,22 +42,22 @@ export default function PasswordInput({
     requiresNumber: requireNumber,
     requiresSpecial: requireSpecial
   });
-  
+
   // Propagar alterações de validação para o componente pai
   useEffect(() => {
     onValidationChange(validation);
   }, [validation, onValidationChange]);
-  
+
   // Handlers para foco e blur
   const handleFocus = () => {
     setFocused(true);
   };
-  
+
   const handleBlur = () => {
     setFocused(false);
     setTouched(true);
   };
-  
+
   // Toggle para mostrar/ocultar senha
   const togglePasswordVisibility = (e) => {
     e.preventDefault();
@@ -68,13 +68,13 @@ export default function PasswordInput({
   const togglePin = (e) => {
     e.preventDefault();
     setIsPinned(prevState => !prevState);
-    
+
     // Se estiver fixando, garantir que touched seja true para exibir as mensagens
     if (!isPinned) {
       setTouched(true);
     }
   };
-  
+
   // Determinar se os requisitos falhos devem ser exibidos
   // Mostrar sempre se estiver fixado, ou de acordo com a lógica anterior
   const safeValue = value || ''; // Garantir que temos uma string
@@ -84,7 +84,7 @@ export default function PasswordInput({
   return (
     <div className={`${styles.passwordContainer} ${className || ''}`}>
       {label && <label htmlFor={id} className={styles.label}>{label}</label>}
-      
+
       <div className={styles.inputWrapper}>
         <input
           id={id}
@@ -98,7 +98,7 @@ export default function PasswordInput({
           className={`${styles.input} ${error ? styles.inputError : ''}`}
           {...rest}
         />
-        
+
         <button
           type="button"
           className={styles.visibilityToggle}
@@ -110,19 +110,19 @@ export default function PasswordInput({
           {showPassword ? <FaEyeSlash className={styles.eyeIcon} /> : <FaEye className={styles.eyeIcon} />}
         </button>
       </div>
-      
+
       {error && <div className={styles.errorText}>{error}</div>}
-      
+
       {/* Barra de força da senha - CORREÇÃO AQUI */}
       {showValidation && safeValue.length > 0 && (
         <div className={styles.strengthContainer}>
           <div className={styles.strengthBar}>
-            <div 
-              className={styles.strengthFill} 
-              style={{ 
-                width: `${validation.strength}%`, 
+            <div
+              className={styles.strengthFill}
+              style={{
+                width: `${validation.strength}%`,
                 backgroundImage: validation.gradient,
-              }} 
+              }}
             />
           </div>
           <div className={styles.strengthText} style={{ color: validation.textColor }}>
@@ -130,28 +130,29 @@ export default function PasswordInput({
           </div>
         </div>
       )}
-      
+
       {/* Requisitos não atendidos - com botão de fixação */}
-      <div 
+      <div
         className={`${styles.failedRequirements} ${
           (shouldShowFailedRequirements && hasFailedRequirements) ? styles.fadeIn : styles.fadeOut
         } ${isPinned ? styles.pinned : ''}`}
         aria-hidden={!(shouldShowFailedRequirements && hasFailedRequirements)}
       >
-        <Tooltip 
-          content={isPinned ? "Desfixar regras" : "Fixar regras"} 
+        <Tooltip
+          content={isPinned ? "Desfixar regras" : "Fixar regras"}
           position="top"
         >
-          <button 
+          <button
             type="button"
             onClick={togglePin}
             className={`${styles.pinButton} ${isPinned ? styles.pinActive : ''}`}
             aria-label={isPinned ? "Desfixar regras" : "Fixar regras"}
+            tabIndex={shouldShowFailedRequirements && hasFailedRequirements ? 0 : -1}
           >
             <FaThumbtack />
           </button>
         </Tooltip>
-        
+
         <ul className={styles.requirementsList}>
           {validation.failedRequirements.map((req, index) => (
             <li key={index} className={styles.invalid}>
