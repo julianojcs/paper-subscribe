@@ -10,7 +10,7 @@ const Button = ({
   fullWidth = false,
   disabled = false,
   loading = false,
-  className = '',
+  className = null,
   ...props
 }) => {
   // Criar classe composta baseada nas props

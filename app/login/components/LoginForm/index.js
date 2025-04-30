@@ -233,7 +233,7 @@ export default function LoginForm({
               type="submit"
               variant="primary"
               disabled={isSubmitting}
-              className={styles.submitButton}
+              className={`${styles.submitButton} ${isSubmitting ? styles.loading : ''}`}
               fullWidth
             >
               {isSubmitting ? 'Aguarde...' : 'Entrar'}
@@ -330,8 +330,8 @@ export default function LoginForm({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || !tokenValidated || !registerPasswordValid || !confirmPasswordValid}
-              className={styles.submitButton}
+              disabled={isSubmitting || (!tokenValidated && !eventData) || !registerPasswordValid || !confirmPasswordValid}
+              className={`${styles.submitButton} ${isSubmitting ? styles.loading : ''}`}
               fullWidth
             >
               {isSubmitting ? 'Aguarde...' : 'Registrar'}
