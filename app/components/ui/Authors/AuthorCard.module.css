@@ -98,6 +98,7 @@
 }
 
 .cardContent {
+  container-type: inline-size; /* Container Context: O elemento alvo da query precisa estar dentro de um elemento com container-type definido */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -140,7 +141,7 @@
 
 .inputRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -193,13 +194,19 @@
 }
 
 @media (max-width: 640px) {
-  .inputRow {
-    grid-template-columns: 1fr;
+  .inputRow, .row1fr {
     gap: 12px;
   }
 
   .presenterLabel {
     display: none;
+  }
+}
+
+/* Container Query para quando o container tiver largura mínima de 400px */
+@container (min-width: 400px) {
+  .inputRow {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

@@ -36,7 +36,7 @@ const Button = ({
           <FaSpinner />
         </span>
       )}
-      <span className={loading ? styles.buttonTextWithSpinner : ''}>
+      <span className={loading ? styles.buttonTextWithSpinner : styles.buttonContent}>
         {children}
       </span>
     </button>

@@ -164,46 +164,47 @@ export default function AuthorCard({
       </div>
 
       <div className={styles.cardContent}>
-        <div className={styles.inputGroup}>
-          <label htmlFor={`author-${author.id}-name`} className={styles.inputLabel}>
-            {fieldErrors[`author-${author.id}-name`] ? (
-              <span className={styles.errorText}>{fieldErrors[`author-${author.id}-name`]}</span>
-            ) : (
-              <span className={styles.inputLabelText}>Nome</span>
-            )}
-            <span className={styles.requiredMark}>*</span>
-          </label>
-          <input
-            type="text"
-            id={`author-${author.id}-name`}
-            value={author.name || ''}
-            onChange={(e) => handleChange('name', e.target.value)}
-            onBlur={(e) => handleBlur('name', e.target.value.trim())}
-            className={`${styles.inputField} ${fieldErrors[`author-${author.id}-name`] ? styles.inputError : ''} ${isMainAuthor ? styles.disabledInput : ''}`}
-            placeholder="Nome completo"
-            disabled={isMainAuthor}
-          />
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label htmlFor={`author-${author.id}-institution`} className={styles.inputLabel}>
-            {fieldErrors[`author-${author.id}-institution`] ? (
-              <span className={styles.errorText}>{fieldErrors[`author-${author.id}-institution`]}</span>
-            ) : (
-              <span className={styles.inputLabelText}>Instituição</span>
-            )}
-            <span className={styles.requiredMark}>*</span>
-          </label>
-          <input
-            type="text"
-            id={`author-${author.id}-institution`}
-            value={author.institution || ''}
-            onChange={(e) => handleChange('institution', e.target.value)}
-            onBlur={(e) => handleBlur('institution', e.target.value.trim())}
-            className={`${styles.inputField} ${fieldErrors[`author-${author.id}-institution`] ? styles.inputError : ''} ${isMainAuthor ? styles.disabledInput : ''}`}
-            placeholder="Nome da instituição"
-            disabled={isMainAuthor}
-          />
+        <div className={`${styles.inputRow} ${styles.row1fr}`}>
+          <div className={styles.inputGroup}>
+            <label htmlFor={`author-${author.id}-name`} className={styles.inputLabel}>
+              {fieldErrors[`author-${author.id}-name`] ? (
+                <span className={styles.errorText}>{fieldErrors[`author-${author.id}-name`]}</span>
+              ) : (
+                <span className={styles.inputLabelText}>Nome</span>
+              )}
+              <span className={styles.requiredMark}>*</span>
+            </label>
+            <input
+              type="text"
+              id={`author-${author.id}-name`}
+              value={author.name || ''}
+              onChange={(e) => handleChange('name', e.target.value)}
+              onBlur={(e) => handleBlur('name', e.target.value.trim())}
+              className={`${styles.inputField} ${fieldErrors[`author-${author.id}-name`] ? styles.inputError : ''} ${isMainAuthor ? styles.disabledInput : ''}`}
+              placeholder="Nome completo"
+              disabled={isMainAuthor}
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor={`author-${author.id}-institution`} className={styles.inputLabel}>
+              {fieldErrors[`author-${author.id}-institution`] ? (
+                <span className={styles.errorText}>{fieldErrors[`author-${author.id}-institution`]}</span>
+              ) : (
+                <span className={styles.inputLabelText}>Instituição</span>
+              )}
+              <span className={styles.requiredMark}>*</span>
+            </label>
+            <input
+              type="text"
+              id={`author-${author.id}-institution`}
+              value={author.institution || ''}
+              onChange={(e) => handleChange('institution', e.target.value)}
+              onBlur={(e) => handleBlur('institution', e.target.value.trim())}
+              className={`${styles.inputField} ${fieldErrors[`author-${author.id}-institution`] ? styles.inputError : ''} ${isMainAuthor ? styles.disabledInput : ''}`}
+              placeholder="Nome da instituição"
+              disabled={isMainAuthor}
+            />
+          </div>
         </div>
 
         <div className={styles.inputRow}>

@@ -467,6 +467,8 @@
 .dynamicFieldsContent {
   color: #4a5568;
   line-height: 1.6;
+  text-align: justify;
+  text-indent: 2rem;
 }
 
 .abstractText {
@@ -629,6 +631,12 @@
   .metaGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .dynamicFieldsContent {
+    color: #4a5568;
+    line-height: 1.3;
+    font-size: smaller;
   }
 
   .authorMainBadge, .authorPresenterBadge {

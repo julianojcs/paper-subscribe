@@ -35,11 +35,13 @@
 /* Responsividade */
 @media (max-width: 767px) {
   .pageWrapper {
-    padding: 1rem 0.5rem;
+    padding: 0;
+    margin-block-start: 1rem;
   }
 
   .container {
-    border-radius: 8px;
-    margin: 1.8rem auto 1rem;
+    border-radius: unset;
+    margin: 0;
+    width: 100%;
   }
 }

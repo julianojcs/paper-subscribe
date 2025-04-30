@@ -252,7 +252,7 @@
 
 @media (max-width: 374px) {
   .input {
-    padding: 0.5rem;
+    padding-left: 2.25rem;
     font-size: 0.85rem;
   }
 }

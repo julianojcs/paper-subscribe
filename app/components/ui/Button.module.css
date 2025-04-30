@@ -109,6 +109,12 @@
   display: inline-block;
 }
 
+.buttonContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .buttonTextWithSpinner {
   opacity: 0.8;
 }
@@ -128,11 +134,11 @@
     border-color: var(--paper-secondary-700);
     color: var(--paper-secondary-200);
   }
-  
+
   .outline:hover:not(:disabled) {
     background-color: var(--paper-secondary-800);
   }
-  
+
   .outline:active:not(:disabled) {
     background-color: var(--paper-secondary-700);
   }

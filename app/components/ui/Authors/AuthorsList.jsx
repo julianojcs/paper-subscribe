@@ -29,19 +29,20 @@ export default function AuthorsList({
     // Atualiza o mapa com autores que têm userId ou id
     const updatedAuthors = authorsList.map((author, index) => {
       // Se o autor já tem um ID real (userId ou id), use-o
-      if (author.userId || author.id) {
-        return author;
-      }
+      // if (author.userId || author.id) {
+      //   return author;
+      // }
 
       // Se não tem ID, gerar um estável baseado no índice
       if (!newMap.has(index)) {
         newMap.set(index, generateStableId(index));
       }
 
-      // Retornar autor com ID estável
+      // Retornar autor com ID estável para todos os autores e apenas o author principal terá um userId
       return {
         ...author,
-        id: newMap.get(index)
+        id: newMap.get(index),
+        userId: author.userId //
       };
     });
 
@@ -209,7 +210,7 @@ export default function AuthorsList({
       {authors.length < maxAuthors && (
         <div className={styles.addAuthorContainer}>
           <Button
-            variant="outline"
+            variant="danger"
             type="button"
             onClick={handleAddAuthor}
             className={styles.addAuthorButton}
