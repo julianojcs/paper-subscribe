@@ -30,7 +30,6 @@ export default function LoginForm({
   const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
   const { ip, userAgent, eventData } = useDataContext();
-  // Usar valores iniciais das props
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [eventToken, setEventToken] = useState(initialToken);
   const [tokenValidated, setTokenValidated] = useState(initialTokenValidated);
@@ -49,7 +48,7 @@ export default function LoginForm({
       if (!password) newErrors.password = 'Senha é obrigatória';
       if (!confirmPassword) newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
       if (password !== confirmPassword) newErrors.confirmPassword = 'As senhas não coincidem';
-      if (!eventToken) newErrors.eventToken = 'Token do evento é obrigatório'; // Validação condicional
+      if (!eventToken && !tokenValidated && !eventData) newErrors.eventToken = 'Um Token válido é obrigatório para registro.';
     }
 
     setErrors(newErrors);
@@ -95,7 +94,7 @@ export default function LoginForm({
 
     try {
       // Verificar se tem token validado
-      if (!eventToken || !tokenValidated) {
+      if ((!eventToken || !tokenValidated) && !eventData) {
         setServerError('Token do evento é inválido ou expirou');
         setIsSubmitting(false);
         return;
@@ -311,20 +310,22 @@ export default function LoginForm({
               onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
             />
             {/* Token do evento - exibição condicional */}
-            {!(eventToken || tokenValidated || eventData) && (
-              <Input
-                label="Token do Evento"
-                id="eventToken"
-                name="token"
-                type="text"
-                placeholder="Digite o token fornecido pelo organizador"
-                value={eventToken}
-                onChange={(e) => handleTokenInput(e.target.value)}
-                error={errors.eventToken}
-                disabled={isSubmitting}
-                leftIcon={<FaTicketAlt />}
-                helpText="Obrigatório para registro. Solicite ao organizador do evento."
-              />
+            {(!tokenValidated && !eventData) && (
+              <div style={errors.eventToken ? { marginBlockEnd: '1rem' } : {}}>
+                <Input
+                  label="Token do Evento"
+                  id="eventToken"
+                  name="token"
+                  type="text"
+                  placeholder="Digite o token fornecido pelo organizador"
+                  value={eventToken}
+                  onChange={(e) => handleTokenInput(e.target.value)}
+                  error={errors.eventToken}
+                  disabled={isSubmitting}
+                  leftIcon={<FaTicketAlt />}
+                  helpText="Obrigatório para registro. Solicite ao organizador do evento."
+                />
+              </div>
             )}
 
             <Button

@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import styles from './Input.module.css';
 
 const Input = forwardRef(({
@@ -13,18 +13,50 @@ const Input = forwardRef(({
   error,
   disabled = false,
   required = false,
-  helpText, // Esta prop não deve ser passada para o input
+  helpText,
   className = '',
   isLoading = false,
   isValid = false,
-  ...restProps // Outras props que serão passadas para o input
+  autoComplete,
+  leftIcon,
+  ...restProps
 }, ref) => {
 
-  // Extrair helpText explicitamente de restProps para garantir que não seja passado para o input
-  const { helpText: _, ...filteredProps } = restProps;
+  // Estados para controlar a visibilidade dos indicadores
+  const [showValidIndicator, setShowValidIndicator] = useState(false);
+  const [showInvalidIndicator, setShowInvalidIndicator] = useState(false);
 
-  // Criar objeto de props específicas para o input
-  // Garantindo que helpText não seja incluído
+  // Usar useEffect para adicionar atraso na mudança de estado
+  useEffect(() => {
+    if (isValid && !error) {
+      setShowValidIndicator(true);
+    } else {
+      setShowValidIndicator(false);
+    }
+
+    if (error) {
+      setShowInvalidIndicator(true);
+    } else {
+      setShowInvalidIndicator(false);
+    }
+  }, [isValid, error]);
+
+  // Extrair helpText e leftIcon explicitamente de restProps
+  // para garantir que não sejam passados para o input nativo
+  const { helpText: _, leftIcon: __, ...filteredProps } = restProps;
+
+  const inputClasses = `${styles.input}
+    ${leftIcon ? styles.withLeftIcon : ''}
+    ${error ? styles.error : ''}
+    ${isValid && !error ? styles.valid : ''}
+    ${className || ''}`.trim();
+
+  // Preparar classes e atributos
+  const wrapperClasses = `${styles.inputWrapper} ${error ? styles.hasError : ''}`.trim();
+
+  // Manter o erro no data-attribute para exibir via pseudo-elemento
+  const errorAttributes = error ? { 'data-error-message': error } : {};
+
   const inputProps = {
     ref,
     id,
@@ -36,17 +68,22 @@ const Input = forwardRef(({
     onBlur,
     disabled,
     required,
-    className: `${styles.input} ${error ? styles.error : ''} ${isValid ? styles.valid : ''} ${className}`,
+    autoComplete,
+    className: inputClasses,
     ...filteredProps
   };
 
-  // Se há texto de ajuda, adiciona um atributo para acessibilidade
-  if (helpText) {
+  // Adicionar atributos de acessibilidade
+  if (error) {
+    inputProps['aria-invalid'] = 'true';
+    // O erro é fornecido pelo pseudo-elemento via data-attribute
+  } else if (helpText) {
+    // Sem erro, usar helpText para descrever o campo
     inputProps['aria-describedby'] = `${id}-helptext`;
   }
 
   return (
-    <div className={styles.formGroup}>
+    <div className={wrapperClasses} {...errorAttributes}>
       {label && (
         <label htmlFor={id} className={styles.label}>
           {label}
@@ -55,23 +92,30 @@ const Input = forwardRef(({
           )}
         </label>
       )}
-      <div className={styles.inputWrapper}>
+      <div className={styles.inputContainer}>
+        {leftIcon && (
+          <div className={styles.leftIconContainer}>
+            {leftIcon}
+          </div>
+        )}
         <input {...inputProps} />
 
+        {/* Usar os estados para controlar a visibilidade dos indicadores */}
         {isLoading && (
           <div className={styles.loadingIndicator}>
             <span className={styles.spinner}></span>
           </div>
         )}
-
-        {isValid && !error && (
+        {!isLoading && showInvalidIndicator && (
+          <div className={styles.invalidIndicator}>✕</div>
+        )}
+        {!isLoading && !error && showValidIndicator && (
           <div className={styles.validIndicator}>✓</div>
         )}
       </div>
 
-      {error && <p className={styles.errorText}>{error}</p>}
-
-      {helpText && (
+      {/* Mostrar helpText apenas quando não houver erro */}
+      {helpText && !error && (
         <p id={`${id}-helptext`} className={styles.helpText}>
           {helpText}
         </p>

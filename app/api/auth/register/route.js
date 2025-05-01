@@ -19,7 +19,7 @@ export async function POST(request) {
     let organizationId = null;
     if (eventToken) {
       const tokenRecord = await prisma.organizationToken.findFirst({
-        where: { 
+        where: {
           token: eventToken,
           expiresAt: {
             gte: new Date() // Verificar se o token não expirou
@@ -119,22 +119,23 @@ export async function POST(request) {
             role: "MEMBER" // Definindo papel padrão como membro
           }
         });
-      } else {
-        // Se não foi fornecido um eventToken válido, podemos tentar encontrar uma organização padrão
-        const defaultOrg = await tx.organization.findFirst({
-          where: { isDefault: true }
-        });
-
-        if (defaultOrg) {
-          await tx.organizationMember.create({
-            data: {
-              userId: newUser.id,
-              organizationId: defaultOrg.id,
-              role: "MEMBER"
-            }
-          });
-        }
       }
+//       else {
+//         // Se não foi fornecido um eventToken válido, podemos tentar encontrar uma organização padrão
+//         const defaultOrg = await tx.organization.findFirst({
+//           where: { isDefault: true }
+//         });
+//
+//         if (defaultOrg) {
+//           await tx.organizationMember.create({
+//             data: {
+//               userId: newUser.id,
+//               organizationId: defaultOrg.id,
+//               role: "MEMBER"
+//             }
+//           });
+//         }
+//       }
 
       return newUser;
     });
@@ -143,9 +144,9 @@ export async function POST(request) {
     const { password: _, ...userWithoutPassword } = result;
 
     return NextResponse.json(
-      { 
-        user: userWithoutPassword, 
-        message: "Usuário registrado com sucesso e associado à organização" 
+      {
+        user: userWithoutPassword,
+        message: "Usuário registrado com sucesso e associado à organização"
       },
       { status: 201 }
     );
