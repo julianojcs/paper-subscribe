@@ -6,12 +6,54 @@
  */
 import { useDataContext } from '/context/DataContext';
 import { useSession } from 'next-auth/react';
+import * as tokenService from './tokenService';
+import * as localStorageService from './localStorage'; // Importar o serviço de localStorage
 
+// Constantes para chaves de armazenamento
 const EVENT_TOKEN_KEY = 'event_registration_token';
 const EVENT_DATA_KEY = 'event_data';
 
 /**
- * Hook para gerenciar dados de eventos
+ * Busca dados de um evento pelo ID
+ * @param {string} eventId - ID do evento
+ * @returns {Promise<object|null>} Dados do evento ou null
+ */
+export const fetchEventData = async (_eventId) => {
+  const eventId = _eventId || session?.user?.eventId || contextEventData?.id;
+  if (!eventId) {
+    throw new Error('eventId é obrigatório');
+  }
+
+  try {
+    // Buscar os dados básicos do evento
+    const eventRes = await fetch(`/api/organization/events/${eventId}`);
+    if (!eventRes.ok) {
+      throw new Error(`Erro ao buscar evento: ${eventRes.status}`);
+    }
+    const eventData = await eventRes.json();
+
+    // Buscar os dados da timeline do evento
+    const timelineRes = await fetch(`/api/organization/events/${eventId}/timeline`);
+    if (!timelineRes.ok) {
+      throw new Error(`Erro ao buscar timeline: ${timelineRes.status}`);
+    }
+    const timelineData = await timelineRes.json();
+
+    const eventDataWithTimeline = {
+      event: eventData.event,
+      timeline: timelineData.timeline || []
+    };
+    console.log('Dados do evento e timeline obtidos:', eventDataWithTimeline);
+    return eventDataWithTimeline;
+  } catch (error) {
+    console.error(`Erro ao buscar dados do evento ${eventId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Hook para usar o serviço de dados do evento
+ * Mantido para compatibilidade com código existente
  */
 export const useEventDataService = () => {
   const { eventData: contextEventData, setEventData, fetchEvent } = useDataContext();
@@ -119,124 +161,86 @@ export const useEventDataService = () => {
   };
 
   /**
-   * Tenta obter dados do evento através do token no localStorage
-   * @returns {Promise<Object|null>} Dados do evento ou null se falhar
+   * Obtém dados do evento a partir do token armazenado
+   * @returns {Promise<object|null>} Dados do evento ou null
    */
   const getDataFromToken = async () => {
-    const tokenStr = localStorage.getItem(EVENT_TOKEN_KEY);
-    if (!tokenStr) {
-      return null;
-    }
-
     try {
-      const tokenData = JSON.parse(tokenStr);
+      const result = await tokenService.getAndValidateStoredToken();
 
-      // Verificar se o token não expirou
-      if (!tokenData.token || !tokenData.expires || tokenData.expires < Date.now()) {
-        console.log('Token expirado, removendo do localStorage');
-        localStorage.removeItem(EVENT_TOKEN_KEY);
+      if (!result.valid || !result.event?.id) {
         return null;
       }
 
-      // Validar o token com a API
-      const validateResponse = await fetch('/api/token/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: tokenData.token }),
-      });
-
-      const validationData = await validateResponse.json();
-
-      if (!validateResponse.ok || !validationData.valid) {
-        console.log('Token inválido, removendo do localStorage');
-        localStorage.removeItem(EVENT_TOKEN_KEY);
-        return null;
-      }
-
-      // Se o token é válido mas não temos um event.id, algo está errado
-      if (!validationData.event.id) {
-        console.error('Token válido, mas não retornou eventId');
-        return null;
-      }
-
-      // Buscar dados do evento usando o eventId retornado pela validação
-      return await fetchEventData(validationData.event.id);
-
+      // Buscar dados completos do evento usando o ID
+      return await fetchEventData(result.event.id);
     } catch (error) {
-      console.error('Erro ao processar token:', error);
-      localStorage.removeItem(EVENT_TOKEN_KEY);
+      console.error('Erro ao processar token para obter dados do evento:', error);
       return null;
     }
   };
 
   /**
-   * Busca dados do evento e timeline da API
-   * @param {string} eventId Id do evento
-   * @returns {Promise<Object>} Dados do evento e timeline
+   * Valida um token específico e retorna dados do evento associado
+   * @param {string} token - Token a ser validado
+   * @returns {Promise<{valid: boolean, eventData: object|null, message: string|null}>}
    */
-  const fetchEventData = async (_eventId) => {
-    const eventId = _eventId || session?.user?.eventId || contextEventData?.id;
-    if (!eventId) {
-      throw new Error('eventId é obrigatório');
+  const validateEventToken = async (token) => {
+    if (!token) {
+      return { valid: false, eventData: null };
     }
 
     try {
-      // Buscar os dados básicos do evento
-      const eventRes = await fetch(`/api/organization/events/${eventId}`);
-      if (!eventRes.ok) {
-        throw new Error(`Erro ao buscar evento: ${eventRes.status}`);
-      }
-      const eventData = await eventRes.json();
+      const validationResult = await tokenService.validateToken(token);
 
-      // Buscar os dados da timeline do evento
-      const timelineRes = await fetch(`/api/organization/events/${eventId}/timeline`);
-      if (!timelineRes.ok) {
-        throw new Error(`Erro ao buscar timeline: ${timelineRes.status}`);
+      if (!validationResult.valid || !validationResult.event?.id) {
+        return {
+          valid: false,
+          eventData: null,
+          message: validationResult.message
+        };
       }
-      const timelineData = await timelineRes.json();
 
-      const eventDataWithTimeline = {
-        event: eventData.event,
-        timeline: timelineData.timeline || []
-      };
-      console.log('Dados do evento e timeline obtidos:', eventDataWithTimeline);
-      return eventDataWithTimeline;
+      // Se o token for válido, salvar no localStorage
+      tokenService.saveToken(token);
+
+      // Buscar dados completos do evento
+      const eventData = await fetchEventData(validationResult.event.id);
+      return { valid: true, eventData, message: validationResult.message };
     } catch (error) {
-      console.error(`Erro ao buscar dados do evento ${eventId}:`, error);
-      throw error;
+      console.error('Erro ao validar token do evento:', error);
+      return {
+        valid: false,
+        eventData: null,
+        message: 'Erro ao processar o token'
+      };
     }
   };
 
   /**
-   * Obtém dados do evento do localStorage
+   * Obtém dados do evento do localStorage usando o serviço localStorage.js
    * @returns {Object|null} Dados do evento ou null se não encontrado/expirado
    */
   const getDataFromLocalStorage = () => {
-    const eventDataStr = localStorage.getItem(EVENT_DATA_KEY);
-    if (!eventDataStr) {
+    // Usar o serviço de localStorage em vez do acesso direto
+    const eventData = localStorageService.getItem(EVENT_DATA_KEY);
+
+    if (!eventData) {
       return null;
     }
 
-    try {
-      const eventData = JSON.parse(eventDataStr);
-
-      // Verificar se os dados não expiraram
-      if (!eventData.expires || eventData.expires < Date.now()) {
-        console.log('Dados do evento expirados, removendo do localStorage');
-        // localStorage.removeItem(EVENT_DATA_KEY);
-        return null;
-      }
-
-      return eventData;
-    } catch (error) {
-      console.error('Erro ao processar dados do evento do localStorage:', error);
-      // localStorage.removeItem(EVENT_DATA_KEY);
+    // Verificar se os dados não expiraram
+    if (!eventData.expires || eventData.expires < Date.now()) {
+      console.log('Dados do evento expirados');
+      localStorageService.removeItem(EVENT_DATA_KEY);
       return null;
     }
+
+    return eventData;
   };
 
   /**
-   * Salva os dados do evento no localStorage
+   * Salva os dados do evento no localStorage usando o serviço localStorage.js
    * @param {Object} data Objeto contendo dados do evento e timeline
    */
   const saveEventDataToLocalStorage = (data) => {
@@ -268,11 +272,12 @@ export const useEventDataService = () => {
         expires: expirationDate
       };
 
-      localStorage.setItem(EVENT_DATA_KEY, JSON.stringify(dataToSave));
+      // Usar o serviço de localStorage
+      localStorageService.setItem(EVENT_DATA_KEY, dataToSave);
       console.log('Dados do evento salvos no localStorage com expiração:', new Date(expirationDate).toISOString());
 
       // Remover token após salvar os dados do evento
-      localStorage.removeItem(EVENT_TOKEN_KEY);
+      localStorageService.removeItem(EVENT_TOKEN_KEY);
       console.log('Token de registro removido após salvar dados do evento');
 
     } catch (error) {
@@ -280,8 +285,10 @@ export const useEventDataService = () => {
     }
   };
 
+  // Retornar as funções do hook
   return {
     getEventData,
+    validateEventToken,
     fetchEventData,
     saveEventDataToLocalStorage
   };
