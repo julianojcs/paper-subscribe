@@ -256,3 +256,24 @@
     font-size: 0.85rem;
   }
 }
+
+/* Adicione estas classes ao seu arquivo Input.module.css */
+
+.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+}
+
+.clickable:focus {
+  outline: 2px solid var(--color-primary);
+  border-radius: 50%;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

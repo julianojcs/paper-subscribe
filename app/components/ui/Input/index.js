@@ -45,6 +45,34 @@ const Input = forwardRef(({
   // para garantir que não sejam passados para o input nativo
   const { helpText: _, leftIcon: __, ...filteredProps } = restProps;
 
+  // Handler para limpar o campo quando clicar no X
+  const handleClearInput = (event) => {
+    // Prevenir a propagação do evento para não acionar outros handlers
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (disabled) return;
+
+    // Criar um evento sintético para simular a mudança de input
+    const syntheticEvent = {
+      target: { value: '', name },
+      preventDefault: () => {},
+      stopPropagation: () => {}
+    };
+
+    // Chamar o onChange com o valor em branco
+    if (onChange) {
+      onChange(syntheticEvent);
+    }
+
+    // Opcional: focar no input após limpar
+    if (ref && ref.current) {
+      ref.current.focus();
+    } else if (document.getElementById(id)) {
+      document.getElementById(id).focus();
+    }
+  };
+
   const inputClasses = `${styles.input}
     ${leftIcon ? styles.withLeftIcon : ''}
     ${error ? styles.error : ''}
@@ -107,7 +135,21 @@ const Input = forwardRef(({
           </div>
         )}
         {!isLoading && showInvalidIndicator && (
-          <div className={styles.invalidIndicator}>✕</div>
+          <div
+            className={`${styles.invalidIndicator} ${disabled ? styles.disabled : styles.clickable}`}
+            onClick={!disabled ? handleClearInput : undefined}
+            title={disabled ? "" : "Limpar campo"}
+            aria-label={disabled ? "" : "Limpar campo"}
+            role={disabled ? "" : "button"}
+            tabIndex={disabled ? -1 : 0}
+            onKeyDown={(e) => {
+              if (!disabled && (e.key === "Enter" || e.key === " ")) {
+                handleClearInput(e);
+              }
+            }}
+          >
+            ✕
+          </div>
         )}
         {!isLoading && !error && showValidIndicator && (
           <div className={styles.validIndicator}>✓</div>
