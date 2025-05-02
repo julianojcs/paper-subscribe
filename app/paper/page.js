@@ -33,7 +33,7 @@ export default function PaperPage({ searchParams }) {
   });
   const eventLogoUrl = session?.user?.activeEventLogoUrl;
   const eventName = session?.user?.activeEventName;
-
+console.log('session', session);
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
     // Se o status está mudando ou é desconhecido, mostrar loading

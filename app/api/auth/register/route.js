@@ -5,36 +5,15 @@ import prisma from "../../../lib/db";
 export async function POST(request) {
   try {
     // Extrair dados da requisição
-    const { name, email, password, eventToken } = await request.json();
+    const { name, email, password, organizationId = 'c4b47eeb63945d0da252915ce' } = await request.json();
+console.log("Dados recebidos:", { name, email, password, organizationId });
 
     // Validação básica
     if (!name || !email || !password) {
       return NextResponse.json(
-        { message: "Nome, email e senha são obrigatórios" },
+        { message: "Nome, email e senha são obri'atórios" },
         { status: 400 }
       );
-    }
-
-    // Validar eventToken e obter o organizationId associado
-    let organizationId = null;
-    if (eventToken) {
-      const tokenRecord = await prisma.organizationToken.findFirst({
-        where: {
-          token: eventToken,
-          expiresAt: {
-            gte: new Date() // Verificar se o token não expirou
-          }
-        }
-      });
-
-      if (!tokenRecord) {
-        return NextResponse.json(
-          { message: "Token do evento inválido ou expirado" },
-          { status: 400 }
-        );
-      }
-
-      organizationId = tokenRecord.organizationId;
     }
 
     // Verificar se o email já existe
@@ -96,6 +75,13 @@ export async function POST(request) {
       );
     }
 
+    // if (!organizationId) {
+    //   return NextResponse.json(
+    //     { message: "Id da organização do evento é obrigatório." },
+    //     { status: 400 }
+    //   );
+    // }
+
     // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -120,22 +106,6 @@ export async function POST(request) {
           }
         });
       }
-//       else {
-//         // Se não foi fornecido um eventToken válido, podemos tentar encontrar uma organização padrão
-//         const defaultOrg = await tx.organization.findFirst({
-//           where: { isDefault: true }
-//         });
-//
-//         if (defaultOrg) {
-//           await tx.organizationMember.create({
-//             data: {
-//               userId: newUser.id,
-//               organizationId: defaultOrg.id,
-//               role: "MEMBER"
-//             }
-//           });
-//         }
-//       }
 
       return newUser;
     });

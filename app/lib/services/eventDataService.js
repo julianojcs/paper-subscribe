@@ -232,7 +232,7 @@ export const useEventDataService = () => {
     // Verificar se os dados não expiraram
     if (!eventData.expires || eventData.expires < Date.now()) {
       console.log('Dados do evento expirados');
-      localStorageService.removeItem(EVENT_DATA_KEY);
+      // localStorageService.removeItem(EVENT_DATA_KEY);
       return null;
     }
 

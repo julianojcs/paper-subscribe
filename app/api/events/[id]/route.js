@@ -75,7 +75,9 @@ export async function GET(request, context) {
           select: {
             id: true,
             label: true,
-            description: true,
+            helperText: true,
+            defaultValue: true,
+            placeholder: true,
             isRequired: true,
             fieldType: true,
             fieldOptions: true,
@@ -101,7 +103,7 @@ export async function GET(request, context) {
 
     return NextResponse.json(event);
   } catch (error) {
-    console.error(`Erro ao buscar evento (ID: ${params?.id}):`, error);
+    console.log('Erro ao buscar evento:', error);
     return NextResponse.json({ message: 'Erro ao buscar evento' }, { status: 500 });
   }
 }

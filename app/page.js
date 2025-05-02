@@ -15,6 +15,9 @@ import HeaderContentTitle from './components/layout/HeaderContentTitle';
 import { useDataContext } from '../context/DataContext';
 import Timeline from './components/ui/Timeline';
 import { useEventDataService } from '/app/lib/services/eventDataService';
+import * as localStorageService from '/app/lib/services/localStorage';
+
+const EVENT_DATA_KEY = 'event_data';
 
 const Home = () => {
   const { data: session, status: authStatus } = useSession();
@@ -48,45 +51,37 @@ const Home = () => {
       setLoading(true);
       console.log("Carregando dados do evento...", { authStatus, hasSession: !!session });
 
-      try {
-        const storedData = localStorage.getItem('event_data');
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          console.log('Dados encontrados no localStorage:', parsedData.id);
+      const storedData = localStorageService.getItem(EVENT_DATA_KEY);
+      if (storedData && !force) {
+        console.log('Dados encontrados no localStorage:', storedData.id);
 
-          const timelineData = parsedData.timelines || [];
-          console.log(`Timeline encontrada no localStorage: ${timelineData.length} itens`);
+        const timelineData = storedData.timelines || [];
+        console.log(`Timeline encontrada no localStorage: ${timelineData.length} itens`);
 
-          setLocalEventData(parsedData);
-          setLocalTimelineItems(timelineData);
+        setLocalEventData(storedData);
+        setLocalTimelineItems(timelineData);
 
-          setEventData(parsedData);
-          setTimelineItems(timelineData);
+        setEventData(storedData);
+        setTimelineItems(timelineData);
 
-          setSourceData('localStorage');
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Erro ao ler localStorage:', error);
+        setSourceData('localStorage');
+        setLoading(false);
+        return;
       }
 
       const result = await getEventData();
       console.log("Dados obtidos da API:", result);
 
       if (result?.dataEvent) {
-        try {
-          localStorage.setItem('event_data', JSON.stringify(result.dataEvent));
-        } catch (e) {
-          console.error('Erro ao salvar no localStorage:', e);
-        }
+        localStorageService.setItem(EVENT_DATA_KEY, result.dataEvent);
 
         setLocalEventData(result.dataEvent);
         setLocalTimelineItems(result.dataEvent.timelines || []);
-        setSourceData(result.sourceDataEvent);
 
         setEventData(result.dataEvent);
         setTimelineItems(result.dataEvent.timelines || []);
+
+        setSourceData(result.sourceDataEvent);
       } else {
         console.log('Nenhum dado de evento disponível');
 
@@ -104,10 +99,41 @@ const Home = () => {
   }, [authStatus, session, loading, getEventData, eventData, setEventData, setTimelineItems]);
 
   useEffect(() => {
+    const checkStorageUpdates = () => {
+      const storedData = localStorageService.getItem(EVENT_DATA_KEY);
+      if (storedData && eventData && storedData.id !== eventData.id) {
+        console.log('Dados do evento atualizados em outra aba, recarregando...');
+
+        setLocalEventData(storedData);
+        setLocalTimelineItems(storedData.timelines || []);
+
+        setEventData(storedData);
+        setTimelineItems(storedData.timelines || []);
+
+        setSourceData('localStorage');
+      }
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === EVENT_DATA_KEY) {
+        checkStorageUpdates();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
+  }, [eventData, setEventData, setTimelineItems]);
+
+  useEffect(() => {
     if (authStatus === 'loading') return;
-
     if (isInitialized) return;
-
     loadEventData();
   }, [authStatus, loadEventData, isInitialized]);
 
@@ -195,21 +221,16 @@ const Home = () => {
 
     if (timelineItems && timelineItems.length > 0) {
       currentTimelineItems = timelineItems;
-      console.log('Usando timelineItems do estado local:', timelineItems.length);
     } else if (contextTimelineItems && contextTimelineItems.length > 0) {
       currentTimelineItems = contextTimelineItems;
-      console.log('Usando timelineItems do contexto global:', contextTimelineItems.length);
     } else if (currentEventData && currentEventData.timelines) {
       currentTimelineItems = currentEventData.timelines;
-      console.log('Usando timelineItems diretamente do eventData:', currentEventData.timelines.length);
     }
-
-    console.log('currentTimelineItems final:', currentTimelineItems?.length || 0);
 
     return (
       <>
         <HeaderContentTitle
-          eventData={{eventLogoUrl: currentEventData.logoUrl, eventName: currentEventData.name}}
+          eventData={{eventLogoUrl: currentEventData?.logoUrl, eventName: currentEventData?.name}}
           onImageLoad={() => setImageReady(true)}
           subtitle="Sistema de Submissão de Trabalhos"
           fallbackTitle="Sistema de Submissão de Trabalhos Científicos"

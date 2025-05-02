@@ -152,7 +152,7 @@ const SubmitPaperPage = () => {
               setAuthors([mainAuthor]);
             } else {
               // Em vez de redirecionar imediatamente, exiba o modal
-              setProfileRedirectUrl('/profile?callbackUrl=' + encodeURIComponent(window.location.href));
+              // setProfileRedirectUrl('/profile?callbackUrl=' + encodeURIComponent(window.location.href));
               setShowProfileModal(true);
             }
 

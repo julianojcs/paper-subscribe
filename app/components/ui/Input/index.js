@@ -1,5 +1,6 @@
 import React, { forwardRef, useState, useEffect } from 'react';
 import styles from './Input.module.css';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 
 const Input = forwardRef(({
   label,
@@ -25,21 +26,33 @@ const Input = forwardRef(({
   // Estados para controlar a visibilidade dos indicadores
   const [showValidIndicator, setShowValidIndicator] = useState(false);
   const [showInvalidIndicator, setShowInvalidIndicator] = useState(false);
+  // Novo estado para verificar campos obrigatórios vazios
+  const [isEmpty, setIsEmpty] = useState(value === '' || value === null || value === undefined);
+  const [touched, setTouched] = useState(false);
 
-  // Usar useEffect para adicionar atraso na mudança de estado
+  // Verificar se o campo está vazio
   useEffect(() => {
-    if (isValid && !error) {
-      setShowValidIndicator(true);
-    } else {
-      setShowValidIndicator(false);
-    }
+    setIsEmpty(value === '' || value === null || value === undefined);
+  }, [value]);
 
-    if (error) {
-      setShowInvalidIndicator(true);
-    } else {
+  // Usar useEffect para adicionar atraso na mudança de estado e verificar campos obrigatórios
+  useEffect(() => {
+    // Verifica se é válido e não tem erro
+    if (isValid && !error && !isEmpty) {
+      setShowValidIndicator(true);
       setShowInvalidIndicator(false);
     }
-  }, [isValid, error]);
+    // Verifica se tem erro explícito OU se é obrigatório, está vazio e já foi tocado
+    else if (error || (required && isEmpty && touched)) {
+      setShowValidIndicator(false);
+      setShowInvalidIndicator(true);
+    }
+    // Estado neutro
+    else {
+      setShowValidIndicator(false);
+      setShowInvalidIndicator(false);
+    }
+  }, [isValid, error, isEmpty, required, touched]);
 
   // Extrair helpText e leftIcon explicitamente de restProps
   // para garantir que não sejam passados para o input nativo
@@ -73,17 +86,32 @@ const Input = forwardRef(({
     }
   };
 
+  // Gerenciar o evento de blur para marcar o campo como "tocado"
+  const handleBlur = (e) => {
+    setTouched(true);
+    if (onBlur) {
+      onBlur(e);
+    }
+  };
+
+  // Determinar se o campo tem erro (explícito ou por regra de validação)
+  const hasError = error || (required && isEmpty && touched);
+
+  // Construir as classes com base nas condições
   const inputClasses = `${styles.input}
     ${leftIcon ? styles.withLeftIcon : ''}
-    ${error ? styles.error : ''}
-    ${isValid && !error ? styles.valid : ''}
+    ${hasError ? styles.error : ''}
+    ${(isValid && !isEmpty && !hasError) ? styles.valid : ''}
     ${className || ''}`.trim();
 
   // Preparar classes e atributos
-  const wrapperClasses = `${styles.inputWrapper} ${error ? styles.hasError : ''}`.trim();
+  const wrapperClasses = `${styles.inputWrapper} ${hasError ? styles.hasError : ''}`.trim();
+
+  // Preparar mensagem de erro - pode ser o erro explícito ou uma mensagem padrão para campos obrigatórios
+  const errorMessage = error || (required && isEmpty && touched ? 'Este campo é obrigatório' : '');
 
   // Manter o erro no data-attribute para exibir via pseudo-elemento
-  const errorAttributes = error ? { 'data-error-message': error } : {};
+  const errorAttributes = errorMessage ? { 'data-error-message': errorMessage } : {};
 
   const inputProps = {
     ref,
@@ -93,7 +121,7 @@ const Input = forwardRef(({
     placeholder,
     value,
     onChange,
-    onBlur,
+    onBlur: handleBlur, // Usar nosso handler personalizado
     disabled,
     required,
     autoComplete,
@@ -102,7 +130,7 @@ const Input = forwardRef(({
   };
 
   // Adicionar atributos de acessibilidade
-  if (error) {
+  if (hasError) {
     inputProps['aria-invalid'] = 'true';
     // O erro é fornecido pelo pseudo-elemento via data-attribute
   } else if (helpText) {
@@ -151,13 +179,13 @@ const Input = forwardRef(({
             ✕
           </div>
         )}
-        {!isLoading && !error && showValidIndicator && (
+        {!isLoading && !hasError && showValidIndicator && (
           <div className={styles.validIndicator}>✓</div>
         )}
       </div>
 
       {/* Mostrar helpText apenas quando não houver erro */}
-      {helpText && !error && (
+      {helpText && !hasError && (
         <p id={`${id}-helptext`} className={styles.helpText}>
           {helpText}
         </p>

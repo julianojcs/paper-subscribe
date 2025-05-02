@@ -33,7 +33,7 @@ export async function POST(request) {
     if (!token) {
       return NextResponse.json({
         valid: false,
-        message: "Token não fornecido"
+        message: "Token não fornecido."
       }, { status: 400 });
     }
 
@@ -51,6 +51,7 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
+            shortName: true,
             isActive: true
           }
         },
@@ -58,9 +59,10 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            isActive: true,
+            logoUrl: true,
             submissionStart: true,
-            submissionEnd: true
+            submissionEnd: true,
+            isActive: true
           }
         }
       }
@@ -70,7 +72,7 @@ export async function POST(request) {
     if (!organizationToken) {
       return NextResponse.json({
         valid: false,
-        message: "Token inválido ou expirado"
+        message: "Token inválido ou expirado."
       });
     }
 
@@ -78,7 +80,7 @@ export async function POST(request) {
     if (!organizationToken.organization.isActive) {
       return NextResponse.json({
         valid: false,
-        message: "A organização associada a este token não está ativa"
+        message: `A organização ${organizationToken.organization.shortName} está inativa.`
       });
     }
 
@@ -86,7 +88,7 @@ export async function POST(request) {
     if (organizationToken.eventId && !organizationToken.event.isActive) {
       return NextResponse.json({
         valid: false,
-        message: "O evento associado a este token não está ativo"
+        message: `O evento ${organizationToken.event.name} associado a este token está inativo.`
       });
     }
 
@@ -97,7 +99,7 @@ export async function POST(request) {
         return NextResponse.json({
           valid: true, // O token é válido, mas as submissões ainda não começaram
           active: false,
-          message: "O período de submissões para este evento ainda não começou",
+          message: "O período de submissões ainda não começou.",
           submissionsStart: organizationToken.event.submissionStart
         });
       }
@@ -106,7 +108,7 @@ export async function POST(request) {
         return NextResponse.json({
           valid: true, // O token é válido, mas as submissões já terminaram
           active: false,
-          message: "O período de submissões para este evento já terminou",
+          message: "O período de submissões já terminou.",
           submissionsEnd: organizationToken.event.submissionEnd
         });
       }
@@ -123,6 +125,8 @@ export async function POST(request) {
       event: organizationToken.event ? {
         id: organizationToken.event.id,
         name: organizationToken.event.name,
+        logoUrl: organizationToken.event.logoUrl,
+        shortName: organizationToken.event.shortName,
         submissionStart: organizationToken.event.submissionStart,
         submissionEnd: organizationToken.event.submissionEnd
       } : null,
@@ -133,7 +137,7 @@ export async function POST(request) {
     console.error("Erro ao validar token:", error);
     return NextResponse.json({
       valid: false,
-      message: "Erro ao processar a solicitação"
+      message: "Erro ao processar o token."
     }, { status: 500 });
   }
 }

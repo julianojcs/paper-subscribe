@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
 import { useDataContext } from '../../context/DataContext';
 import { useEventDataService } from '../lib/services/eventDataService';
 import LoginForm from './components/LoginForm';
@@ -16,7 +15,8 @@ function LoginPageContent() {
   const [tokenValidated, setTokenValidated] = useState(false);
   const [imageReady, setImageReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { eventData } = useDataContext();
+  const { eventData, setEventData, setTimelineData } = useDataContext();
+  const [localEventData, setLocalEventData] = useState(null);
   const [ isDataLoadinfFinished, setIsDataLoadinfFinished ] = useState(false);
 
   // Estado para controlar a tab padrão
@@ -30,12 +30,8 @@ function LoginPageContent() {
     const loadEventData = async () => {
       try {
         setLoading(true);
-
-
         // Obter dados do evento usando o serviço
         const result = await getEventData();
-
-        console.log('Dados do evento carregados de:', result.sourceDataEvent);
         setIsDataLoadinfFinished(true);
 
         if (result.dataEvent) {
@@ -81,13 +77,25 @@ function LoginPageContent() {
     setLoading(false);
   };
 
+  const handleTokenValidationSuccess = (validatedEventData) => {
+    if (validatedEventData?.event) {
+      setLocalEventData(validatedEventData.event);
+      setEventData(validatedEventData.event);
+      setTimelineData(validatedEventData.timeline);
+      setImageReady(false); // Resetar para permitir nova animação de carregamento da imagem
+    }
+  };
+
   // Componente de conteúdo principal
   const MainContent = () => (
     <div className={`${styles.card} ${imageReady || !eventData?.logoUrl ? styles.ready : ''}`}>
       {/* Exibe HeaderContentTitle se houver dados de evento */}
-      {eventData?.logoUrl ? (
+      {(eventData?.logoUrl || localEventData?.logoUrl) ? (
         <HeaderContentTitle
-          eventData={{eventLogoUrl: eventData.logoUrl, eventName: eventData.name}}
+          eventData={{
+            eventLogoUrl: eventData.logoUrl || localEventData?.logoUrl,
+            eventName: eventData.name || localEventData?.name,
+          }}
           onImageLoad={handleImageLoad}
           subtitle="Sistema de Submissão de Trabalhos"
           fallbackTitle="Registro para Evento Científico"
@@ -108,7 +116,7 @@ function LoginPageContent() {
             eventToken={eventToken}
             tokenValidated={tokenValidated}
             defaultTab={defaultTab}
-            eventData={eventData}
+            onTokenValidated={handleTokenValidationSuccess} // Passar a função de callback
           />
         </div>
 

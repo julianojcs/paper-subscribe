@@ -11,12 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui
 import styles from './LoginForm.module.css';
 import { formatName } from '../../../utils';
 import { FaEnvelope, FaLock, FaTicketAlt, FaUser } from 'react-icons/fa';
+import { useEventDataService } from '../../../lib/services/eventDataService';
+import * as localStorageService from '../../../lib/services/localStorage';
+
+// Constante para a chave
+const EVENT_TOKEN_KEY = 'event_registration_token';
 
 // Modificar a definição do componente para aceitar props da página principal
 export default function LoginForm({
   eventToken: initialToken = '',
   tokenValidated: initialTokenValidated = false,
-  defaultTab = 'login'
+  defaultTab = 'login',
+  onTokenValidated = () => {} // Função de callback padrão vazia
 }) {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -29,10 +35,13 @@ export default function LoginForm({
   const [success, setSuccess] = useState('');
   const [registerPasswordValid, setRegisterPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
-  const { ip, userAgent, eventData } = useDataContext();
+  const { ip, userAgent, eventData, setEventData } = useDataContext();
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [eventToken, setEventToken] = useState(initialToken);
   const [tokenValidated, setTokenValidated] = useState(initialTokenValidated);
+  const [isValidatingToken, setIsValidatingToken] = useState(false);
+
+  const { validateEventToken } = useEventDataService();
 
   const validateForm = () => {
     const newErrors = {};
@@ -75,6 +84,7 @@ export default function LoginForm({
 
       // Verificar se o login foi bem-sucedido
       if (result?.ok) {
+        localStorageService.removeItem(EVENT_TOKEN_KEY);
         router.push('/');
       } else {
         setServerError('Erro ao iniciar sessão');
@@ -93,12 +103,11 @@ export default function LoginForm({
     setSuccess('');
 
     try {
-      // Verificar se tem token validado
-      if ((!eventToken || !tokenValidated) && !eventData) {
-        setServerError('Token do evento é inválido ou expirou');
-        setIsSubmitting(false);
-        return;
-      }
+      // if (!eventData?.organizationId) {
+      //   setServerError('Organização do evento é orbigatório');
+      //   setIsSubmitting(false);
+      //   return;
+      // }
 
       // Continuar com o registro
       const response = await fetch('/api/auth/register', {
@@ -110,7 +119,7 @@ export default function LoginForm({
           name: formatName(name.trim()),
           email: email.replace(/\s+/g, '').toLowerCase(),
           password,
-          eventToken,
+          organizationId: eventData?.organizationId || 'c4b47eeb63945d0da252915ce'
         }),
       });
 
@@ -124,19 +133,19 @@ export default function LoginForm({
       // Salvar dados do evento para uso persistente
       if (data.eventId && data.eventData) {
         // Remover o token de registro
-        localStorage.removeItem('event_registration_token');
+        localStorageService.removeItem(EVENT_TOKEN_KEY);
 
         // Salvar os dados do evento com validade até a data de fim do evento
         const eventEndDate = data.eventData.endDate ? new Date(data.eventData.endDate).getTime() :
                             (Date.now() + 1000 * 60 * 60 * 24 * 365); // Default: 1 ano
 
-        localStorage.setItem('user_event_data', JSON.stringify({
+        localStorageService.setItem('user_event_data', {
           eventId: data.eventId,
           logoUrl: data.eventData.logoUrl,
           name: data.eventData.name,
           timeline: data.eventData.timeline || [],
           expires: eventEndDate
-        }));
+        });
       }
 
       if (data.linkToExistingAccount) {
@@ -165,10 +174,49 @@ export default function LoginForm({
   };
 
   // Validar manualmente um token inserido pelo usuário
-  const handleTokenInput = (inputToken) => {
+  const handleTokenInput = async (inputToken) => {
     setEventToken(inputToken);
-    // Nota: A validação propriamente dita deveria ser feita na página pai
-    // Aqui só atualizamos o estado local
+
+    // Limpar o erro do token quando o usuário começa a digitar
+    if (errors.eventToken) {
+      setErrors(prev => ({...prev, eventToken: undefined}));
+    }
+
+    // Se o token for muito curto, não tentamos validar ainda
+    if (inputToken.length < 6) {
+      return;
+    }
+
+    setIsValidatingToken(true);
+
+    try {
+      const result = await validateEventToken(inputToken);
+
+      if (result.valid) {
+        // Token válido
+        localStorageService.removeItem(EVENT_TOKEN_KEY);
+        setTokenValidated(true);
+        setEventData(result.eventData);
+        setErrors(prev => ({...prev, eventToken: undefined}));
+        onTokenValidated(result.eventData);
+      } else {
+        // Token inválido - usar a mensagem exata retornada pela API
+        setTokenValidated(false);
+        setErrors(prev => ({
+          ...prev,
+          eventToken: result.message // Usar exatamente a mensagem retornada pela API
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao validar token:', error);
+      // Para erros de rede/exceções, ainda precisamos de uma mensagem genérica
+      setErrors(prev => ({
+        ...prev,
+        eventToken: 'Erro de comunicação com o servidor'
+      }));
+    } finally {
+      setIsValidatingToken(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -310,7 +358,7 @@ export default function LoginForm({
               onValidationChange={(state) => setConfirmPasswordValid(state.isValid)}
             />
             {/* Token do evento - exibição condicional */}
-            {(!tokenValidated && !eventData) && (
+            {(!tokenValidated && !eventData) ? (
               <div style={errors.eventToken ? { marginBlockEnd: '1rem' } : {}}>
                 <Input
                   label="Token do Evento"
@@ -321,9 +369,25 @@ export default function LoginForm({
                   value={eventToken}
                   onChange={(e) => handleTokenInput(e.target.value)}
                   error={errors.eventToken}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isValidatingToken}
                   leftIcon={<FaTicketAlt />}
                   helpText="Obrigatório para registro. Solicite ao organizador do evento."
+                />
+              </div>
+            ) : tokenValidated && (
+              <div className={styles.tokenInput}>
+                <Input
+                  label="Token do Evento"
+                  id="eventToken-validated"
+                  name="token"
+                  type="text"
+                  placeholder="Token validado"
+                  value={eventToken}
+                  disabled={true}
+                  leftIcon={<FaTicketAlt />}
+                  isValid={true}
+                  helpText="Token validado com sucesso!"
+                  className={styles.tokenValidated}
                 />
               </div>
             )}
@@ -331,7 +395,12 @@ export default function LoginForm({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || (!tokenValidated && !eventData) || !registerPasswordValid || !confirmPasswordValid}
+              disabled={
+                isSubmitting ||
+                (!tokenValidated && !eventData) ||
+                !registerPasswordValid ||
+                !confirmPasswordValid
+              }
               className={`${styles.submitButton} ${isSubmitting ? styles.loading : ''}`}
               fullWidth
             >
