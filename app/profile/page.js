@@ -912,7 +912,7 @@ const ProfilePage = () => {
                 isRtl={false}
                 isSearchable={true}
                 name="stateId"
-                id='stateId'
+                id="stateId"
                 options={brazilianStates}
                 styles={{
                   control: (base, state) => ({
@@ -924,7 +924,17 @@ const ProfilePage = () => {
                         ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
                         : 'none',
                   }),
+                  menu: (provided) => ({
+                    ...provided,
+                    zIndex: 10,
+                  }),
+                  menuPortal: (provided) => ({
+                    ...provided,
+                    zIndex: 10,
+                  }),
                 }}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
               />
             </div>
 
