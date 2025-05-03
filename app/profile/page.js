@@ -876,67 +876,88 @@ const ProfilePage = () => {
               />
             </div>
 
-            <div className={styles.infoField}>
-              <label htmlFor="stateId" className={fieldErrors.stateId ? styles.labelError : styles.stateLabel}>
-                {fieldErrors.stateId ? (
-                  <span className={styles.errorText}>{fieldErrors.stateId}</span>
-                ) : (
-                  "Estado"
-                )}
-                <span className={styles.requiredMark}>*</span>
-              </label>
-              <Select
-                className="basic-single"
-                classNamePrefix="select"
-                defaultValue={brazilianStates[12]}
-                value={formData.stateId}
-                required
-                onChange={(selectedOption) => {
-                  setFormData((prevData) => ({
-                    ...prevData,
-                    stateId: selectedOption
-                  }));
+            {!isEditing ? (
+              <div className={styles.infoField + ' ' + styles.inputDisabled}>
+                <Input
+                  label="Estado"
+                  id="stateId"
+                  name="stateId"
+                  value={formData.stateId?.label || ''}
+                  placeholder="Seu estado"
+                  type="text"
+                  leftIcon={<FaCity />}
+                  autoCapitalize="words"
+                  autoFocus={false}
+                  disabled={true}
+                  required
+                  isValid={!fieldErrors.institution}
+                  isLoading={loading}
+                />
+              </div>
+            ) : (
+              // Se estiver editando, mostrar o Select
+              <div className={styles.infoField}>
+                <label htmlFor="stateId" className={fieldErrors.stateId ? styles.labelError : styles.stateLabel}>
+                  {fieldErrors.stateId ? (
+                    <span className={styles.errorText}>{fieldErrors.stateId}</span>
+                  ) : (
+                    "Estado"
+                  )}
+                  <span className={styles.requiredMark}>*</span>
+                </label>
+                <Select
+                  className="basic-single"
+                  classNamePrefix="select"
+                  defaultValue={brazilianStates[12]}
+                  value={formData.stateId}
+                  required
+                  onChange={(selectedOption) => {
+                    setFormData((prevData) => ({
+                      ...prevData,
+                      stateId: selectedOption
+                    }));
 
-                  // Limpar erro de estado
-                  if (fieldErrors.stateId) {
-                    setFieldErrors(prev => {
-                      const updated = { ...prev };
-                      delete updated.stateId;
-                      return updated;
-                    });
-                  }
-                }}
-                isDisabled={!isEditing}
-                isLoading={false}
-                isClearable={true}
-                isRtl={false}
-                isSearchable={true}
-                name="stateId"
-                id="stateId"
-                options={brazilianStates}
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderColor: fieldErrors.stateId ? '#ef4444' : state.isFocused ? '#3b82f6' : '#cbd5e1',
-                    boxShadow: fieldErrors.stateId
-                      ? '0 0 0 1px #ef4444'
-                      : state.isFocused
-                        ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
-                        : 'none',
-                  }),
-                  menu: (provided) => ({
-                    ...provided,
-                    zIndex: 10,
-                  }),
-                  menuPortal: (provided) => ({
-                    ...provided,
-                    zIndex: 10,
-                  }),
-                }}
-                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                menuPosition="fixed"
-              />
-            </div>
+                    // Limpar erro de estado
+                    if (fieldErrors.stateId) {
+                      setFieldErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.stateId;
+                        return updated;
+                      });
+                    }
+                  }}
+                  isDisabled={!isEditing}
+                  isLoading={false}
+                  isClearable={true}
+                  isRtl={false}
+                  isSearchable={true}
+                  name="stateId"
+                  id="stateId"
+                  options={brazilianStates}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      borderColor: fieldErrors.stateId ? '#ef4444' : state.isFocused ? '#3b82f6' : '#cbd5e1',
+                      boxShadow: fieldErrors.stateId
+                        ? '0 0 0 1px #ef4444'
+                        : state.isFocused
+                          ? '0 0 0 2px rgba(59, 130, 246, 0.2)'
+                          : 'none',
+                    }),
+                    menu: (provided) => ({
+                      ...provided,
+                      zIndex: 10,
+                    }),
+                    menuPortal: (provided) => ({
+                      ...provided,
+                      zIndex: 10,
+                    }),
+                  }}
+                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                  menuPosition="fixed"
+                />
+              </div>
+            )}
 
             <div className={styles.infoField + ' ' + styles.fullWidth}>
               <Input

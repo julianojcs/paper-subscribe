@@ -14,7 +14,7 @@ import PageContainer from './components/layout/PageContainer';
 import HeaderContentTitle from './components/layout/HeaderContentTitle';
 import { useDataContext } from '../context/DataContext';
 import Timeline from './components/ui/Timeline';
-import { useEventDataService } from '/app/lib/services/eventDataService';
+import { useEventDataService } from './lib/services/eventDataService';
 import * as localStorageService from '/app/lib/services/localStorage';
 
 const EVENT_DATA_KEY = 'event_data';
@@ -31,7 +31,7 @@ const Home = () => {
   const [sourceData, setSourceData] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const { getEventData } = useEventDataService();
+  const { getEventData, saveEventDataToLocalStorage } = useEventDataService();
 
   const formatEventDate = (dateString) => {
     if (!dateString) return '';
@@ -53,15 +53,32 @@ const Home = () => {
 
       const storedData = localStorageService.getItem(EVENT_DATA_KEY);
       if (storedData && !force) {
-        console.log('Dados encontrados no localStorage:', storedData.id);
+        console.log('Dados encontrados no localStorage:', storedData);
 
-        const timelineData = storedData.timelines || [];
+        // Verificar a estrutura dos dados e adaptar se necessário
+        let normalizedData = storedData;
+
+        // Se os dados estiverem diretamente no objeto raiz (formato antigo de produção)
+        if (!storedData.expires && storedData.event) {
+          console.log('Detectada estrutura de dados antiga, normalizando...');
+
+          // Não precisamos calcular a data de expiração manualmente,
+          // pois a função saveEventDataToLocalStorage já faz isso
+          console.log('Normalizando estrutura de dados usando saveEventDataToLocalStorage');
+
+          // Usar a função utilitária existente para normalizar e salvar os dados
+          normalizedData = saveEventDataToLocalStorage(storedData);
+
+          console.log('Dados de evento normalizados e salvos com expires:',
+            normalizedData.expires ? new Date(normalizedData.expires).toLocaleString() : 'indefinido');
+        }
+
+        const timelineData = normalizedData.timelines || [];
         console.log(`Timeline encontrada no localStorage: ${timelineData.length} itens`);
 
-        setLocalEventData(storedData);
+        setLocalEventData(normalizedData);
         setLocalTimelineItems(timelineData);
-
-        setEventData(storedData);
+        setEventData(normalizedData);
         setTimelineItems(timelineData);
 
         setSourceData('localStorage');
@@ -73,7 +90,7 @@ const Home = () => {
       console.log("Dados obtidos da API:", result);
 
       if (result?.dataEvent) {
-        localStorageService.setItem(EVENT_DATA_KEY, result.dataEvent);
+        saveEventDataToLocalStorage(result.dataEvent);
 
         setLocalEventData(result.dataEvent);
         setLocalTimelineItems(result.dataEvent.timelines || []);
@@ -96,7 +113,7 @@ const Home = () => {
       setImageReady(true);
       setIsInitialized(true);
     }
-  }, [authStatus, session, loading, getEventData, eventData, setEventData, setTimelineItems]);
+  }, [authStatus, session, loading, getEventData, eventData, setEventData, setTimelineItems, saveEventDataToLocalStorage]);
 
   useEffect(() => {
     const checkStorageUpdates = () => {
@@ -216,6 +233,26 @@ const Home = () => {
 
   const MainContent = () => {
     const currentEventData = eventData || contextEventData;
+    console.log('Renderizando MainContent com dados:', currentEventData);
+
+    // Garantir que os dados do evento estejam na estrutura esperada
+    let normalizedEventData = currentEventData;
+    let eventLogo, eventName;
+
+    if (currentEventData) {
+      // Determinar onde estão as informações relevantes
+      if (currentEventData.event) {
+        // Formato da produção
+        eventLogo = currentEventData.event.logoUrl;
+        eventName = currentEventData.event.name;
+        console.log('Usando estrutura de dados do formato de produção');
+      } else {
+        // Formato esperado pelo componente
+        eventLogo = currentEventData.logoUrl;
+        eventName = currentEventData.name;
+        console.log('Usando estrutura de dados padrão');
+      }
+    }
 
     let currentTimelineItems = [];
 
@@ -223,14 +260,19 @@ const Home = () => {
       currentTimelineItems = timelineItems;
     } else if (contextTimelineItems && contextTimelineItems.length > 0) {
       currentTimelineItems = contextTimelineItems;
-    } else if (currentEventData && currentEventData.timelines) {
-      currentTimelineItems = currentEventData.timelines;
+    } else if (currentEventData) {
+      // Verificar onde estão os itens da timeline
+      currentTimelineItems = currentEventData.timelines ||
+                            (currentEventData.event ? currentEventData.event.timelines : []);
     }
 
     return (
       <>
         <HeaderContentTitle
-          eventData={{eventLogoUrl: currentEventData?.logoUrl, eventName: currentEventData?.name}}
+          eventData={{
+            eventLogoUrl: eventLogo,
+            eventName: eventName
+          }}
           onImageLoad={() => setImageReady(true)}
           subtitle="Sistema de Submissão de Trabalhos"
           fallbackTitle="Sistema de Submissão de Trabalhos Científicos"

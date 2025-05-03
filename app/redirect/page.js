@@ -20,8 +20,7 @@ function LoadingState() {
 const RedirectHandler = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isProcessing, setIsProcessing] = useState(true);
-  const { validateEventToken } = useEventDataService();
+  const { validateEventToken, saveEventDataToLocalStorage } = useEventDataService();
   const { setEventData } = useDataContext();
 
   useEffect(() => {
@@ -40,12 +39,8 @@ const RedirectHandler = () => {
         if (result.valid && result.eventData) {
           console.log('Token válido, dados recebidos:', result.eventData);
 
-          // 1. Salvar os dados do evento no localStorage antes de redirecionar
-          localStorageService.setItem(EVENT_DATA_KEY, {
-            ...result.eventData,
-            timestamp: Date.now(),  // Adicionar timestamp para verificações futuras
-            source: 'redirect_validation'
-          });
+          // Usar a função existente para salvar os dados no localStorage
+          saveEventDataToLocalStorage(result.eventData);
 
           // 2. Atualizar o contexto global
           setEventData(result.eventData);
@@ -53,10 +48,7 @@ const RedirectHandler = () => {
           // 3. Remover o token antigo, pois já foi validado
           localStorageService.removeItem(EVENT_TOKEN_KEY);
 
-          // 4. Adicionar um pequeno delay para garantir que os dados sejam persistidos
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          console.log('Redirecionando para /login');
+          console.log('Dados do evento salvos com expires:', result.eventData.expires);
         } else {
           console.error('Token inválido:', result);
         }
@@ -71,7 +63,7 @@ const RedirectHandler = () => {
 
     validateToken();
 
-  }, [router, searchParams, validateEventToken, setEventData]);
+  }, [router, searchParams, validateEventToken, saveEventDataToLocalStorage, setEventData]);
 
   return <LoadingState />;  // Mostrar algo enquanto processa
 };

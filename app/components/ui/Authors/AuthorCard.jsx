@@ -36,10 +36,14 @@ export default function AuthorCard({
       case 'name':
         value = formatName(value);
         fieldName = 'Nome';
-        break;
+        break
       case 'city':
         value = formatName(value);
         fieldName = 'Cidade';
+        break;;
+      case 'institution':
+        value = value;
+        fieldName = 'Instituição';
         break;
       default:
         break;
@@ -233,6 +237,15 @@ export default function AuthorCard({
             <label htmlFor={`author-${author.id}-state`} className={styles.inputLabel}>
               Estado<span className={styles.requiredMark}>*</span>
             </label>
+            {isMainAuthor ? (
+              <input
+                type="text"
+                id={`author-${author.id}-state`}
+                defaultValue={brazilianStates.find(option => option.value === author?.state?.value)?.label}
+                className={`${styles.inputField} ${fieldErrors[`author-${author.id}-state`] ? styles.inputError : ''} ${isMainAuthor ? styles.disabledInput : ''}`}
+                disabled={true}
+              />
+            ) : (
             <Select
               id={`author-${author.id}-state`}
               name={`author-${author.id}-state`}
@@ -242,9 +255,10 @@ export default function AuthorCard({
                   : author.state
               }
               onChange={(selectedOption) => handleChange('state', selectedOption)}
+              defaultValue={brazilianStates[12]}
+              formatOptionLabel={(option) => option.label}
               className="basic-single"
               classNamePrefix="select"
-              defaultValue={brazilianStates[12]}
               placeholder="Estado"
               isDisabled={isMainAuthor}
               isLoading={false}
@@ -281,6 +295,10 @@ export default function AuthorCard({
                   width: '100%',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 }),
+                menuPortal: (provided) => ({
+                  ...provided,
+                  zIndex: 10,
+                }),
                 container: (base) => ({
                   ...base,
                   position: 'relative',
@@ -301,7 +319,10 @@ export default function AuthorCard({
                   fontWeight: state.isSelected ? '500' : 'normal',
                 }),
               }}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              menuPosition="fixed"
             />
+            )}
             {fieldErrors[`author-${author.id}-state`] && (
               <span className={styles.errorText}>{fieldErrors[`author-${author.id}-state`]}</span>
             )}

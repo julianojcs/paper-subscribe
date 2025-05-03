@@ -14,13 +14,27 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [adminSubmenuOpen, setAdminSubmenuOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState('top'); // 'top' ou 'bottom'
   const pathname = usePathname();
   const adminMenuRef = useRef(null);
   const menuRef = useRef(null);
+  const buttonRef = useRef(null);
+  const dragStartRef = useRef(null);
+  const isDraggingRef = useRef(false);
 
   const isAdmin = session?.user?.role === 'ADMIN' ||
     (session?.user?.organizationMemberships &&
     session.user.organizationMemberships.some(m => m.role === 'ADMIN'));
+
+  // Carregar a preferência de posição do botão do localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('menuButtonPosition');
+      if (savedPosition) {
+        setButtonPosition(savedPosition);
+      }
+    }
+  }, []);
 
   // Verificar tamanho da tela e definir estado mobile
   useEffect(() => {
@@ -68,6 +82,103 @@ const Header = () => {
     setMenuOpen(false);
     setAdminSubmenuOpen(false);
   }, [pathname]);
+
+  // Substituir o código do useEffect para eventos de toque
+  useEffect(() => {
+    const button = buttonRef.current;
+    if (!button || !isMobile) return;
+
+    // Variáveis para detectar se o usuário está arrastando ou apenas clicando
+    let startX = 0;
+    let startY = 0;
+    let hasMoved = false;
+    const moveThreshold = 10; // pixels para considerar um movimento como arraste
+
+    const handleTouchStart = (e) => {
+      // NÃO chamar e.preventDefault() aqui para permitir que o evento de clique ocorra
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      hasMoved = false;
+
+      isDraggingRef.current = false; // Inicialmente não estamos arrastando
+      dragStartRef.current = {
+        y: startY,
+        x: startX
+      };
+    };
+
+    const handleTouchMove = (e) => {
+      const currentX = e.touches[0].clientX;
+      const currentY = e.touches[0].clientY;
+      const deltaX = Math.abs(currentX - startX);
+      const deltaY = Math.abs(currentY - startY);
+
+      // Se o movimento exceder o limite, consideramos como um arraste
+      if (deltaX > moveThreshold || deltaY > moveThreshold) {
+        hasMoved = true;
+        isDraggingRef.current = true;
+
+        // Adicionar classe visual para feedback do usuário
+        button.classList.add(styles.dragging);
+
+        // Prevenir apenas se estiver realmente arrastando
+        e.preventDefault();
+
+        // Aplicar transformação durante arraste para feedback visual
+        const dragDistance = currentY - startY;
+        button.style.transform = `translateY(${dragDistance}px)`;
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      // Se o usuário arrastou o botão
+      if (hasMoved && isDraggingRef.current) {
+        // Remover classe visual
+        button.classList.remove(styles.dragging);
+
+        // Resetar a transformação CSS
+        button.style.transform = '';
+
+        const dragDistance = e.changedTouches[0].clientY - startY;
+        const windowHeight = window.innerHeight;
+
+        // Se o usuário arrastou significativamente na direção vertical
+        if (Math.abs(dragDistance) > windowHeight * 0.15) {
+          const newPosition = buttonPosition === 'top' ? 'bottom' : 'top';
+          setButtonPosition(newPosition);
+
+          // Salvar a preferência no localStorage
+          localStorage.setItem('menuButtonPosition', newPosition);
+        }
+      }
+
+      isDraggingRef.current = false;
+      hasMoved = false;
+    };
+
+    // Cancelar o arraste se o usuário sair da área do botão
+    const handleTouchCancel = () => {
+      button.style.transform = '';
+      button.classList.remove(styles.dragging);
+      isDraggingRef.current = false;
+      hasMoved = false;
+    };
+
+    // Use passive: true para touchstart para não interferir no comportamento padrão de clique
+    button.addEventListener('touchstart', handleTouchStart, { passive: true });
+
+    // Use passive: false apenas para touchmove onde realmente precisamos impedir o comportamento padrão
+    button.addEventListener('touchmove', handleTouchMove, { passive: false });
+    button.addEventListener('touchend', handleTouchEnd);
+    button.addEventListener('touchcancel', handleTouchCancel);
+
+    return () => {
+      button.removeEventListener('touchstart', handleTouchStart);
+      button.removeEventListener('touchmove', handleTouchMove);
+      button.removeEventListener('touchend', handleTouchEnd);
+      button.removeEventListener('touchcancel', handleTouchCancel);
+    };
+  }, [buttonPosition, isMobile]);
 
   // Verificar se o link está ativo
   const isActive = (path) => {
@@ -207,21 +318,25 @@ const Header = () => {
       {/* Versão mobile: apenas botão flutuante e menu lateral quando aberto */}
       {isMobile && isLoaded && (
         <>
-          {/* Botão hamburger flutuante */}
+          {/* Botão hamburger flutuante com posição dinâmica */}
           <button
+            ref={buttonRef}
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setMenuOpen(currentState => !currentState);
+              // Somente abrir/fechar o menu se não estiver arrastando
+              if (!isDraggingRef.current) {
+                setMenuOpen(currentState => !currentState);
+              }
             }}
-            onMouseDown={(e) => e.preventDefault()} // Prevenir comportamento padrão de mouseDown
-            onTouchStart={(e) => e.preventDefault()} // Importante para dispositivos móveis
-            className={`${styles.floatingMenuButton} ${menuOpen ? styles.floatingMenuButtonOpen : ''}`}
+            className={`
+              ${styles.floatingMenuButton}
+              ${menuOpen ? styles.floatingMenuButtonOpen : ''}
+              ${buttonPosition === 'bottom' ? styles.floatingMenuButtonBottom : styles.floatingMenuButtonTop}
+            `}
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
           >
             {menuOpen ? (
-              <FaTimes size={20} /> /* Tamanho em pixels */
+              <FaTimes size={20} />
             ) : (
               <FaBars size={20} />
             )}

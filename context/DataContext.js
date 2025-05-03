@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { saveEventDataToLocalStorage } from '../app/lib/services/eventDataService';
 
 // Criar o contexto
 const DataContext = createContext({
@@ -352,9 +353,7 @@ export function DataProvider({ children }) {
   const handleSetEventData = (data) => {
     setEventData(data);
     if (data) {
-      localStorage.setItem('event_data', JSON.stringify(data));
-    } else {
-      // localStorage.removeItem('event_data');
+      saveEventDataToLocalStorage(data);
     }
   };
 

@@ -93,14 +93,14 @@
 .formLabel {
   display: block;
   font-weight: 500;
-  font-size: 0.95rem;
-  color: #475569;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--paper-primary);
+  margin-bottom: 0.2rem;
 }
 
 .requiredMark {
   color: #ef4444;
-  margin-left: 0.25rem;
+  margin-left: -2px;
 }
 
 .formInput, .formTextarea {
@@ -305,96 +305,96 @@
   .pageWrapper {
     padding: 1rem 0.5rem;
   }
-  
+
   .container {
     width: 100%;
     border-radius: 8px;
   }
-  
+
   .header {
     padding: 1.5rem 1rem;
   }
-  
+
   .title {
     font-size: 1.5rem;
   }
-  
+
   .content {
     padding: 1.5rem 1rem;
   }
-  
+
   .sectionTitle {
     font-size: 1.3rem;
   }
-  
+
   .sectionDescription {
     font-size: 0.95rem;
     margin-bottom: 1.25rem;
   }
-  
+
   .formGroup {
     margin-bottom: 1.25rem;
   }
-  
+
   .formLabel {
-    font-size: 0.9rem;
-    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.2rem;
   }
-  
+
   .formInput, .formTextarea {
     padding: 0.65rem 0.85rem;
     font-size: 0.95rem;
   }
-  
+
   .fieldHelper, .fieldError {
     font-size: 0.8rem;
   }
-  
+
   .fileDropArea {
     height: 120px;
     padding: 1rem;
   }
-  
+
   .uploadIcon {
     font-size: 1.5rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .dragDropText {
     display: none; /* Ocultar texto de drag-and-drop em mobile */
   }
-  
+
   .selectedFile {
     padding: 12px;
   }
-  
+
   .fileDetails {
     gap: 4px;
   }
-  
+
   .fileName {
     font-size: 0.9rem;
   }
-  
+
   .fileSize {
     font-size: 0.75rem;
   }
-  
+
   .termsGroup {
     margin-top: 1.5rem;
     margin-bottom: 1.25rem;
   }
-  
+
   .termsNotice {
     font-size: 0.8rem;
   }
-  
+
   .formActions {
     flex-direction: column-reverse;
     gap: 0.75rem;
     margin-top: 1.5rem;
   }
-  
+
   .submitButton, .cancelButton {
     width: 100%;
     min-width: 0;
@@ -405,24 +405,24 @@
   .header {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .title {
     font-size: 1.3rem;
   }
-  
+
   .content {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .sectionTitle {
     font-size: 1.2rem;
   }
-  
+
   .formInput, .formTextarea {
     padding: 0.6rem 0.75rem;
     font-size: 0.9rem;
   }
-  
+
   .fileDropArea {
     height: 100px;
   }
@@ -432,57 +432,57 @@
   .pageWrapper {
     background-color: #0f172a;
   }
-  
+
   .container {
     background-color: #1e293b;
   }
-  
+
   .sectionTitle {
     color: #e2e8f0;
   }
-  
+
   .sectionDescription, .fieldHelper, .uploadText, .fileSize, .termsNotice, .fileRequirements {
     color: #94a3b8;
   }
-  
+
   .formLabel {
     color: #cbd5e1;
   }
-  
+
   .formInput, .formTextarea {
     background-color: #334155;
     border-color: #475569;
     color: #e2e8f0;
   }
-  
+
   .formInput:focus, .formTextarea:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
-  
+
   .fileDropArea {
     border-color: #475569;
     background-color: #1e293b;
   }
-  
+
   .fileDropArea:hover {
     background-color: #334155;
     border-color: #64748b;
   }
-  
+
   .fileSelected {
     border-color: #3b82f6;
     background-color: rgba(59, 130, 246, 0.1);
   }
-  
+
   .fileName {
     color: #e2e8f0;
   }
-  
+
   .uploadIcon, .infoIcon {
     color: #64748b;
   }
-  
+
   .errorMessage {
     background-color: rgba(239, 68, 68, 0.1);
     color: #fca5a5;
@@ -494,97 +494,97 @@
   .pageWrapper {
     padding: 1rem 0.5rem;
   }
-  
+
   .container {
     width: 100%;
     padding: 1rem;
     margin: 1rem auto;
   }
-  
+
   .header {
     border-radius: 8px;
     padding: 1.5rem 1rem;
   }
-  
+
   .title {
     font-size: 1.5rem;
   }
-  
+
   .content {
     padding: 1.5rem 1rem;
   }
-  
+
   .paperControls {
     flex-direction: column;
     margin-bottom: 1.5rem;
   }
-  
+
   .welcomeSection {
     margin-right: 0;
     margin-bottom: 1rem;
     width: 100%;
   }
-  
+
   .newPaperButton {
     width: 100%;
   }
-  
+
   .newPaperButton button {
     width: 100%;
   }
-  
+
   .sectionTitle {
     font-size: 1.3rem;
   }
-  
+
   .sectionDescription {
     font-size: 0.95rem;
   }
-  
+
   .papersList {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .cardActions {
     padding: 0.75rem 1rem;
   }
-  
+
   .actionButton {
     width: 100%;
   }
-  
+
   .unauthenticatedContent {
     padding: 1.5rem 1rem;
     margin: 1rem auto;
   }
-  
+
   .authLinks button {
     width: 100%;
   }
-  
+
   .paperHeader {
     padding: 1rem 1rem 0.75rem;
     flex-direction: column;
   }
-  
+
   .cardTitle {
     margin-bottom: 0.5rem;
     margin-right: 0;
   }
-  
+
   .statusBadge {
     align-self: flex-start;
   }
-  
+
   .paperMeta {
     padding: 0.75rem 1rem;
   }
-  
+
   .paperAbstract {
     padding: 0.75rem 1rem;
   }
-  
+
   .loadingContainer, .emptyState {
     padding: 2rem 1rem;
   }
@@ -594,15 +594,15 @@
   .header {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .title {
     font-size: 1.3rem;
   }
-  
+
   .content {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .cardTitle {
     font-size: 1rem;
   }
@@ -703,12 +703,12 @@
   .selectContainer {
     gap: 0.5rem;
   }
-  
+
   .areaSelect {
     padding: 0.625rem 0.875rem;
     font-size: 0.9375rem;
   }
-  
+
   .selectedAreaDescription {
     padding: 0.625rem;
     font-size: 0.8125rem;
@@ -721,7 +721,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
   }
-  
+
   .selectWrapper::after {
     right: 12px;
     border-left-width: 5px;
@@ -780,7 +780,7 @@
     border-color: rgba(255, 255, 255, 0.1);
     border-top-color: #60a5fa;
   }
-  
+
   .loadingContainer {
     color: #e2e8f0;
   }
@@ -788,57 +788,57 @@
   .pageWrapper {
     background-color: #0f172a;
   }
-  
+
   .container {
     background-color: #1e293b;
   }
-  
+
   .sectionTitle {
     color: #e2e8f0;
   }
-  
+
   .sectionDescription, .fieldHelper, .uploadText, .fileSize, .termsNotice, .fileRequirements {
     color: #94a3b8;
   }
-  
+
   .formLabel {
     color: #cbd5e1;
   }
-  
+
   .formInput, .formTextarea, .formSelect, .areaSelect {
     background-color: #334155;
     border-color: #475569;
     color: #e2e8f0;
   }
-  
+
   .formInput:focus, .formTextarea:focus, .formSelect:focus, .areaSelect:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
-  
+
   .fileDropArea {
     border-color: #475569;
     background-color: #1e293b;
   }
-  
+
   .fileDropArea:hover {
     background-color: #334155;
     border-color: #64748b;
   }
-  
+
   .fileSelected {
     border-color: #3b82f6;
     background-color: rgba(59, 130, 246, 0.1);
   }
-  
+
   .fileName {
     color: #e2e8f0;
   }
-  
+
   .uploadIcon, .infoIcon {
     color: #64748b;
   }
-  
+
   .errorMessage {
     background-color: rgba(239, 68, 68, 0.1);
     color: #fca5a5;

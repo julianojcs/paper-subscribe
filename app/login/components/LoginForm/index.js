@@ -41,7 +41,7 @@ export default function LoginForm({
   const [tokenValidated, setTokenValidated] = useState(initialTokenValidated);
   const [isValidatingToken, setIsValidatingToken] = useState(false);
 
-  const { validateEventToken } = useEventDataService();
+  const { validateEventToken, saveEventDataToLocalStorage } = useEventDataService();
 
   const validateForm = () => {
     const newErrors = {};
@@ -128,24 +128,6 @@ export default function LoginForm({
       if (!response.ok) {
         setServerError(data.message || 'Erro ao registrar usuário');
         return;
-      }
-
-      // Salvar dados do evento para uso persistente
-      if (data.eventId && data.eventData) {
-        // Remover o token de registro
-        localStorageService.removeItem(EVENT_TOKEN_KEY);
-
-        // Salvar os dados do evento com validade até a data de fim do evento
-        const eventEndDate = data.eventData.endDate ? new Date(data.eventData.endDate).getTime() :
-                            (Date.now() + 1000 * 60 * 60 * 24 * 365); // Default: 1 ano
-
-        localStorageService.setItem('user_event_data', {
-          eventId: data.eventId,
-          logoUrl: data.eventData.logoUrl,
-          name: data.eventData.name,
-          timeline: data.eventData.timeline || [],
-          expires: eventEndDate
-        });
       }
 
       if (data.linkToExistingAccount) {

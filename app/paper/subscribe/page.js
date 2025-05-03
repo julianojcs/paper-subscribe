@@ -2,8 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaExclamationTriangle, FaInfoCircle, FaUpload } from 'react-icons/fa';
 import AuthorsList from '../../components/ui/Authors/AuthorsList';
 import Button from '../../components/ui/Button';

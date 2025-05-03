@@ -279,7 +279,11 @@
   font-size: 20px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); */
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow 0.3s ease,
+              top 0.4s ease,
+              bottom 0.4s ease;
   outline: none;
 
   /* Evitar seleção visual quando clicado */
@@ -330,6 +334,164 @@
 .floatingMenuButtonOpen:active {
   transform: rotate(90deg) scale(0.95);
 }
+
+/* Botão flutuante com posições dinâmicas */
+.floatingMenuButton {
+  position: fixed;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.3s ease, top 0.4s ease, bottom 0.4s ease;
+  touch-action: none; /* Previne o comportamento padrão de toque na tela */
+  user-select: none;
+}
+
+.floatingMenuButtonTop {
+  top: 16px;
+  bottom: auto;
+}
+
+.floatingMenuButtonBottom {
+  bottom: 16px;
+  top: auto;
+}
+
+/* Adicionar o efeito de rastro mais visível */
+.floatingMenuButton::before,
+.floatingMenuButton::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s, width 0.3s, height 0.3s;
+  pointer-events: none;
+}
+
+/* Primeiro círculo de rastro */
+.floatingMenuButton::before {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 142, 83, 0.3);
+  z-index: -1;
+}
+
+/* Segundo círculo de rastro (maior e mais sutil) */
+.floatingMenuButton::after {
+  width: 120%;
+  height: 120%;
+  background: rgba(255, 107, 107, 0.15);
+  z-index: -2;
+}
+
+/* Efeito hover - mostrar rastro sutil */
+.floatingMenuButton:hover::before {
+  opacity: 0.7;
+  transform: scale(1.15);
+}
+
+.floatingMenuButton:hover::after {
+  opacity: 0.5;
+  transform: scale(1.3);
+}
+
+
+
+
+.floatingMenuButton:active {
+  background-color: #2563eb;
+}
+
+.floatingMenuButtonOpen {
+  background-color: #ef4444;
+}
+
+/* Adicione uma indicação visual de que o botão pode ser arrastado */
+/* .floatingMenuButton::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 1px;
+  bottom: 8px;
+} */
+
+/* Animar o botão quando estiver sendo arrastado */
+/* .floatingMenuButton:active::after {
+  background-color: white;
+} */
+
+/* Adicione depois dos estilos existentes do botão flutuante */
+
+.dragging {
+  opacity: 0.9;
+  /* box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); */
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6) !important
+}
+
+/* .dragging::after {
+  background-color: white; Indicador mais visível durante arraste
+  width: 25px; Ligeiramente maior para feedback visual
+} */
+
+/* Animar o rastro durante o arrasto com um efeito mais duradouro */
+.dragging::before {
+  opacity: 0.8 !important;
+  transform: scale(1.4) !important;
+  animation: dragTrace 2s infinite !important;
+}
+
+.dragging::after {
+  opacity: 0.6 !important;
+  transform: scale(1.8) !important;
+  animation: dragTraceWide 3s infinite !important;
+}
+
+/* Animações de rastro mais lentas e perceptíveis */
+@keyframes dragTrace {
+  0% {
+    transform: scale(1.2);
+    opacity: 0.7;
+    background: rgba(255, 142, 83, 0.3);
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.4;
+    background: rgba(255, 107, 107, 0.3);
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0.7;
+    background: rgba(255, 142, 83, 0.3);
+  }
+}
+
+@keyframes dragTraceWide {
+  0% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+
 
 /* Container do menu móvel */
 .mobileMenuContainer {

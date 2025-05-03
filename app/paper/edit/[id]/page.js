@@ -13,7 +13,9 @@ import {
   FaInfoCircle,
   FaBuilding,
   FaMicroscope,
-  FaTag
+  FaTag,
+  FaArrowLeft,
+  FaUsers
 } from 'react-icons/fa';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
@@ -22,6 +24,7 @@ import TrashIcon from '../../../components/ui/TrashIcon';
 import AuthorsList from '../../../components/ui/Authors/AuthorsList';
 import useBrazilianStates from '../../../hooks/useBrazilianStates';
 import { FieldType, getInputTypeFromFieldType } from '../../../utils/fieldTypes';
+import { useDataContext } from '../../../../context/DataContext';
 import styles from './edit.module.css';
 
 export default function EditPaperPage() {
@@ -29,6 +32,7 @@ export default function EditPaperPage() {
   const router = useRouter();
   const { id } = params;
   const { data: session, status } = useSession();
+  const { eventData } = useDataContext();
 
   // Refs
   const fileInputRef = useRef(null);
@@ -55,6 +59,7 @@ export default function EditPaperPage() {
   const [hasFileField, setHasFileField] = useState(false);
   const [fileFieldConfig, setFileFieldConfig] = useState(null);
   const [abstract, setAbstract] = useState('');
+  const [abstractField, setAbstractField] = useState(null);
 
   // Estados para controle de UI
   const [loading, setLoading] = useState(true);
@@ -80,13 +85,24 @@ export default function EditPaperPage() {
       const authorsChanged = currentAuthorsStr !== originalAuthorsStr;
       const areaChanged = areaId !== (paper.area?.id || '');
       const paperTypeChanged = paperTypeId !== (paper.paperType?.id || '');
-      const abstractChanged = abstract !== (paper.abstract || '');
+
+      // Verificar se o abstract mudou (agora pode estar em um campo dinâmico)
+      let abstractChanged = false;
+      if (abstractField) {
+        const abstractValue = dynamicFieldValues[abstractField.id] || '';
+        abstractChanged = abstractValue !== (abstractField.originalValue || '');
+      } else {
+        abstractChanged = abstract !== (paper.abstract || '');
+      }
 
       // Verificar se algum campo dinâmico foi alterado
       let dynamicFieldsChanged = false;
       const paperFieldValues = paper.fieldValues || [];
 
       for (const fieldId in dynamicFieldValues) {
+        // Ignorar o campo de abstract que já foi verificado
+        if (abstractField && fieldId === abstractField.id) continue;
+
         const fieldValue = paperFieldValues.find(fv => fv.fieldId === fieldId);
         if (!fieldValue && dynamicFieldValues[fieldId]) {
           dynamicFieldsChanged = true;
@@ -109,10 +125,105 @@ export default function EditPaperPage() {
         dynamicFieldsChanged
       );
     }
-  }, [title, authors, keywords, areaId, paperTypeId, abstract, fileChanged, paper, dynamicFieldValues]);
+  }, [title, authors, keywords, areaId, paperTypeId, abstract, fileChanged, paper, dynamicFieldValues, abstractField]);
+
+  // Função para processar campos do evento
+  const processEventFields = useCallback((fields) => {
+    if (!Array.isArray(fields)) return;
+
+    // Verificar se existe um campo do tipo FILE
+    const fileField = fields.find(field =>
+      field.fieldType === FieldType.FILE
+    );
+
+    if (fileField) {
+      setHasFileField(true);
+      setFileFieldConfig(fileField);
+    }
+
+    // Identificar o campo de abstract (resumo)
+    const abstractField = fields.find(field =>
+      field.fieldType === FieldType.TEXTAREA &&
+      (field.label.toLowerCase().includes('resumo') ||
+        field.label.toLowerCase().includes('abstract'))
+    );
+
+    if (abstractField) {
+      setAbstractField(abstractField);
+    }
+
+    // Filtrar e ordenar campos dinâmicos (excluindo o abstract)
+    const formFields = fields
+      .filter(field =>
+        field.fieldType === FieldType.TEXT ||
+        field.fieldType === FieldType.TEXTAREA ||
+        field.fieldType === FieldType.SELECT ||
+        field.fieldType === FieldType.MULTISELECT ||
+        field.fieldType === FieldType.CHECKBOX ||
+        field.fieldType === FieldType.RADIO ||
+        field.fieldType === FieldType.DATE ||
+        field.fieldType === FieldType.NUMBER ||
+        field.fieldType === FieldType.EMAIL
+      )
+      .sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) {
+          return a.sortOrder - b.sortOrder;
+        }
+        return a.label.localeCompare(b.label);
+      });
+
+    setEventFields(formFields);
+  }, []);
+
 
   const fetchEventData = useCallback(async (eventId) => {
     try {
+      // Primeiro, verifica se já temos os dados do evento no contexto
+      if (eventData && eventData.id === eventId) {
+        console.log('Usando dados do evento do contexto global');
+
+        const event = eventData;
+        setEventName(event.name || 'Evento');
+
+        if (event.maxAuthors) {
+          setMaxAuthors(event.maxAuthors);
+        }
+
+        // Atualizar limites de keywords do evento
+        setKeywords(prev => ({
+          ...prev,
+          min: event.minKeywords || 0,
+          max: event.maxKeywords || 0
+        }));
+
+        // Ordenar áreas por sortOrder e depois alfabeticamente
+        if (event.areas && event.areas.length > 0) {
+          const sortedAreas = [...event.areas].sort((a, b) => {
+            if (a.sortOrder !== b.sortOrder) {
+              return a.sortOrder - b.sortOrder;
+            }
+            return a.name.localeCompare(b.name);
+          });
+          setAreas(sortedAreas);
+        }
+
+        // Ordenar tipos de paper por sortOrder e depois alfabeticamente
+        if (event.paperTypes && event.paperTypes.length > 0) {
+          const sortedPaperTypes = [...event.paperTypes].sort((a, b) => {
+            if (a.sortOrder !== b.sortOrder) {
+              return a.sortOrder - b.sortOrder;
+            }
+            return a.name.localeCompare(b.name);
+          });
+          setPaperTypes(sortedPaperTypes);
+        }
+
+        // Processar campos do evento
+        processEventFields(event.eventFields || []);
+        return;
+      }
+
+      // Se não temos no contexto, buscar da API
       const response = await fetch(`/api/events/${eventId}`);
       if (!response.ok) throw new Error('Falha ao carregar detalhes do evento');
 
@@ -157,43 +268,14 @@ export default function EditPaperPage() {
 
         // Processar campos do evento
         if (event.eventFields) {
-          // Verificar se existe um campo do tipo FILE
-          const fileField = event.eventFields.find(field =>
-            field.fieldType === FieldType.FILE
-          );
-
-          if (fileField) {
-            setHasFileField(true);
-            setFileFieldConfig(fileField);
-          }
-
-          // Filtrar e ordenar campos dinâmicos
-          const formFields = event.eventFields
-            .filter(field =>
-              field.fieldType === FieldType.TEXT ||
-              field.fieldType === FieldType.TEXTAREA ||
-              field.fieldType === FieldType.SELECT ||
-              field.fieldType === FieldType.MULTISELECT ||
-              field.fieldType === FieldType.CHECKBOX ||
-              field.fieldType === FieldType.RADIO ||
-              field.fieldType === FieldType.DATE ||
-              field.fieldType === FieldType.NUMBER ||
-              field.fieldType === FieldType.EMAIL
-            )
-            .sort((a, b) => {
-              if (a.sortOrder !== b.sortOrder) {
-                return a.sortOrder - b.sortOrder;
-              }
-              return a.label.localeCompare(b.label);
-            });
-
-          setEventFields(formFields);
+          processEventFields(event.eventFields);
         }
       }
     } catch (err) {
       console.error('Erro ao buscar detalhes do evento:', err);
+      setError('Não foi possível carregar os detalhes do evento. Por favor, tente novamente mais tarde.');
     }
-  }, []);
+  }, [eventData, processEventFields]);
 
   const fetchPaperData = useCallback(async () => {
     try {
@@ -208,6 +290,7 @@ export default function EditPaperPage() {
 
       const data = await response.json();
       setPaper(data.paper);
+      console.log('Paper carregado:', data.paper);
 
       // Preencher o formulário com os dados do paper
       setTitle(data.paper.title || '');
@@ -234,19 +317,24 @@ export default function EditPaperPage() {
       // Tratar autores
       if (Array.isArray(data.paper.authors)) {
         // Mapear os autores para o formato esperado pelo componente AuthorsList
-        const mappedAuthors = data.paper.authors.map(author => ({
-          userId: author.userId || null,
-          name: author.name,
-          institution: author.institution,
-          city: author.city,
-          state: author.stateId ? {
-            value: author.stateId,
-            label: author.state?.name || author.stateId
-          } : null,
-          isMainAuthor: author.isMainAuthor || false,
-          isPresenter: author.isPresenter || false,
-          authorOrder: author.authorOrder || 0
-        }));
+        const mappedAuthors = data.paper.authors.map(author => {
+          return {
+            userId: author.userId || null,
+            name: author.name,
+            institution: author.institution,
+            city: author.city,
+            state: author.stateId ? {
+              value: author.stateId,
+              label: brazilianStates.find(option => option.id === author?.stateId)?.name
+            } : null,
+            isMainAuthor: author.isMainAuthor || false,
+            isPresenter: author.isPresenter || false,
+            authorOrder: author.authorOrder || 0
+          };
+        });
+
+        // Ordenar por authorOrder
+        mappedAuthors.sort((a, b) => a.authorOrder - b.authorOrder);
         setAuthors(mappedAuthors);
       } else {
         // Se não for um array, criar um autor padrão
@@ -265,9 +353,24 @@ export default function EditPaperPage() {
       // Inicializar valores para os campos dinâmicos
       if (data.paper.fieldValues && data.paper.fieldValues.length > 0) {
         const initialValues = {};
+
         data.paper.fieldValues.forEach(field => {
+          // Armazenar o valor original para comparação posterior
           initialValues[field.fieldId] = field.value || '';
+
+          // Se for o campo de resumo, configurar o estado do abstract
+          if (field.field &&
+             (field.field.label.toLowerCase().includes('resumo') ||
+              field.field.label.toLowerCase().includes('abstract'))) {
+
+            setAbstractField({
+              ...field.field,
+              id: field.fieldId,
+              originalValue: field.value || ''
+            });
+          }
         });
+
         setDynamicFieldValues(initialValues);
       }
 
@@ -278,7 +381,7 @@ export default function EditPaperPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, fetchEventData, session?.user?.id, session?.user?.name]);
+  }, [id, fetchEventData, session?.user?.id, session?.user?.name, brazilianStates]);
 
   useEffect(() => {
     if (status === 'authenticated' && id) {
@@ -290,40 +393,48 @@ export default function EditPaperPage() {
 
   // Manipuladores de eventos
 
-  const triggerFileInput = (e) => {
+  const triggerFileInput = useCallback((e) => {
     if (e.target.closest(`.${styles.removeFileButton}`)) {
       return;
     }
-    fileInputRef.current.click();
-  };
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, []);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       if (selectedFile.type !== 'application/pdf') {
         setFieldErrors((prev) => ({ ...prev, file: 'Apenas arquivos PDF são permitidos' }));
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setFieldErrors((prev) => ({ ...prev, file: 'O arquivo não pode exceder 10MB' }));
+
+      // Verificar tamanho máximo configurado ou padrão 10MB
+      const maxSizeMB = fileFieldConfig?.maxFileSize || 10;
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+      if (selectedFile.size > maxSizeBytes) {
+        setFieldErrors((prev) => ({ ...prev, file: `O arquivo não pode exceder ${maxSizeMB}MB` }));
         return;
       }
+
       setFile(selectedFile);
       setFileChanged(true);
       setFieldErrors((prev) => ({ ...prev, file: null }));
     }
-  };
+  }, [fileFieldConfig]);
 
-  const handleRemoveFile = (e) => {
+  const handleRemoveFile = useCallback((e) => {
     e.stopPropagation();
     setFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
     setFileChanged(true);
-  };
+  }, []);
 
-  const handleAuthorsChange = (updatedAuthors) => {
+  const handleAuthorsChange = useCallback((updatedAuthors) => {
     // Atualizar o authorOrder com base na posição no array
     const authorsWithOrder = updatedAuthors.map((author, index) => ({
       ...author,
@@ -338,52 +449,55 @@ export default function EditPaperPage() {
       const mainAuthorIndex = authorsWithOrder.findIndex(author => author.userId === session?.user?.id);
       if (mainAuthorIndex >= 0) {
         authorsWithOrder[mainAuthorIndex].isPresenter = true;
+      } else {
+        // Se não encontrar o autor logado, marcar o primeiro autor como apresentador
+        authorsWithOrder[0].isPresenter = true;
       }
     }
 
     setAuthors(authorsWithOrder);
     setFieldErrors((prev) => ({ ...prev, authors: null }));
-  };
+  }, [session?.user?.id]);
 
-  const handleAreaChange = (e) => {
+  const handleAreaChange = useCallback((e) => {
     setAreaId(e.target.value);
     setFieldErrors((prev) => ({ ...prev, area: null }));
-  };
+  }, []);
 
-  const getAreaDescription = (areaId) => {
+  const getAreaDescription = useCallback((areaId) => {
     const selectedArea = areas.find(area => area.id === areaId);
     return selectedArea?.description || null;
-  };
+  }, [areas]);
 
-  const handlePaperTypeChange = (e) => {
+  const handlePaperTypeChange = useCallback((e) => {
     setPaperTypeId(e.target.value);
     setFieldErrors((prev) => ({ ...prev, paperType: null }));
-  };
+  }, []);
 
-  const getPaperTypeDescription = (paperTypeId) => {
+  const getPaperTypeDescription = useCallback((paperTypeId) => {
     const selectedType = paperTypes.find(type => type.id === paperTypeId);
     return selectedType?.description || null;
-  };
+  }, [paperTypes]);
 
-  const handleDynamicFieldChange = (e) => {
+  const handleDynamicFieldChange = useCallback((e) => {
     const { name, value } = e.target;
     setDynamicFieldValues(prev => ({
       ...prev,
       [name]: value
     }));
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
-  };
+  }, []);
 
-  const handleKeywordsChange = (e) => {
+  const handleKeywordsChange = useCallback((e) => {
     const newValue = e.target.value;
     setKeywords(prev => ({
       ...prev,
       value: newValue
     }));
     setFieldErrors((prev) => ({ ...prev, keywords: null }));
-  };
+  }, []);
 
-  const countKeywords = (keywordsStr) => {
+  const countKeywords = useCallback((keywordsStr) => {
     if (!keywordsStr) return 0;
 
     return keywordsStr
@@ -391,7 +505,12 @@ export default function EditPaperPage() {
       .map(k => k.trim())
       .filter(k => k.length > 0)
       .length;
-  };
+  }, []);
+
+  const handleAbstractChange = useCallback((e) => {
+    setAbstract(e.target.value);
+    setFieldErrors((prev) => ({ ...prev, abstract: null }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -428,8 +547,40 @@ export default function EditPaperPage() {
       errors.paperType = 'Selecione um tipo de trabalho';
     }
 
-    // Validação para campos dinâmicos
+    // Validação do abstract
+    if (abstractField) {
+      const abstractValue = dynamicFieldValues[abstractField.id]?.trim() || '';
+      if (abstractField.isRequired && !abstractValue) {
+        errors[abstractField.id] = `${abstractField.label} é obrigatório`;
+      } else if (abstractValue) {
+        if (abstractField.minLength && abstractValue.length < abstractField.minLength) {
+          errors[abstractField.id] = `${abstractField.label} deve ter pelo menos ${abstractField.minLength} caracteres`;
+        }
+        if (abstractField.maxLength && abstractValue.length > abstractField.maxLength) {
+          errors[abstractField.id] = `${abstractField.label} deve ter no máximo ${abstractField.maxLength} caracteres`;
+        }
+        if (abstractField.minWords) {
+          const wordCount = abstractValue.split(/\s+/).filter(w => w.trim().length > 0).length;
+          if (wordCount < abstractField.minWords) {
+            errors[abstractField.id] = `${abstractField.label} deve ter pelo menos ${abstractField.minWords} palavra${abstractField.minWords === 1 ? '' : 's'}`;
+          }
+        }
+        if (abstractField.maxWords) {
+          const wordCount = abstractValue.split(/\s+/).filter(w => w.trim().length > 0).length;
+          if (wordCount > abstractField.maxWords) {
+            errors[abstractField.id] = `${abstractField.label} deve ter no máximo ${abstractField.maxWords} palavra${abstractField.maxWords === 1 ? '' : 's'}`;
+          }
+        }
+      }
+    } else if (!abstract.trim() && !errors.abstract) {
+      errors.abstract = 'Resumo é obrigatório';
+    }
+
+    // Validação para campos dinâmicos (excluindo o abstract que já foi validado)
     eventFields.forEach(field => {
+      // Ignorar o campo de abstract que já foi validado
+      if (abstractField && field.id === abstractField.id) return;
+
       const value = dynamicFieldValues[field.id]?.trim() || '';
 
       if (field.isRequired && !value) {
@@ -450,7 +601,7 @@ export default function EditPaperPage() {
       }
 
       if (field.minWords) {
-        const wordCount = value.split(/\s+/).length;
+        const wordCount = value.split(/\s+/).filter(w => w.trim().length > 0).length;
         if (wordCount < field.minWords) {
           errors[field.id] = `${field.label} deve ter pelo menos ${field.minWords} palavra${field.minWords === 1 ? '' : 's'}`;
           return;
@@ -458,7 +609,7 @@ export default function EditPaperPage() {
       }
 
       if (field.maxWords) {
-        const wordCount = value.split(/\s+/).length;
+        const wordCount = value.split(/\s+/).filter(w => w.trim().length > 0).length;
         if (wordCount > field.maxWords) {
           errors[field.id] = `${field.label} deve ter no máximo ${field.maxWords} palavra${field.maxWords === 1 ? '' : 's'}`;
           return;
@@ -511,8 +662,18 @@ export default function EditPaperPage() {
       errors.authors = 'Um ou mais autores possuem informações incompletas';
     }
 
+    // Validação de limite de autores
+    if (authors.length > maxAuthors) {
+      errors.authors = `Este evento permite no máximo ${maxAuthors} autor${maxAuthors === 1 ? '' : 'es'}`;
+    }
+
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
+      // Rolar para o topo para mostrar erros
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
       return;
     }
 
@@ -520,6 +681,14 @@ export default function EditPaperPage() {
     setSubmitting(true);
 
     try {
+      // Preparar os field values, incluindo o abstract se for um campo dinâmico
+      const fieldValues = Object.keys(dynamicFieldValues)
+        .filter(fieldId => dynamicFieldValues[fieldId] !== undefined && dynamicFieldValues[fieldId] !== null)
+        .map(fieldId => ({
+          fieldId,
+          value: dynamicFieldValues[fieldId]
+        }));
+
       // Primeiro, atualizar os dados principais do paper via JSON
       const updateResponse = await fetch(`/api/paper/${id}`, {
         method: 'PUT',
@@ -528,7 +697,8 @@ export default function EditPaperPage() {
         },
         body: JSON.stringify({
           title,
-          abstract,
+          // Se o abstract não for um campo dinâmico, incluí-lo diretamente
+          abstract: !abstractField ? abstract : undefined,
           keywords: keywords.value,
           areaId: areaId || undefined,
           paperTypeId: paperTypeId || undefined,
@@ -543,12 +713,7 @@ export default function EditPaperPage() {
             authorOrder: author.authorOrder
           })),
           // Incluir os valores dos campos personalizados
-          fieldValues: Object.keys(dynamicFieldValues)
-            .filter(fieldId => dynamicFieldValues[fieldId])
-            .map(fieldId => ({
-              fieldId,
-              value: dynamicFieldValues[fieldId]
-            }))
+          fieldValues: fieldValues
         }),
       });
 
@@ -603,12 +768,12 @@ export default function EditPaperPage() {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     router.push(`/paper/${id}`);
-  };
+  }, [router, id]);
 
   // Funções auxiliares para formatação de texto e contagem de palavras
-  const getFieldHelperText = (fieldConfig) => {
+  const getFieldHelperText = useCallback((fieldConfig) => {
     let text = fieldConfig.helpText || '';
 
     const constraints = [];
@@ -635,12 +800,12 @@ export default function EditPaperPage() {
     }
 
     return text;
-  };
+  }, []);
 
-  const getWordCountText = (text, fieldConfig) => {
+  const getWordCountText = useCallback((text, fieldConfig) => {
     if (!text) return '';
 
-    const wordCount = text.trim().split(/\s+/).length;
+    const wordCount = text.trim().split(/\s+/).filter(w => w.trim().length > 0).length;
     const characterCount = text.length;
 
     let message = `${wordCount} palavra${wordCount === 1 ? '' : 's'}`;
@@ -666,11 +831,16 @@ export default function EditPaperPage() {
     }
 
     return message;
-  };
+  }, []);
 
   // Renderizadores de campos
 
-  const renderDynamicField = (fieldConfig) => {
+  const renderDynamicField = useCallback((fieldConfig) => {
+    // Não renderizar o campo abstract aqui, ele tem uma seção própria
+    if (abstractField && fieldConfig.id === abstractField.id) {
+      return null;
+    }
+
     switch (fieldConfig.fieldType) {
       case FieldType.TEXTAREA:
         return (
@@ -694,6 +864,7 @@ export default function EditPaperPage() {
             fieldConfig={fieldConfig}
             autoResize={true}
             showWordCount={!!fieldConfig.minWords || !!fieldConfig.maxWords}
+            className={styles.dynamicTextarea}
           />
         );
       case FieldType.TEXT:
@@ -759,7 +930,7 @@ export default function EditPaperPage() {
             <label htmlFor={fieldConfig.id} className={styles.formLabel}>
               {fieldConfig.label} {fieldConfig.isRequired && <span className={styles.requiredMark}>*</span>}
             </label>
-            <select
+            <Select
               id={fieldConfig.id}
               name={fieldConfig.id}
               value={dynamicFieldValues[fieldConfig.id] || ''}
@@ -775,7 +946,7 @@ export default function EditPaperPage() {
                   </option>
                 ))
               }
-            </select>
+            </Select>
             {fieldErrors[fieldConfig.id] && (
               <span className={styles.fieldError}>{fieldErrors[fieldConfig.id]}</span>
             )}
@@ -852,9 +1023,55 @@ export default function EditPaperPage() {
       default:
         return null;
     }
-  };
+  }, [abstractField, dynamicFieldValues, fieldErrors, getFieldHelperText, getWordCountText, handleDynamicFieldChange]);
 
-  const renderFileUploadField = () => {
+  const renderAbstractField = useCallback(() => {
+    if (abstractField) {
+      // Renderizar o abstract como campo dinâmico
+      return (
+        <TextareaField
+          key={abstractField.id}
+          id={abstractField.id}
+          name={abstractField.id}
+          label={abstractField.label}
+          value={dynamicFieldValues[abstractField.id] || ''}
+          onChange={handleDynamicFieldChange}
+          placeholder={abstractField.placeholder || ''}
+          helperText={getFieldHelperText(abstractField)}
+          errorMessage={fieldErrors[abstractField.id]}
+          required={abstractField.isRequired}
+          rows={abstractField.rows || 6}
+          maxRows={abstractField.maxRows || 12}
+          maxCount={abstractField.maxLength}
+          minCount={abstractField.minLength}
+          maxWords={abstractField.maxWords}
+          minWords={abstractField.minWords}
+          autoResize={true}
+          showWordCount={!!abstractField.minWords || !!abstractField.maxWords}
+          className={styles.abstractTextarea}
+        />
+      );
+    } else {
+      // Renderizar o campo abstract padrão
+      return (
+        <TextareaField
+          id="abstract"
+          name="abstract"
+          label="Resumo"
+          value={abstract}
+          onChange={handleAbstractChange}
+          placeholder="Resumo do trabalho"
+          errorMessage={fieldErrors.abstract}
+          required={true}
+          rows={6}
+          autoResize={true}
+          className={styles.abstractTextarea}
+        />
+      );
+    }
+  }, [abstract, abstractField, dynamicFieldValues, fieldErrors, getFieldHelperText, handleAbstractChange, handleDynamicFieldChange]);
+
+  const renderFileUploadField = useCallback(() => {
     const currentFileName = paper?.fileName;
 
     return (
@@ -942,14 +1159,14 @@ export default function EditPaperPage() {
         ) : (
           <div className={styles.fileRequirements}>
             <FaInfoCircle className={styles.infoIcon} />
-            <span>O arquivo deve estar em formato PDF e não exceder 10MB</span>
+            <span>O arquivo deve estar em formato PDF e não exceder {fileFieldConfig?.maxFileSize || 10}MB</span>
           </div>
         )}
       </div>
     );
-  };
+  }, [file, fileChanged, fieldErrors.file, fileFieldConfig, paper?.fileName, triggerFileInput, handleFileChange, handleRemoveFile]);
 
-  const renderKeywordsField = () => {
+  const renderKeywordsField = useCallback(() => {
     // Não renderizar o campo se max não estiver definido e não houver valor existente
     if (!keywords.max && !keywords.value) return null;
 
@@ -1006,7 +1223,7 @@ export default function EditPaperPage() {
         <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
       </div>
     );
-  };
+  }, [countKeywords, fieldErrors.keywords, handleKeywordsChange, keywords]);
 
   // Renderização condicional com base no status de carregamento
 
@@ -1056,7 +1273,7 @@ export default function EditPaperPage() {
               onClick={handleCancel}
               className={styles.backButton}
             >
-              &larr; Voltar
+              <FaArrowLeft className={styles.backIcon} /> Voltar
             </Button>
             <h1 className={styles.title}>Editar Trabalho</h1>
           </div>
@@ -1079,8 +1296,47 @@ export default function EditPaperPage() {
           <div className={styles.formContainer}>
             <form onSubmit={handleSubmit} className={styles.paperForm}>
               <div className={styles.formSection}>
+
+                {/* Evento (somente exibição) */}
+                <div className={styles.infoSection}>
+                  <div className={styles.infoHeader}>
+                    <FaBuilding className={styles.infoIcon} />
+                    <span className={styles.infoLabel}>Evento:</span>
+                  </div>
+                  <div className={styles.infoContent}>
+                    {eventName || 'Evento não informado'}
+                  </div>
+                </div>
                 <h2 className={styles.sectionTitle}>Informações do Trabalho</h2>
 
+                {/* Autores */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Autores <span className={styles.requiredMark}>*</span>
+                  </label>
+                  <div className={styles.authorsSection}>
+                    <AuthorsList
+                      authors={authors}
+                      onChange={handleAuthorsChange}
+                      maxAuthors={maxAuthors}
+                      fieldErrors={fieldErrors}
+                      currentUserId={session?.user?.id}
+                      brazilianStates={brazilianStates}
+                      statesLoading={statesLoading}
+                    />
+                    {fieldErrors.authors && (
+                      <span className={styles.fieldError}>{fieldErrors.authors}</span>
+                    )}
+                    {/* {maxAuthors > 0 && (
+                      <div className={styles.authorsLimit}>
+                        <FaInfoCircle className={styles.infoIcon} />
+                        <span>Limite máximo de {maxAuthors} autor{maxAuthors !== 1 ? 'es' : ''}</span>
+                      </div>
+                    )} */}
+                  </div>
+                </div>
+
+                {/* Título do trabalho */}
                 <div className={styles.formGroup}>
                   <label htmlFor="title" className={styles.formLabel}>
                     Título <span className={styles.requiredMark}>*</span>
@@ -1098,24 +1354,7 @@ export default function EditPaperPage() {
                   )}
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Autores <span className={styles.requiredMark}>*</span>
-                  </label>
-                  <AuthorsList
-                    authors={authors}
-                    onChange={handleAuthorsChange}
-                    maxAuthors={maxAuthors}
-                    fieldErrors={fieldErrors}
-                    currentUserId={session?.user?.id}
-                    brazilianStates={brazilianStates}
-                    statesLoading={statesLoading}
-                  />
-                  {fieldErrors.authors && (
-                    <span className={styles.fieldError}>{fieldErrors.authors}</span>
-                  )}
-                </div>
-
+                {/* Área temática */}
                 {areas.length > 0 && (
                   <Select
                     id="area"
@@ -1131,6 +1370,7 @@ export default function EditPaperPage() {
                   />
                 )}
 
+                {/* Tipo de trabalho */}
                 {paperTypes.length > 0 && (
                   <Select
                     id="paperType"
@@ -1146,29 +1386,31 @@ export default function EditPaperPage() {
                   />
                 )}
 
-                {/* Resumo (abstract) sempre é exibido */}
-                <TextareaField
-                  id="abstract"
-                  name="abstract"
-                  label="Resumo"
-                  value={abstract}
-                  onChange={(e) => setAbstract(e.target.value)}
-                  placeholder="Resumo do trabalho"
-                  errorMessage={fieldErrors.abstract}
-                  required={true}
-                  rows={5}
-                  autoResize={true}
-                />
+                {/* Resumo (abstract) */}
+                <div className={styles.abstractSection}>
+                  {renderAbstractField()}
+                </div>
 
-                {/* Renderiza todos os campos dinâmicos */}
-                {eventFields.map(field => renderDynamicField(field))}
+                {/* Campos dinâmicos */}
+                {eventFields.length > 0 && (
+                  <div className={styles.dynamicFieldsSection}>
+                    {eventFields.map(field => renderDynamicField(field))}
+                  </div>
+                )}
 
-                {/* Renderiza o campo de upload de arquivo */}
-                {renderFileUploadField()}
+                {/* Palavras-chave */}
+                <div className={styles.keywordsSection}>
+                  {renderKeywordsField()}
+                </div>
 
-                {/* Renderiza o campo de palavras-chave */}
-                {renderKeywordsField()}
+                {/* Upload de arquivo */}
+                {(hasFileField || paper?.fileUrl) && (
+                  <div className={styles.fileSection}>
+                    {renderFileUploadField()}
+                  </div>
+                )}
 
+                {/* Botões de ação */}
                 <div className={styles.formActions}>
                   <Button
                     type="button"

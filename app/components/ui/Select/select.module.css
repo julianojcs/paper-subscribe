@@ -1,7 +1,6 @@
 .selectGroup {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
   width: 100%;
   position: relative;
 }
@@ -9,15 +8,15 @@
 .label {
   display: block;
   font-weight: 500;
-  font-size: 0.95rem;
-  color: #475569;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--paper-primary);
+  margin-bottom: 0.2rem;
   cursor: pointer;
 }
 
 .required {
   color: #ef4444;
-  margin-left: 0.25rem;
+  margin-left: -2px;
 }
 
 .customSelectContainer {
@@ -162,7 +161,7 @@
   border-left: 2px solid #0ea5e9;
 }
 
-.option.selected.highlighted, 
+.option.selected.highlighted,
 .option.selected:hover {
   background-color: #bae6fd;
 }
@@ -239,20 +238,20 @@
     min-height: 2.5rem;
     font-size: 0.9375rem;
   }
-  
+
   .optionsList {
     max-height: 12rem;
   }
-  
+
   .option {
     padding: 0.5rem 0.875rem;
   }
-  
+
   .selectedDescription {
     padding: 0.625rem;
     font-size: 0.8125rem;
   }
-  
+
   .optionDescription {
     font-size: 0.75rem;
   }
@@ -264,7 +263,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
   }
-  
+
   .optionsList {
     position: fixed;
     top: auto;
@@ -278,11 +277,11 @@
     border-bottom: none;
     z-index: 100;
   }
-  
+
   .option {
     padding: 0.75rem 1rem;
   }
-  
+
   /* Adicionar cabeçalho para mobile */
   .optionsList::before {
     content: '';
@@ -300,67 +299,67 @@
   .label {
     color: #e2e8f0;
   }
-  
+
   .selectTrigger {
     color: #e2e8f0;
     background-color: #1e293b;
     border-color: #475569;
   }
-  
+
   .selectTrigger:hover:not(.disabled) {
     background-color: #0f172a;
     border-color: #64748b;
   }
-  
+
   .selectTrigger:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
-  
+
   .selectTrigger.disabled {
     background-color: #0f172a;
     color: #64748b;
   }
-  
+
   .optionsList {
     background-color: #1e293b;
     border-color: #334155;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
     scrollbar-color: #475569 #1e293b;
   }
-  
+
   .optionsList::-webkit-scrollbar-track {
     background: #0f172a;
   }
-  
+
   .optionsList::-webkit-scrollbar-thumb {
     background: #475569;
   }
-  
+
   .option:hover, .option.highlighted {
     background-color: #0f172a;
   }
-  
+
   .option.selected {
     background-color: #0c4a6e;
     border-left-color: #0ea5e9;
   }
-  
+
   .option.selected.highlighted,
   .option.selected:hover {
     background-color: #075985;
   }
-  
+
   .optionDescription {
     color: #94a3b8;
   }
-  
+
   .selectedDescription {
     background-color: #0f172a;
     border-color: #334155;
     color: #cbd5e1;
   }
-  
+
   .helperText {
     color: #94a3b8;
   }

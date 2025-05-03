@@ -51,6 +51,54 @@ export const fetchEventData = async (_eventId) => {
   }
 };
 
+const _saveEventDataToLocalStorage = (data) => {
+  if (!data) {
+    console.error('Tentativa de salvar dados inválidos no localStorage');
+    return null;
+  }
+
+  const eventData = data.event || data;  // Suporta ambos os formatos
+
+  try {
+    // Determinar a data de expiração
+    let expirationDate;
+
+    if (eventData.endDate) {
+      expirationDate = new Date(eventData.endDate).getTime();
+    } else if (eventData.timelines && eventData.timelines.length > 0) {
+      const endEvent = eventData.timelines.find(item => item.type === 'EVENT_END');
+      if (endEvent && endEvent.date) {
+        expirationDate = new Date(endEvent.date).getTime();
+      }
+    }
+
+    // Se não encontrou data de fim ou já passou, usar 1 ano como padrão
+    if (!expirationDate || expirationDate < Date.now()) {
+      expirationDate = Date.now() + (365 * 24 * 60 * 60 * 1000); // 1 ano
+    }
+
+    const dataToSave = {
+      event: eventData,
+      expires: expirationDate
+    };
+
+    // Usar o serviço de localStorage
+    localStorageService.setItem(EVENT_DATA_KEY, dataToSave);
+    console.log('Dados do evento salvos no localStorage com expiração:', new Date(expirationDate).toISOString());
+
+    return dataToSave;
+  } catch (error) {
+    console.error('Erro ao salvar dados do evento no localStorage:', error);
+    return null;
+  }
+};
+
+export const saveEventDataToLocalStorage = (data) => {
+  const savedData = _saveEventDataToLocalStorage(data);
+
+  return savedData;
+}
+
 /**
  * Hook para usar o serviço de dados do evento
  * Mantido para compatibilidade com código existente
@@ -241,48 +289,14 @@ export const useEventDataService = () => {
 
   /**
    * Salva os dados do evento no localStorage usando o serviço localStorage.js
-   * @param {Object} data Objeto contendo dados do evento e timeline
+   * @param {Object} data Objeto contendo dados do evento
+   * @returns {Object} Dados salvos com expiração
    */
   const saveEventDataToLocalStorage = (data) => {
-    if (!data || !data.event) {
-      console.error('Tentativa de salvar dados inválidos no localStorage');
-      return;
-    }
+    // Usar o serviço de localStorage para salvar os dados
+    const savedData = _saveEventDataToLocalStorage(data);
 
-    try {
-      // Determinar a data de expiração
-      let expirationDate;
-
-      if (data.event.endDate) {
-        expirationDate = new Date(data.event.endDate).getTime();
-      } else if (data.timelineItems && data.timelineItems.length > 0) {
-        const endEvent = data.timelineItems.find(item => item.type === 'EVENT_END');
-        if (endEvent && endEvent.date) {
-          expirationDate = new Date(endEvent.date).getTime();
-        }
-      }
-
-      // Se não encontrou data de fim ou já passou, usar 1 ano como padrão
-      if (!expirationDate || expirationDate < Date.now()) {
-        expirationDate = Date.now() + (365 * 24 * 60 * 60 * 1000); // 1 ano
-      }
-
-      const dataToSave = {
-        ...data,
-        expires: expirationDate
-      };
-
-      // Usar o serviço de localStorage
-      localStorageService.setItem(EVENT_DATA_KEY, dataToSave);
-      console.log('Dados do evento salvos no localStorage com expiração:', new Date(expirationDate).toISOString());
-
-      // Remover token após salvar os dados do evento
-      localStorageService.removeItem(EVENT_TOKEN_KEY);
-      console.log('Token de registro removido após salvar dados do evento');
-
-    } catch (error) {
-      console.error('Erro ao salvar dados do evento no localStorage:', error);
-    }
+    return savedData;
   };
 
   // Retornar as funções do hook

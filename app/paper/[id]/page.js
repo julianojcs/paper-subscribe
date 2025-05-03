@@ -9,7 +9,7 @@ import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
   FaFileDownload, FaBuilding, FaTag, FaEdit, FaMicroscope,
-  FaFilePdf
+  FaFilePdf, FaArrowLeft
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
 import Tooltip from '../../components/ui/Tooltip';
@@ -219,7 +219,11 @@ export default function PaperDetailPage() {
               <span className={styles.metaLabel}>{abstractField.field.label}</span>
             </div>
             <div className={styles.dynamicFieldsContent}>
-              {abstractField.value}
+              {abstractField.value.split('\n').map((paragraph, index) => (
+                <p key={index} className={styles.dynamicFieldsParagraph}>
+                  {paragraph}
+                </p>
+              ))}
             </div>
           </section>
         );
@@ -321,7 +325,8 @@ export default function PaperDetailPage() {
   }
 
   // Determinar se o trabalho pode ser editado
-  const canEdit = false; // ['DRAFT', 'PENDING'].includes(paper.status);
+  const canEdit = ['DRAFT', 'PENDING'].includes(paper.status);
+  // const canEdit = false; // ['DRAFT', 'PENDING'].includes(paper.status);
 
   return (
     <div className={styles.container}>
@@ -333,10 +338,10 @@ export default function PaperDetailPage() {
               onClick={handleBack}
               className={styles.backButton}
             >
-              &larr; Voltar
+              <FaArrowLeft className={styles.backIcon} /> Voltar
             </Button>
 
-            <div className={styles.statusContainer}>
+            <div className={`${styles.statusContainer} ${styles.desktopDisplay}`}>
               {getStatusBadge(paper.status)}
             </div>
           </div>
@@ -355,6 +360,9 @@ export default function PaperDetailPage() {
                 <span className={styles.infoValue}>
                   {paper.event ? paper.event.name : 'Evento não informado'}
                 </span>
+                <div className={`${styles.statusContainer} ${styles.mobileDisplay}`}>
+                  {getStatusBadge(paper.status)}
+                </div>
               </div>
             </div>
 
