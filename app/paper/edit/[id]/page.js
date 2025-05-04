@@ -9,19 +9,16 @@ import {
   FaUpload,
   FaSpinner,
   FaSave,
-  FaTimes,
   FaInfoCircle,
   FaBuilding,
-  FaMicroscope,
-  FaTag,
-  FaArrowLeft,
-  FaUsers
+  FaArrowLeft
 } from 'react-icons/fa';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import TextareaField from '../../../components/ui/TextareaField';
 import TrashIcon from '../../../components/ui/TrashIcon';
 import AuthorsList from '../../../components/ui/Authors/AuthorsList';
+import KeywordsField from '../../../components/ui/KeywordsField';
 import useBrazilianStates from '../../../hooks/useBrazilianStates';
 import { FieldType, getInputTypeFromFieldType } from '../../../utils/fieldTypes';
 import { useDataContext } from '../../../../context/DataContext';
@@ -488,24 +485,13 @@ export default function EditPaperPage() {
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
   }, []);
 
-  const handleKeywordsChange = useCallback((e) => {
-    const newValue = e.target.value;
+  const handleKeywordsChange = (newValue) => {
     setKeywords(prev => ({
       ...prev,
       value: newValue
     }));
-    setFieldErrors((prev) => ({ ...prev, keywords: null }));
-  }, []);
-
-  const countKeywords = useCallback((keywordsStr) => {
-    if (!keywordsStr) return 0;
-
-    return keywordsStr
-      .split(',')
-      .map(k => k.trim())
-      .filter(k => k.length > 0)
-      .length;
-  }, []);
+    setFieldErrors(prev => ({ ...prev, keywords: null }));
+  };
 
   const handleAbstractChange = useCallback((e) => {
     setAbstract(e.target.value);
@@ -1166,65 +1152,6 @@ export default function EditPaperPage() {
     );
   }, [file, fileChanged, fieldErrors.file, fileFieldConfig, paper?.fileName, triggerFileInput, handleFileChange, handleRemoveFile]);
 
-  const renderKeywordsField = useCallback(() => {
-    // Não renderizar o campo se max não estiver definido e não houver valor existente
-    if (!keywords.max && !keywords.value) return null;
-
-    // Texto de ajuda baseado nas regras
-    let helperText = '';
-
-    if (keywords.min === keywords.max && keywords.min > 0) {
-      helperText = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.min > 0 && keywords.max > 0) {
-      helperText = `Informe de ${keywords.min} a ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.min > 0) {
-      helperText = `Informe pelo menos ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.max > 0) {
-      helperText = `Informe até ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    }
-
-    // Contador de palavras-chave atuais
-    const keywordsCount = countKeywords(keywords.value);
-    let keywordCountText = '';
-
-    if (keywords.value.trim()) {
-      keywordCountText = `${keywordsCount} palavra${keywordsCount === 1 ? '-chave' : 's-chave'} informada${keywordsCount === 1 ? '' : 's'}`;
-    }
-
-    // Verificar se está fora das regras
-    const isInvalid =
-      (keywords.min === keywords.max && keywordsCount !== keywords.min && keywords.min > 0) ||
-      (keywords.min > 0 && keywordsCount < keywords.min) ||
-      (keywords.max > 0 && keywordsCount > keywords.max);
-
-    return (
-      <div className={styles.formGroup}>
-        <label htmlFor="keywords" className={styles.formLabel}>
-          Palavras-chave <span className={styles.requiredMark}>*</span>
-        </label>
-        <input
-          id="keywords"
-          type="text"
-          value={keywords.value}
-          onChange={handleKeywordsChange}
-          className={`${styles.formInput} ${fieldErrors.keywords ? styles.inputError : ''}`}
-          placeholder={helperText}
-        />
-        {fieldErrors.keywords && (
-          <span className={styles.fieldError}>{fieldErrors.keywords}</span>
-        )}
-        <div className={styles.keywordsInfo}>
-          {keywordCountText && (
-            <span className={`${styles.keywordCount} ${isInvalid ? styles.keywordCountError : ''}`}>
-              {keywordCountText}
-            </span>
-          )}
-        </div>
-        <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
-      </div>
-    );
-  }, [countKeywords, fieldErrors.keywords, handleKeywordsChange, keywords]);
-
   // Renderização condicional com base no status de carregamento
 
   if (status === 'loading') {
@@ -1400,7 +1327,15 @@ export default function EditPaperPage() {
 
                 {/* Palavras-chave */}
                 <div className={styles.keywordsSection}>
-                  {renderKeywordsField()}
+                  <KeywordsField
+                    value={keywords.value}
+                    onChange={handleKeywordsChange}
+                    minKeywords={keywords.min}
+                    maxKeywords={keywords.max}
+                    error={fieldErrors.keywords}
+                    setError={(error) => setFieldErrors(prev => ({ ...prev, keywords: error }))}
+                    required={keywords.min > 0}
+                  />
                 </div>
 
                 {/* Upload de arquivo */}

@@ -297,21 +297,6 @@
   flex-shrink: 0;
 }
 
-/* Estilos para palavras-chave */
-.keywordsInfo {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-}
-
-.keywordCount {
-  color: #6b7280;
-}
-
-.keywordCountError {
-  color: #dc2626;
-}
-
 /* Estilos para campos tipo checkbox e radio */
 .checkboxField {
   display: flex;

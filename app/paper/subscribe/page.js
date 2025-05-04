@@ -16,7 +16,7 @@ import ProfileRedirectModal from './components/ProfileRedirectModal';
 import PageContainer from '/app/components/layout/PageContainer';
 import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
 import LoadingSpinner from '/app/components/ui/LoadingSpinner';
-
+import KeywordsField from '../../components/ui/KeywordsField';
 
 // Funções auxiliares para formatação de texto e contagem de palavras
 const getFieldHelperText = (fieldConfig) => {
@@ -78,6 +78,40 @@ const getWordCountText = (text, fieldConfig) => {
   }
 
   return message;
+};
+
+// Função para normalizar e verificar duplicatas de palavras-chave
+const normalizeKeywords = (keywordsString) => {
+  const keywordsArray = keywordsString
+    .split(',')
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0);
+
+  const uniqueKeywords = [];
+  const duplicates = [];
+
+  keywordsArray.forEach(keyword => {
+    if (!uniqueKeywords.includes(keyword)) {
+      uniqueKeywords.push(keyword);
+    } else if (!duplicates.includes(keyword)) {
+      duplicates.push(keyword);
+    }
+  });
+
+  return {
+    normalized: uniqueKeywords.join(', '),
+    uniqueCount: uniqueKeywords.length,
+    hasDuplicates: duplicates.length > 0,
+    duplicates
+  };
+};
+
+// Modificar a função countKeywords para usar a normalização
+const countKeywords = (keywordsStr) => {
+  if (!keywordsStr) return 0;
+
+  const { uniqueCount } = normalizeKeywords(keywordsStr);
+  return uniqueCount;
 };
 
 // Componente principal que utiliza useSearchParams
@@ -378,22 +412,15 @@ const SubmitPaperPage = () => {
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
   };
 
-  const handleKeywordsChange = (e) => {
-    const newValue = e.target.value;
+  const handleKeywordsChange = (newValue) => {
+    // Limpa mensagem de erro ao digitar
+    setFieldErrors(prev => ({ ...prev, keywords: null }));
+
+    // Atualiza o valor normalmente
     setKeywords(prev => ({
       ...prev,
       value: newValue
     }));
-  };
-
-  const countKeywords = (keywordsStr) => {
-    if (!keywordsStr) return 0;
-
-    return keywordsStr
-      .split(',')
-      .map(k => k.trim())
-      .filter(k => k.length > 0)
-      .length;
   };
 
   const handleSubmit = async (e) => {
@@ -401,20 +428,32 @@ const SubmitPaperPage = () => {
     const errors = {};
     if (!title.trim()) errors.title = 'Título é obrigatório';
 
-    // Validação de keywords
-    if (keywords.max > 0) { // Só validar se tiver max definido
+    // Validação de keywords modificada
+    const hasMaxKeywordsLimit = keywords.max !== undefined && keywords.max > 0;
+    const requiresKeywords = hasMaxKeywordsLimit || keywords.min > 0;
+
+    if (requiresKeywords) { // Só validar se tiver min > 0 ou max definido
       if (!keywords.value.trim()) {
         errors.keywords = 'Palavras-chave são obrigatórias';
       } else {
-        const keywordsCount = countKeywords(keywords.value);
+        const keywordsAnalysis = normalizeKeywords(keywords.value);
+        const keywordsCount = keywordsAnalysis.uniqueCount;
 
-        if (keywords.min === keywords.max && keywordsCount !== keywords.min) {
+        if (keywordsAnalysis.hasDuplicates) {
+          errors.keywords = `Palavras duplicadas não são permitidas: ${keywordsAnalysis.duplicates.join(', ')}`;
+        } else if (keywords.min === keywords.max && keywordsCount !== keywords.min && hasMaxKeywordsLimit) {
           errors.keywords = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'}`;
         } else if (keywords.min > 0 && keywordsCount < keywords.min) {
           errors.keywords = `Informe pelo menos ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'}`;
-        } else if (keywords.max > 0 && keywordsCount > keywords.max) {
+        } else if (hasMaxKeywordsLimit && keywordsCount > keywords.max) {
           errors.keywords = `Informe no máximo ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'}`;
         }
+      }
+    } else if (keywords.value.trim()) {
+      // Se não é obrigatório, mas o usuário informou algo, verificamos apenas duplicatas
+      const keywordsAnalysis = normalizeKeywords(keywords.value);
+      if (keywordsAnalysis.hasDuplicates) {
+        errors.keywords = `Palavras duplicadas não são permitidas: ${keywordsAnalysis.duplicates.join(', ')}`;
       }
     }
 
@@ -571,7 +610,6 @@ const SubmitPaperPage = () => {
         formData.append('eventId', eventId);
         formData.append('eventName', eventName);
       }
-
 
       // Criar array de paper fields values para enviar ao backend
       const paperFieldValues = Object.keys(dynamicFieldValues)
@@ -873,66 +911,6 @@ const SubmitPaperPage = () => {
     );
   };
 
-  const renderKeywordsField = () => {
-    // Não renderizar o campo se max não estiver definido
-    if (!keywords.max) return null;
-
-    // Texto de ajuda baseado nas regras
-    let helperText = '';
-
-    if (keywords.min === keywords.max) {
-      helperText = `Informe exatamente ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.min > 0 && keywords.max > 0) {
-      helperText = `Informe de ${keywords.min} a ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.min > 0) {
-      helperText = `Informe pelo menos ${keywords.min} palavra${keywords.min === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    } else if (keywords.max > 0) {
-      helperText = `Informe até ${keywords.max} palavra${keywords.max === 1 ? '-chave' : 's-chave'} separadas por vírgula`;
-    }
-
-    // Contador de palavras-chave atuais
-    const keywordsCount = countKeywords(keywords.value);
-    let keywordCountText = '';
-
-    if (keywords.value.trim()) {
-      keywordCountText = `${keywordsCount} palavra${keywordsCount === 1 ? '-chave' : 's-chave'} informada${keywordsCount === 1 ? '' : 's'}`;
-    }
-
-    // Verificar se está fora das regras
-    const isInvalid =
-      (keywords.min === keywords.max && keywordsCount !== keywords.min) ||
-      (keywords.min > 0 && keywordsCount < keywords.min) ||
-      (keywords.max > 0 && keywordsCount > keywords.max);
-
-    return (
-      <div className={styles.formGroup}>
-        <label htmlFor="keywords" className={styles.formLabel}>
-          Palavras-chave <span className={styles.requiredMark}>*</span>
-        </label>
-        <input
-          id="keywords"
-          type="text"
-          value={keywords.value}
-          onChange={handleKeywordsChange}
-          className={`${styles.formInput} ${fieldErrors.keywords ? styles.inputError : ''}`}
-          placeholder={helperText}
-        />
-        {fieldErrors.keywords && (
-          <span className={styles.fieldError}>{fieldErrors.keywords}</span>
-        )}
-        <div className={styles.keywordsInfo}>
-          {/* <span className={styles.fieldHelper}>{helperText}</span> */}
-          {keywordCountText && (
-            <span className={`${styles.keywordCount} ${isInvalid ? styles.keywordCountError : ''}`}>
-              {keywordCountText}
-            </span>
-          )}
-        </div>
-        <span className={styles.fieldHelper}>Ex: inteligência artificial, machine learning, deep learning</span>
-      </div>
-    );
-  };
-
   // Mostrar loading se estiver carregando ou se o conteúdo não estiver pronto
   if (isLoading || status === 'loading' || !contentReady) {
     return (
@@ -1044,7 +1022,15 @@ const SubmitPaperPage = () => {
                 {renderFileUploadField()}
 
                 {/* Renderiza o campo de palavras-chave */}
-                {renderKeywordsField()}
+                <KeywordsField
+                  value={keywords.value}
+                  onChange={handleKeywordsChange}
+                  minKeywords={keywords.min}
+                  maxKeywords={keywords.max} // Agora pode ser undefined ou 0
+                  error={fieldErrors.keywords}
+                  setError={(error) => setFieldErrors(prev => ({ ...prev, keywords: error }))}
+                  required={keywords.min > 0} // Só é obrigatório se min > 0
+                />
 
                 {/* Termos de uso e privacidade */}
                 <div className={styles.termsGroup}> {/* Termos e privacidade */}
