@@ -152,13 +152,13 @@ export default function TextareaField({
         <div className={styles.errorMessage}>{errorMessage}</div>
       )}
 
-      <div className={styles.infoRow}>
+      <p className={styles.infoRow}>
         {helperText && (
-          <span className={styles.helperText}>{helperText}</span>
+          <span>{helperText}</span>
         )}
 
         {(maxCount || maxWords || showWordCount) && (
-          <div className={`${styles.counterContainer} ${isExceedingLimit ? styles.countExceeding : ''}`}>
+          <span className={`${isExceedingLimit ? styles.countExceeding : ''}`}>
             <span className={styles.currentCount}>
               {maxWords ? `${wordCount}` : `${charCount}`}
             </span>
@@ -167,21 +167,21 @@ export default function TextareaField({
                 / {maxWords ? `${maxWords}` : `${maxCount}`}
               </span>
             )}
-          </div>
+          </span>
         )}
-      </div>
+      </p>
 
       {((minWords && maxWords) || (minCount && maxCount)) && value && (
-        <div className={`${styles.minCountInfo} ${isBelowMinimum ? styles.belowMinimum : ''}`}>
+        <p className={`${styles.minCountInfo} ${isBelowMinimum ? styles.belowMinimum : ''}`}>
           {minWords ? `Mínimo: ${minWords} palavra${minWords === 1 ? '' : 's'}` :
             minCount ? `Mínimo: ${minCount} caractere${minCount === 1 ? '' : 's'}` : ''}
-        </div>
+        </p>
       )}
 
       {maxWords && maxCount && value && (
-        <div className={styles.secondaryCounter}>
+        <p className={styles.secondaryCounter}>
           {`${charCount} caractere${charCount === 1 ? '' : 's'} / Máximo: ${maxCount}`}
-        </div>
+        </p>
       )}
     </div>
   );
