@@ -143,7 +143,7 @@
 .linkedAccounts p:first-child {
   text-align: center;
   padding: 20px 0;
-  color: #666;
+  color: #64748b;
 }
 .addPasswordSection
 .addPasswordSection h2 {
@@ -188,7 +188,7 @@
 .linkProviders p:first-child {
   text-align: center;
   padding: 20px 0;
-  color: #666;
+  color: #64748b;
 }
 
 .success {
@@ -217,7 +217,7 @@
   align-items: center;
   min-height: 300px;
   font-size: 18px;
-  color: #666;
+  color: #64748b;
 }
 
 .accountsList {

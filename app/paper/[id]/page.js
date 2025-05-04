@@ -8,8 +8,9 @@ import Button from '../../components/ui/Button';
 import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
-  FaFileDownload, FaBuilding, FaTag, FaEdit, FaMicroscope,
-  FaFilePdf, FaArrowLeft
+  FaFileDownload, FaBuilding, FaTags, FaEdit, FaStethoscope,
+  FaFilePdf, FaArrowLeft,
+  FaSuitcase
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
 import Tooltip from '../../components/ui/Tooltip';
@@ -370,7 +371,7 @@ export default function PaperDetailPage() {
             {paper.area && (
               <div className={styles.eventInfoRow}>
                 <div className={styles.infoContainer}>
-                  <FaMicroscope className={styles.metaIcon} />
+                  <FaStethoscope className={styles.metaIcon} />
                   <span className={styles.eventLabel}>Área:</span>
                   <div className={styles.typeName}>
                     {paper.area.name}
@@ -392,7 +393,7 @@ export default function PaperDetailPage() {
             {paper.paperType && (
               <div className={styles.eventInfoRow}>
                 <div className={styles.infoContainer}>
-                  <FaTag className={styles.metaIcon} />
+                  <FaSuitcase className={styles.metaIcon} />
                   <span className={styles.eventLabel}>Tipo:</span>
                   <div className={styles.typeName}>
                     {paper.paperType.name}
@@ -433,7 +434,7 @@ export default function PaperDetailPage() {
           {/* Palavras-chave */}
           <section className={styles.keywordsSection}>
             <div className={styles.metaHeader}>
-              <FaTag className={styles.metaIcon} />
+              <FaTags className={styles.metaIcon} />
               <span className={styles.metaLabel}>Palavras-chave</span>
             </div>
             <div className={styles.keywordsTags}>

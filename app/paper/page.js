@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import styles from './paper.module.css';
 import Button from '../components/ui/Button';
-import { FaFileAlt, FaCalendarAlt, FaUsers, FaTag, FaBookmark, FaBuilding, FaDownload, FaHistory, FaFlask, FaMicroscope, FaStethoscope } from 'react-icons/fa';
+import { FaFileAlt, FaCalendarAlt, FaUsers, FaBuilding, FaDownload, FaStethoscope, FaSuitcase } from 'react-icons/fa';
 import Tooltip from '../components/ui/Tooltip';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import PageContainer from '../components/layout/PageContainer';
@@ -305,7 +305,7 @@ console.log('session', session);
 
                         {paper.paperType && (
                           <div className={styles.metaItem}>
-                            <FaTag className={styles.metaIcon} />
+                            <FaSuitcase className={styles.metaIcon} />
                             <Tooltip
                               content={paper.paperType.description || ''}
                               position="top"
