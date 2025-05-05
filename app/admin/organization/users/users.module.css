@@ -606,7 +606,7 @@
 
 @media (max-width: 767px) {
   .container {
-    max-width: 100svw;
+    max-width: 100%;
   }
 
   .mobileCardList {
