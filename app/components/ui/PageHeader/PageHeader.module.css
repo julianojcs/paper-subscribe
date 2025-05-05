@@ -19,10 +19,12 @@
   font-weight: 600;
   color: #2d3748;
   margin: 0;
+  text-align: center;
 }
 
 .description {
   margin: 0;
   color: #718096;
   font-size: 1rem;
+  text-align: center;
 }

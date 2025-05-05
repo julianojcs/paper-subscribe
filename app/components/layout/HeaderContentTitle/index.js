@@ -18,7 +18,8 @@ const HeaderContentTitle = ({
   onImageLoad,
   subtitle = "Sistema de Submissão de Trabalhos",
   fallbackTitle = "Sistema de Submissão de Trabalhos Científicos",
-  className = ""
+  className = "",
+  background = "linear-gradient(135deg,#3b82f6,rgb(17,76,204))",
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { eventName, eventLogoUrl } = eventData || {};
@@ -26,9 +27,8 @@ const HeaderContentTitle = ({
     setImageLoaded(true);
     if (onImageLoad) onImageLoad();
   };
-
   return (
-    <header className={`${styles.header} ${className}`}>
+    <header className={`${styles.header} ${className}`} style={{ background }}>
       <div className={styles.headerContent}>
         {(eventLogoUrl && eventName) ? (
           <div className={styles.logoWrapper}>

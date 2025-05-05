@@ -27,6 +27,9 @@ import Select from '../../../components/ui/Select';
 import Input from '../../../components/ui/Input';
 import Tooltip from '../../../components/ui/Tooltip';
 import styles from './users.module.css';
+import HeaderContentTitle from '../../../components/layout/HeaderContentTitle';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import PageContainer from '../../../components/layout/PageContainer';
 
 export default function OrganizationUsersPage() {
   const [users, setUsers] = useState([]);
@@ -46,13 +49,13 @@ export default function OrganizationUsersPage() {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [roleFilter, setRoleFilter] = useState('');
-  
+
   // Estado para controlar a exibição de filtros
   const [filtersVisible, setFiltersVisible] = useState(false);
-  
+
   // Estado para controlar o modo de visualização (tabela ou cards)
   const [viewMode, setViewMode] = useState('table');
-  
+
   // Key para forçar re-renderização de componentes de Tooltip
   const [tooltipKey, setTooltipKey] = useState(0);
 
@@ -75,10 +78,10 @@ export default function OrganizationUsersPage() {
         setViewMode('card');
       }
     };
-    
+
     // Configurar inicialmente
     handleResize();
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -106,7 +109,7 @@ export default function OrganizationUsersPage() {
         setActiveEvent(data.activeEvent);
         setPagination(data.pagination);
         setHasAccess(true);
-        
+
         // Incrementar tooltipKey para forçar recriação dos tooltips
         setTooltipKey(prevKey => prevKey + 1);
       } else {
@@ -133,7 +136,7 @@ export default function OrganizationUsersPage() {
     e.preventDefault();
     // Resetar para a página 1 ao realizar uma nova busca
     setPagination(prev => ({ ...prev, page: 1 }));
-    
+
     // Em dispositivos móveis, fechar os filtros após busca
     if (window.innerWidth < 768) {
       setFiltersVisible(false);
@@ -149,7 +152,7 @@ export default function OrganizationUsersPage() {
     // Scrollar para o topo da lista de usuários
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   const handleRoleFilterChange = (e) => {
     setRoleFilter(e.target.value);
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -168,7 +171,9 @@ export default function OrganizationUsersPage() {
   const roleOptions = [
     { id: '', name: 'Todos' },
     { id: 'ADMIN', name: 'Administradores' },
-    { id: 'MEMBER', name: 'Membros' }
+    { id: 'MEMBER', name: 'Membros' },
+    { id: 'MANAGER', name: 'Gerente' },
+    { id: 'REVIEWER', name: 'Revisor' },
   ];
 
   const sortOptions = [
@@ -204,7 +209,7 @@ export default function OrganizationUsersPage() {
     const isAdmin = user.role === 'ADMIN';
     const tooltipContent = isAdmin ? 'Administrador' : 'Membro';
     const avatarClass = isAdmin ? styles.adminAvatar : styles.memberAvatar;
-    
+
     return (
       <div key={`user-icon-${user.id}-${tooltipKey}`}>
         <Tooltip content={tooltipContent}>
@@ -261,21 +266,21 @@ export default function OrganizationUsersPage() {
             <span className={styles.detailLabel}>Email:</span>
             <span className={styles.detailValue}>{user.email}</span>
           </div>
-          
+
           {user.phone && (
             <div className={styles.cardDetail}>
               <span className={styles.detailLabel}>Telefone:</span>
               <span className={styles.detailValue}>{user.phone}</span>
             </div>
           )}
-          
+
           {user.cpf && (
             <div className={styles.cardDetail}>
               <span className={styles.detailLabel}>CPF:</span>
               <span className={styles.detailValue}>{user.cpf}</span>
             </div>
           )}
-          
+
           <div className={`${styles.cardDetail} ${styles.detailGrow}`}>
             <span className={styles.detailLabel}>Cadastro:</span>
             <div className={styles.dateTimeContainer}>
@@ -294,15 +299,18 @@ export default function OrganizationUsersPage() {
     );
   };
 
-  return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.container}>
-        <PageHeader
-          title="Usuários da Organização"
-          description="Gerencie os usuários vinculados à sua organização"
-          icon={<FaUsers className={styles.headerIcon} />}
+  const MainContent = () => {
+    return (
+      <>
+        <HeaderContentTitle
+          eventData={{
+            eventLogoUrl: activeEvent?.logoUrl,
+            eventName: activeEvent?.shortName
+          }}
+          subtitle="Gerencie os usuários vinculados à sua organização"
+          fallbackTitle="Gerencie os usuários vinculados à sua organização"
+          background="linear-gradient(135deg, rgba(var(--paper-success-rgb), 1) 0%, var(--paper-success-dark) 100%)"
         />
-
         {loading && !users.length ? (
           <div className={styles.loadingContainer}>
             <FaSpinner className={styles.spinnerIcon} />
@@ -316,7 +324,7 @@ export default function OrganizationUsersPage() {
             </Button>
           </div>
         ) : (
-          <>
+          <div className={styles.container}>
             <div className={styles.contextInfo}>
               {organization && (
                 <div className={styles.organizationInfo}>
@@ -339,8 +347,8 @@ export default function OrganizationUsersPage() {
             </div>
 
             <div className={styles.controlBar}>
-              <button 
-                onClick={toggleFilters} 
+              <button
+                onClick={toggleFilters}
                 className={styles.filterToggleButton}
                 aria-expanded={filtersVisible}
                 aria-label={filtersVisible ? "Ocultar filtros" : "Mostrar filtros"}
@@ -351,7 +359,7 @@ export default function OrganizationUsersPage() {
                   <>Filtros e Busca <FaFilter className={styles.toggleIcon} /></>
                 )}
               </button>
-              
+
               {/* Botões para alternar entre modo tabela e cards (visível apenas no desktop) */}
               <div className={styles.viewToggleContainer}>
                 <button
@@ -456,8 +464,7 @@ export default function OrganizationUsersPage() {
                   <thead>
                     <tr>
                       <th>Usuário</th>
-                      <th>Email</th>
-                      <th>Telefone</th>
+                      <th>Email/Celular</th>
                       <th>Cadastro</th>
                       <th>Trabalhos</th>
                     </tr>
@@ -469,14 +476,18 @@ export default function OrganizationUsersPage() {
                           <td>
                             <div className={styles.userInfo}>
                               {renderUserIcon(user)}
-                              <div className={styles.userName}>
-                                {user.name}
+                              <div className={styles.userNameCPF}>
+                                {<span className={styles.userName}>CPF: {user.name}</span>}
                                 {user.cpf && <span className={styles.userCpf}>CPF: {user.cpf}</span>}
                               </div>
                             </div>
                           </td>
-                          <td>{user.email}</td>
-                          <td>{user.phone || '—'}</td>
+                          <td>
+                            <div className={styles.userEmailPhone}>
+                              <span className={styles.userEmail}>{user.email}</span>
+                              {user.phone && <span className={styles.userPhone}>{user.phone}</span>}
+                            </div>
+                          </td>
                           <td>
                             <div className={styles.dateTimeContainer}>
                               <div className={styles.dateValue}>{formatDate(user.createdAt)}</div>
@@ -578,9 +589,20 @@ export default function OrganizationUsersPage() {
                 Exibindo {users.length} de {pagination.total} usuário{pagination.total !== 1 ? 's' : ''}
               </p>
             </div>
-          </>
+          </div>
         )}
-      </div>
-    </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {loading
+        ? <LoadingSpinner />
+        : <PageContainer>
+            <MainContent />
+          </PageContainer>
+      }
+    </>
   );
 }
