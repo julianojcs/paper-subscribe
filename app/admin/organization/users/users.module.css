@@ -273,18 +273,23 @@
 
   /* Icon and Name columns*/
   &:nth-child(1) {
-    max-width: calc(2.5rem + 12rem);
+    max-width: 2.5rem;
+  }
+
+  /* Icon and Name columns*/
+  &:nth-child(2) {
+    max-width: 12rem;
   }
 
   /* Email/phone column */
-  &:nth-child(2) {
+  &:nth-child(3) {
     max-width: 12rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
 
   /* Register column */
-  &:nth-child(3) {
+  &:nth-child(4) {
     width: 5.5rem;
     max-width: 6.5rem;
     word-wrap: break-word;
@@ -292,7 +297,7 @@
   }
 
   /* Paper column */
-  &:nth-child(4) {
+  &:nth-child(5) {
     justify-items: center;
   }
 }
