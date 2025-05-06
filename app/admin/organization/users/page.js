@@ -4,20 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
-  FaSearch,
-  FaFilter,
-  FaUsers,
-  FaSortAmountDown,
-  FaSortAmountUp,
-  FaUserShield,
-  FaUser,
-  FaSpinner,
-  FaFileAlt,
-  FaCalendarAlt,
-  FaBuilding,
-  FaTimes,
-  FaTable,
-  FaThLarge
+  FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserShield,
+  FaUserGraduate, FaSpinner, FaFileAlt, FaCalendarAlt, FaBuilding, FaTimes,
+  FaTable, FaThLarge, FaUserCog, FaUserTie, FaUserEdit
 } from 'react-icons/fa';
 
 import Button from '../../../components/ui/Button';
@@ -26,6 +15,7 @@ import NoAccessPage from '../../../components/ui/NoAccessPage';
 import Select from '../../../components/ui/Select';
 import Input from '../../../components/ui/Input';
 import Tooltip from '../../../components/ui/Tooltip';
+import UserRoleModal from '../../../components/ui/UserRoleModal';
 import styles from './users.module.css';
 import HeaderContentTitle from '../../../components/layout/HeaderContentTitle';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
@@ -59,17 +49,43 @@ export default function OrganizationUsersPage() {
   // Key para forçar re-renderização de componentes de Tooltip
   const [tooltipKey, setTooltipKey] = useState(0);
 
+  // Novo estado para gerenciamento de papel de usuário
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isUserRoleModalOpen, setIsUserRoleModalOpen] = useState(false);
+  const [roleChangeSuccess, setRoleChangeSuccess] = useState(null);
+
   const { data: session, status } = useSession();
   const router = useRouter();
 
   // Verificar permissão para acessar a página
   const [hasAccess, setHasAccess] = useState(false);
+  // Verificar se o usuário atual é admin
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  // Opções de papéis disponíveis
+  const roleOptions = [
+    { id: '', name: 'Todos' },
+    { id: 'ADMIN', name: 'Administrador' },
+    { id: 'MANAGER', name: 'Gerente' },
+    { id: 'REVIEWER', name: 'Revisor' },
+    { id: 'MEMBER', name: 'Membro' }
+  ];
+
+  const sortOptions = [
+    { id: 'name', name: 'Nome' },
+    { id: 'email', name: 'Email' },
+    { id: 'createdAt', name: 'Data de cadastro' },
+    { id: 'papersCount', name: 'Quantidade de trabalhos' }
+  ];
+
+  // Verificar permissões do usuário
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
+    } else if (status === 'authenticated') {
+      setIsAdmin(session.user.role === 'ADMIN');
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   // Efeito para detectar tamanho da tela e ajustar modo de visualização
   useEffect(() => {
@@ -79,9 +95,7 @@ export default function OrganizationUsersPage() {
       }
     };
 
-    // Configurar inicialmente
     handleResize();
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -109,8 +123,6 @@ export default function OrganizationUsersPage() {
         setActiveEvent(data.activeEvent);
         setPagination(data.pagination);
         setHasAccess(true);
-
-        // Incrementar tooltipKey para forçar recriação dos tooltips
         setTooltipKey(prevKey => prevKey + 1);
       } else {
         if (response.status === 403) {
@@ -134,10 +146,7 @@ export default function OrganizationUsersPage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Resetar para a página 1 ao realizar uma nova busca
     setPagination(prev => ({ ...prev, page: 1 }));
-
-    // Em dispositivos móveis, fechar os filtros após busca
     if (window.innerWidth < 768) {
       setFiltersVisible(false);
     }
@@ -149,14 +158,12 @@ export default function OrganizationUsersPage() {
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    // Scrollar para o topo da lista de usuários
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleRoleFilterChange = (e) => {
     setRoleFilter(e.target.value);
     setPagination(prev => ({ ...prev, page: 1 }));
-    // Reset tooltips quando o filtro mudar
     setTooltipKey(prevKey => prevKey + 1);
   };
 
@@ -167,21 +174,6 @@ export default function OrganizationUsersPage() {
   const toggleViewMode = () => {
     setViewMode(viewMode === 'table' ? 'card' : 'table');
   };
-
-  const roleOptions = [
-    { id: '', name: 'Todos' },
-    { id: 'ADMIN', name: 'Administradores' },
-    { id: 'MEMBER', name: 'Membros' },
-    { id: 'MANAGER', name: 'Gerente' },
-    { id: 'REVIEWER', name: 'Revisor' },
-  ];
-
-  const sortOptions = [
-    { id: 'name', name: 'Nome' },
-    { id: 'email', name: 'Email' },
-    { id: 'createdAt', name: 'Data de cadastro' },
-    { id: 'papersCount', name: 'Quantidade de trabalhos' }
-  ];
 
   // Formatação de data e hora
   const formatDate = (dateString) => {
@@ -194,46 +186,140 @@ export default function OrganizationUsersPage() {
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Exibir mensagem de acesso negado
-  if (status === 'authenticated' && !hasAccess && !loading) {
-    return (
-      <NoAccessPage
-        title="Acesso Restrito"
-        message="Você não tem permissão para acessar esta página. Apenas administradores podem visualizar usuários da organização."
-      />
-    );
-  }
+  // Novo - Manipuladores para alteração de role do usuário
+  const handleOpenUserRoleModal = (user) => {
+    setSelectedUser(user);
+    setIsUserRoleModalOpen(true);
+  };
+
+  const handleCloseUserRoleModal = () => {
+    setIsUserRoleModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleRoleChange = async ({ userId, newRole, password }) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ newRole, password })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result.error || 'Não foi possível alterar o papel do usuário.'
+        };
+      }
+
+      // Atualizar a lista de usuários localmente
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+
+      // Mostrar mensagem de sucesso temporária
+      setRoleChangeSuccess({
+        userId,
+        message: `Papel do usuário alterado com sucesso para ${getRoleName(newRole)}`
+      });
+
+      setTimeout(() => {
+        setRoleChangeSuccess(null);
+      }, 5000);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao alterar papel do usuário:', error);
+      return {
+        success: false,
+        error: 'Erro ao processar a solicitação. Tente novamente.'
+      };
+    }
+  };
+
+  // Função para obter o nome amigável do papel
+  const getRoleName = (roleId) => {
+    const role = roleOptions.find(r => r.id === roleId);
+    return role ? role.name : roleId;
+  };
 
   // Renderizar o ícone do usuário com Tooltip de forma segura
   const renderUserIcon = (user) => {
-    const isAdmin = user.role === 'ADMIN';
-    const tooltipContent = isAdmin ? 'Administrador' : 'Membro';
-    const avatarClass = isAdmin ? styles.adminAvatar : styles.memberAvatar;
+    let roleInfo, iconComponent;
+
+    switch (user.role) {
+      case 'ADMIN':
+        roleInfo = { name: 'Administrador', class: styles.adminAvatar };
+        iconComponent = <FaUserShield className={styles.roleIcon} />;
+        break;
+      case 'MANAGER':
+        roleInfo = { name: 'Gerente', class: styles.managerAvatar };
+        iconComponent = <FaUserTie className={styles.roleIcon} />;
+        break;
+      case 'REVIEWER':
+        roleInfo = { name: 'Revisor', class: styles.reviewerAvatar };
+        iconComponent = <FaUserEdit className={styles.roleIcon} />;
+        break;
+      default:
+        roleInfo = { name: 'Membro', class: styles.memberAvatar };
+        iconComponent = <FaUserGraduate className={styles.roleIcon} />;
+    }
 
     return (
       <div key={`user-icon-${user.id}-${tooltipKey}`}>
-        <Tooltip content={tooltipContent}>
-          <div className={avatarClass}>
-            {isAdmin ? (
-              <FaUserShield className={styles.roleIcon} />
-            ) : (
-              <FaUser className={styles.roleIcon} />
-            )}
+        <Tooltip content={roleInfo.name}>
+          <div className={roleInfo.class}>
+            {iconComponent}
           </div>
         </Tooltip>
       </div>
     );
   };
 
-  // Renderizar card compacto para mobile
-  const renderCompactCard = (user) => {
+  // Renderizar os botões de ação do usuário
+  const renderUserActions = (user) => {
+    if (user.id === session?.user?.id) return null;
+
     return (
-      <div key={`user-compact-card-${user.id}-${tooltipKey}`} className={styles.compactCard}>
+      <div className={styles.userActions}>
+        {isAdmin && (
+          <Button
+            variant="icon"
+            className={styles.actionButton}
+            onClick={() => handleOpenUserRoleModal(user)}
+            title="Alterar papel do usuário"
+          >
+            <FaUserCog />
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  // Renderizar card compacto para mobile com ações do usuário
+  const renderCompactCard = (user) => {
+    const isCurrentUserCard = user.id === session?.user?.id;
+    const showRoleSuccessMessage = roleChangeSuccess?.userId === user.id;
+
+    return (
+      <div
+        key={`user-compact-card-${user.id}-${tooltipKey}`}
+        className={`${styles.compactCard} ${isCurrentUserCard ? styles.currentUserCard : ''}`}
+      >
         <div className={styles.compactCardContent}>
           <div className={styles.compactUserInfo}>
             {renderUserIcon(user)}
             <div className={styles.compactUserDetails}>
-              <div className={styles.userName}>{user.name}</div>
+              <div className={styles.userName}>
+                {user.name}
+                {isCurrentUserCard && <span className={styles.currentUser}>(Você)</span>}
+              </div>
               <div className={styles.userCpf}>{user.cpf}</div>
               <div className={styles.userEmail}>{user.email}</div>
             </div>
@@ -247,19 +333,36 @@ export default function OrganizationUsersPage() {
               <FaFileAlt className={styles.paperIcon} />
               <span>{user.papersCount}</span>
             </div>
+            {renderUserActions(user)}
           </div>
         </div>
+
+        {showRoleSuccessMessage && (
+          <div className={styles.roleChangeSuccess}>
+            {roleChangeSuccess.message}
+          </div>
+        )}
       </div>
     );
   };
 
-  // Renderizar card normal para desktop (modo grid)
+  // Renderizar card normal para desktop (modo grid) com ações do usuário
   const renderDesktopCard = (user) => {
+    const isCurrentUserCard = user.id === session?.user?.id;
+    const showRoleSuccessMessage = roleChangeSuccess?.userId === user.id;
+
     return (
-      <div key={`user-desktop-card-${user.id}-${tooltipKey}`} className={styles.desktopCard}>
+      <div
+        key={`user-desktop-card-${user.id}-${tooltipKey}`}
+        className={`${styles.desktopCard} ${isCurrentUserCard ? styles.currentUserCard : ''}`}
+      >
         <div className={styles.cardHeader}>
           {renderUserIcon(user)}
-          <h3 className={styles.cardName}>{user.name}</h3>
+          <h3 className={styles.cardName}>
+            {user.name}
+            {isCurrentUserCard && <span className={styles.currentUser}>(Você)</span>}
+          </h3>
+          {renderUserActions(user)}
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardDetail}>
@@ -295,9 +398,25 @@ export default function OrganizationUsersPage() {
             <span>{user.papersCount} trabalho{user.papersCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
+
+        {showRoleSuccessMessage && (
+          <div className={styles.roleChangeSuccess}>
+            {roleChangeSuccess.message}
+          </div>
+        )}
       </div>
     );
   };
+
+  // Exibir mensagem de acesso negado
+  if (status === 'authenticated' && !hasAccess && !loading) {
+    return (
+      <NoAccessPage
+        title="Acesso Restrito"
+        message="Você não tem permissão para acessar esta página. Apenas administradores podem visualizar usuários da organização."
+      />
+    );
+  }
 
   const MainContent = () => {
     return (
@@ -360,7 +479,6 @@ export default function OrganizationUsersPage() {
                 )}
               </button>
 
-              {/* Botões para alternar entre modo tabela e cards (visível apenas no desktop) */}
               <div className={styles.viewToggleContainer}>
                 <button
                   onClick={() => setViewMode('table')}
@@ -439,7 +557,6 @@ export default function OrganizationUsersPage() {
               </div>
             </div>
 
-            {/* Resumo dos filtros aplicados - visível quando os filtros estão escondidos */}
             {!filtersVisible && (search || roleFilter || sortBy !== 'name' || sortOrder !== 'asc') && (
               <div className={styles.appliedFilters}>
                 <span>Filtros: </span>
@@ -457,7 +574,6 @@ export default function OrganizationUsersPage() {
               </div>
             )}
 
-            {/* Visualização de tabela (desktop) */}
             {viewMode === 'table' && (
               <div className={styles.usersTableContainer}>
                 <table className={styles.usersTable}>
@@ -466,45 +582,67 @@ export default function OrganizationUsersPage() {
                       <th>Usuário</th>
                       <th>Email/Celular</th>
                       <th>Cadastro</th>
-                      <th>Trabalhos</th>
+                      <th><FaFileAlt className={styles.paperIcon} /></th>
+                      {isAdmin && <th className={styles.actionsColumn}>Ações</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {users.length > 0 ? (
-                      users.map((user) => (
-                        <tr key={`user-row-${user.id}-${tooltipKey}`}>
-                          <td>
-                            <div className={styles.userInfo}>
-                              {renderUserIcon(user)}
-                              <div className={styles.userNameCPF}>
-                                {<span className={styles.userName}>CPF: {user.name}</span>}
-                                {user.cpf && <span className={styles.userCpf}>CPF: {user.cpf}</span>}
+                      users.map((user) => {
+                        const isCurrentUser = user.id === session?.user?.id;
+                        const showRoleSuccessMessage = roleChangeSuccess?.userId === user.id;
+
+                        return (
+                          <tr
+                            key={`user-row-${user.id}-${tooltipKey}`}
+                            className={isCurrentUser ? styles.currentUserRow : ''}
+                          >
+                            <td>
+                              <div className={styles.userInfo}>
+                                {renderUserIcon(user)}
+                                <div className={styles.userNameCPF}>
+                                  {<span className={styles.userName}>
+                                    {user.name}
+                                    {isCurrentUser && <span className={styles.currentUser}>(Você)</span>}
+                                  </span>}
+                                  {user.cpf && <span className={styles.userCpf}>CPF: {user.cpf}</span>}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.userEmailPhone}>
-                              <span className={styles.userEmail}>{user.email}</span>
-                              {user.phone && <span className={styles.userPhone}>{user.phone}</span>}
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.dateTimeContainer}>
-                              <div className={styles.dateValue}>{formatDate(user.createdAt)}</div>
-                              <div className={styles.timeValue}>{formatTime(user.createdAt)}</div>
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.papersCount}>
-                              <FaFileAlt className={styles.paperIcon} />
-                              <span>{user.papersCount}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                              {showRoleSuccessMessage && (
+                                <div className={styles.roleChangeSuccess}>
+                                  {roleChangeSuccess.message}
+                                </div>
+                              )}
+                            </td>
+                            <td>
+                              <div className={styles.userEmailPhone}>
+                                <span className={styles.userEmail}>{user.email}</span>
+                                {user.phone && <span className={styles.userPhone}>{user.phone}</span>}
+                              </div>
+                            </td>
+                            <td>
+                              <div className={styles.dateTimeContainer}>
+                                <div className={styles.dateValue}>{formatDate(user.createdAt)}</div>
+                                <div className={styles.timeValue}>{formatTime(user.createdAt)}</div>
+                              </div>
+                            </td>
+                            <td>
+                              <div className={styles.papersCount}>
+                                <FaFileAlt className={styles.paperIcon} />
+                                <span>{user.papersCount}</span>
+                              </div>
+                            </td>
+                            {isAdmin && (
+                              <td className={styles.actionsCell}>
+                                {!isCurrentUser && renderUserActions(user)}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan="5" className={styles.emptyState}>
+                        <td colSpan={isAdmin ? "5" : "4"} className={styles.emptyState}>
                           <p>Nenhum usuário encontrado com os filtros selecionados.</p>
                         </td>
                       </tr>
@@ -514,7 +652,6 @@ export default function OrganizationUsersPage() {
               </div>
             )}
 
-            {/* Visualização de cards para desktop (modo grid) */}
             {viewMode === 'card' && (
               <div className={styles.desktopCardGrid}>
                 {users.length > 0 ? (
@@ -527,7 +664,6 @@ export default function OrganizationUsersPage() {
               </div>
             )}
 
-            {/* Visualização compacta para mobile (sempre cards) */}
             <div className={styles.mobileCardList}>
               {users.length > 0 ? (
                 users.map(user => renderCompactCard(user))
@@ -591,13 +727,23 @@ export default function OrganizationUsersPage() {
             </div>
           </div>
         )}
+
+        {selectedUser && (
+          <UserRoleModal
+            isOpen={isUserRoleModalOpen}
+            onClose={handleCloseUserRoleModal}
+            user={selectedUser}
+            availableRoles={roleOptions.filter(r => r.id !== '')}
+            onRoleChange={handleRoleChange}
+          />
+        )}
       </>
     );
   }
 
   return (
     <>
-      {loading
+      {loading && !users.length
         ? <LoadingSpinner />
         : <PageContainer>
             <MainContent />

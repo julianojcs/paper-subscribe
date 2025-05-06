@@ -67,7 +67,7 @@
   --paper-primary-200: rgb(153, 172.2, 227);
   --paper-primary-300: rgb(102, 130.8, 213);
   --paper-primary-400: rgb(51, 89.4, 199);
-  --paper-primary-500: #0030b9;
+  --paper-primary-500: rgb(0, 48.0, 185);
   --paper-primary-600: rgb(0, 38.4, 148);
   --paper-primary-700: rgb(0, 28.8, 111);
   --paper-primary-800: rgb(0, 19.2, 74);
@@ -97,7 +97,7 @@
   --paper-warning-200: rgb(247.4, 195.8, 153);
   --paper-warning-300: rgb(243.6, 166.2, 102);
   --paper-warning-400: rgb(239.8, 136.6, 51);
-  --paper-warning-500: #ec6b00;
+  --paper-warning-500: rgb(236, 107.0, 0);
   --paper-warning-600: rgb(188.8, 85.6, 0);
   --paper-warning-700: rgb(141.6, 64.2, 0);
   --paper-warning-800: rgb(94.4, 42.8, 0);
@@ -107,7 +107,7 @@
   --paper-danger-200: rgb(241, 174.2, 180.6);
   --paper-danger-300: rgb(234, 133.8, 143.4);
   --paper-danger-400: rgb(227, 93.4, 106.2);
-  --paper-danger-500: #dc3545;
+  --paper-danger-500: rgb(220, 53.0, 70.0);
   --paper-danger-600: rgb(189.6, 56.4, 69);
   --paper-danger-700: rgb(142.2, 42.6, 52.8);
   --paper-danger-800: rgb(94.8, 28.8, 36);
@@ -153,7 +153,7 @@ main,
   /* Não mais necessário adicionar padding-top para compensar um header fixo */
   min-height: calc(100vh - 64px); /* Altura de viewport menos altura do header */
 }
-/* 
+/*
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

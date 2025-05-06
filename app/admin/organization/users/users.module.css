@@ -298,11 +298,12 @@
 }
 
 .usersTable th {
-  background-color: #f8fafc;
+  background-color: rgba(var(--paper-info-rgb), 0.1);
   font-weight: 600;
   color: #4a5568;
   font-size: 0.875rem;
   padding: 0.5rem 0.5rem;
+  text-align: center;
 }
 
 .usersTable td {
@@ -323,6 +324,21 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Estilos para status especiais de usuário */
+.currentUserRow,
+.currentUserCard {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.currentUser {
+  margin-left: 0.5rem;
+  font-size: 0.65rem;
+  color: var(--paper-danger-500);
+  font-weight: normal;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
 }
 
 /* Grid de cards para desktop */
@@ -436,6 +452,7 @@
 .userNameCPF {
   display: flex;
   flex-direction: column;
+  row-gap: 0.125rem;
 }
 
 .userName {
@@ -451,7 +468,6 @@
   font-size: 0.65rem;
   font-weight: 400;
   color: #718096;
-  margin-top: 0.125rem;
 }
 
 .userEmailPhone {
@@ -459,6 +475,7 @@
   flex-direction: column;
   font-size: 0.875rem;
   font-weight: 400;
+  row-gap: 0.125rem;
 }
 
 .userEmail {
@@ -480,39 +497,48 @@
   align-items: flex-end;
 }
 
-/* Cores para os avatares de usuários */
-.adminAvatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background-color: rgba(var(--paper-danger-rgb), 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid rgba(var(--paper-danger-rgb), 0.4);
-}
 
+/* Cores para os avatares de usuários */
+.adminAvatar,
+.managerAvatar,
+.reviewerAvatar,
 .memberAvatar {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background-color: rgba(var(--paper-success-rgb), 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(var(--paper-success-rgb), 0.4);
 }
 
-.adminAvatar .roleIcon {
-  color: rgba(var(--paper-danger-rgb), 0.8);
+.adminAvatar {
+  background-color: var(--paper-danger-100);
+  border: 1px solid var(--paper-danger-300);
+  color: var(--paper-danger-500);
+  font-size: 1.1rem;
 }
 
-.memberAvatar .roleIcon {
-  color: rgba(var(--paper-success-rgb), 0.8);
+.managerAvatar {
+  background-color: var(--paper-warning-100);
+  border: 1px solid var(--paper-warning-300);
+  color: var(--paper-warning-500);
+  font-size: 0.95rem;
 }
 
+.reviewerAvatar {
+  background-color: var(--paper-primary-100);
+  border: 1px solid var(--paper-primary-300);
+  color: var(--paper-primary-500);
+  font-size: 1.1rem;
+}
+
+.memberAvatar {
+  background-color: var(--paper-success-100);
+  border: 1px solid var(--paper-success-300);
+  color: var(--paper-success-500);
+  font-size: 0.9rem;
+}
 
 .detailGrow {
   flex-grow: 1;
@@ -557,6 +583,60 @@
   background-color: white;
   border-radius: 0.375rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para ações de usuário */
+.userActions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.actionsColumn {
+  width: 80px;
+}
+
+.actionsCell {
+  text-align: center;
+}
+
+.actionButton {
+  color: #64748b;
+  padding: 0.375rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  background: none;
+  width: 2rem;
+  height: 2rem;
+  min-height: unset;
+  font-size: 1.1rem;
+}
+
+.actionButton:hover {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.actionButton:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Mensagem de sucesso de alteração de papel */
+.roleChangeSuccess {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  animation: fadeInOut 5s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  10%, 90% { opacity: 1; }
 }
 
 /* Estilos para paginação */
