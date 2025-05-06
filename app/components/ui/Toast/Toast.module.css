@@ -1,0 +1,137 @@
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  min-width: 300px;
+  max-width: 400px;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s, transform 0.3s;
+  color: #333;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content {
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.iconContainer {
+  margin-right: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  font-size: 20px;
+}
+
+.message {
+  flex-grow: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  padding-right: 8px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  border-radius: 50%;
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.progressContainer {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.progressBar {
+  height: 100%;
+  transition: width 0.1s linear;
+}
+
+/* Estilos específicos para cada tipo de toast */
+.success {
+  border-left: 4px solid var(--paper-success);
+}
+
+.success .icon {
+  color: var(--paper-success);
+}
+
+.success .progressBar {
+  background-color: var(--paper-success);
+}
+
+.error {
+  border-left: 4px solid var(--paper-danger);
+}
+
+.error .icon {
+  color: var(--paper-danger);
+}
+
+.error .progressBar {
+  background-color: var(--paper-danger);
+}
+
+.info {
+  border-left: 4px solid var(--paper-info);
+}
+
+.info .icon {
+  color: var(--paper-info);
+}
+
+.info .progressBar {
+  background-color: var(--paper-info);
+}
+
+.warning {
+  border-left: 4px solid var(--paper-warning);
+}
+
+.warning .icon {
+  color: var(--paper-warning);
+}
+
+.warning .progressBar {
+  background-color: var(--paper-warning);
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 600px) {
+  .toast {
+    top: auto;
+    bottom: 24px;
+    left: 16px;
+    right: 16px;
+    min-width: 0;
+    max-width: none;
+    width: calc(100% - 32px);
+  }
+}
