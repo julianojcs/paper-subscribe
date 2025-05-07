@@ -9,7 +9,7 @@ import {
   FaSortAmountDown,
   FaSortAmountUp,
   FaUserShield,
-  FaUser,
+  FaUserGraduate,
   FaUserTie, // Para MANAGER
   FaUserEdit, // Para REVIEWER
   FaSpinner,
@@ -22,14 +22,17 @@ import {
 } from 'react-icons/fa';
 
 import Button from '../../../components/ui/Button';
-import NoAccessPage from '../../../components/ui/NoAccessPage';
 import Select from '../../../components/ui/Select';
 import Input from '../../../components/ui/Input';
 import Tooltip from '../../../components/ui/Tooltip';
+import UserRoleMenu from '../../../components/ui/UserRoleMenu';
+import PasswordConfirmModal from '../../../components/ui/PasswordConfirmModal';
 import styles from './users.module.css';
 import HeaderContentTitle from '../../../components/layout/HeaderContentTitle';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import PageContainer from '../../../components/layout/PageContainer';
+import { useToast } from '../../../../context/ToastContext';
+import { ToastType } from '../../../components/ui/Toast';
 
 export default function OrganizationUsersPage() {
   const [users, setUsers] = useState([]);
@@ -65,11 +68,31 @@ export default function OrganizationUsersPage() {
   // Verificar permissão para acessar a página
   const [hasAccess, setHasAccess] = useState(false);
 
+  // Estado para controlar o menu flutuante de papéis
+  const [activeRoleMenu, setActiveRoleMenu] = useState(null);
+
+  // Estado para controlar mudanças de papel
+  const [pendingRoleChange, setPendingRoleChange] = useState(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+
+  // Adicione este estado para controlar se o usuário atual é administrador
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const { addToast } = useToast();
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
+
+  // Adicione este useEffect logo após os outros useEffects existentes
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      // Verifica se o usuário atual tem papel de administrador
+      setIsAdmin(session.user.role === 'ADMIN');
+    }
+  }, [status, session]);
 
   // Efeito para detectar tamanho da tela e ajustar modo de visualização
   useEffect(() => {
@@ -170,8 +193,8 @@ export default function OrganizationUsersPage() {
 
   const roleOptions = [
     { id: '', name: 'Todos' },
-    { id: 'ADMIN', name: 'Administradores' },
-    { id: 'MEMBER', name: 'Membros' },
+    { id: 'ADMIN', name: 'Administrador' },
+    { id: 'MEMBER', name: 'Membro' },
     { id: 'MANAGER', name: 'Gerente' },
     { id: 'REVIEWER', name: 'Revisor' },
   ];
@@ -194,19 +217,124 @@ export default function OrganizationUsersPage() {
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Exibir mensagem de acesso negado
-  if (status === 'authenticated' && !hasAccess && !loading) {
-    return (
-      <NoAccessPage
-        title="Acesso Restrito"
-        message="Você não tem permissão para acessar esta página. Apenas administradores podem visualizar usuários da organização."
-      />
-    );
-  }
+  // Função para abrir/fechar o menu flutuante com destaque visual
+  const toggleRoleMenu = (userId) => {
+    // Se está abrindo um menu para um novo usuário
+    if (userId !== activeRoleMenu) {
+      // Destacar visualmente o elemento selecionado
+      setTimeout(() => {
+        const element = document.getElementById(`user-role-avatar-${userId}`);
+        if (element) {
+          // Verificar se o elemento está visível na viewport
+          const rect = element.getBoundingClientRect();
+          const isVisible = (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+          );
 
-  // Renderizar o ícone do usuário com Tooltip de forma segura
+          // Se não estiver visível, role suavemente para ele
+          if (!isVisible) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }, 100);
+    }
+
+    // Armazena o ID do usuário para o qual o menu está sendo exibido
+    setActiveRoleMenu(activeRoleMenu === userId ? null : userId);
+  };
+
+  // Função para obter o nome do papel
+  const getRoleName = (role) => {
+    const roleMap = {
+      ADMIN: 'Administrador',
+      MEMBER: 'Membro',
+      MANAGER: 'Gerente',
+      REVIEWER: 'Revisor'
+    };
+    return roleMap[role] || 'Desconhecido';
+  };
+
+  // Função para selecionar um papel no menu flutuante
+  const handleRoleSelect = (user, newRole) => {
+    setPendingRoleChange({
+      userId: user.id,
+      userName: user.name,
+      currentRole: user.role,
+      newRole,
+      fromRoleName: getRoleName(user.role),
+      toRoleName: getRoleName(newRole)
+    });
+    setPasswordModalOpen(true);
+    setActiveRoleMenu(null); // Fecha o menu flutuante
+  };
+
+  const handlePasswordConfirm = async (password) => {
+    if (!pendingRoleChange) return;
+
+    try {
+      setLoading(true);
+
+      // Usar o caminho correto da API
+      const response = await fetch(`/api/organization/users/${pendingRoleChange.userId}/role`, {
+        method: 'PUT',  // Usando PUT conforme implementado na API
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          newRole: pendingRoleChange.newRole,
+          password: password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Falha ao alterar o papel do usuário');
+      }
+
+      // Atualizar a lista de usuários localmente
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === pendingRoleChange.userId
+            ? { ...user, role: pendingRoleChange.newRole }
+            : user
+        )
+      );
+
+      // Substituindo alert por Toast
+      addToast(
+        `O papel do usuário ${pendingRoleChange.userName} foi alterado para ${pendingRoleChange.toRoleName} com sucesso!`,
+        ToastType.SUCCESS
+      );
+
+      // Incrementar tooltipKey para forçar recriação dos tooltips com os novos papéis
+      setTooltipKey(prevKey => prevKey + 1);
+    } catch (error) {
+      console.error('Erro ao alterar papel do usuário:', error);
+      // Substituindo alert por Toast para erros
+      addToast(`Erro: ${error.message}`, ToastType.ERROR);
+    } finally {
+      setPasswordModalOpen(false);
+      setPendingRoleChange(null);
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordModalClose = () => {
+    setPasswordModalOpen(false);
+    setPendingRoleChange(null);
+  };
+
+  // Exibir mensagem de acesso negado
+  // Renderizar o ícone do usuário com Tooltip de forma segura e clicável
   const renderUserIcon = (user) => {
     let roleInfo;
+
+    // Verifica se este é o avatar com o menu ativo
+    const isActiveMenu = user.id === activeRoleMenu;
 
     switch (user.role) {
       case 'ADMIN':
@@ -234,16 +362,50 @@ export default function OrganizationUsersPage() {
         roleInfo = {
           name: 'Membro',
           class: styles.memberAvatar,
-          icon: <FaUser className={styles.roleIcon} />
+          icon: <FaUserGraduate className={styles.roleIcon} />
         };
     }
 
+    // Verifica se o usuário é o próprio usuário logado
+    const isCurrentUser = user.id === session?.user?.id;
+
+    // Se for o próprio usuário, ou se o usuário atual não for admin, apenas renderiza o ícone sem ação
+    if (isCurrentUser || !isAdmin) {
+      return (
+        <div key={`user-icon-${user.id}-${tooltipKey}`}>
+          <Tooltip content={roleInfo.name}>
+            <div className={roleInfo.class}>
+              {roleInfo.icon}
+            </div>
+          </Tooltip>
+        </div>
+      );
+    }
+
+    // Se for outro usuário e o usuário atual for admin, torna o ícone clicável
     return (
-      <div key={`user-icon-${user.id}-${tooltipKey}`}>
-        <Tooltip content={roleInfo.name}>
-          <div className={roleInfo.class}>
+      <div key={`user-icon-${user.id}-${tooltipKey}`} className={styles.avatarContainer}>
+        <Tooltip content={`${roleInfo.name} (Clique para alterar)`}>
+          <button
+            id={`user-role-avatar-${user.id}`}
+            type="button"
+            className={`
+              ${roleInfo.class}
+              ${styles.clickableAvatar}
+              ${isActiveMenu ? styles.activeAvatar : ''}
+            `}
+            onClick={(e) => {
+              e.preventDefault(); // Previne o comportamento padrão
+              e.stopPropagation(); // Evita propagação do evento
+              toggleRoleMenu(user.id);
+            }}
+            aria-label={`Alterar papel de ${user.name}`}
+            aria-expanded={isActiveMenu}
+            style={{ anchorName: `--anchor-avatar-${user.id}` }}
+          >
             {roleInfo.icon}
-          </div>
+            {isActiveMenu && <span className={styles.avatarActiveDot}></span>}
+          </button>
         </Tooltip>
       </div>
     );
@@ -632,6 +794,49 @@ export default function OrganizationUsersPage() {
             <MainContent />
           </PageContainer>
       }
+
+      {/* Indicador de menu ativo */}
+      {/* {activeRoleMenu && (
+        <div className={styles.activeMenuIndicator}>
+          <span>Menu ativo para {users.find(u => u.id === activeRoleMenu)?.name}</span>
+          <button
+            className={styles.closeIndicatorButton}
+            onClick={() => setActiveRoleMenu(null)}
+          >
+            <FaTimes />
+          </button>
+        </div>
+      )} */}
+
+      {/* Portal para o menu flutuante */}
+      {activeRoleMenu !== null && (
+        <UserRoleMenu
+          isOpen={true}
+          anchorId={`user-role-avatar-${activeRoleMenu}`}
+          user={users.find(u => u.id === activeRoleMenu)}
+          availableRoles={roleOptions.filter(r => r.id !== '' && r.id !== users.find(u => u.id === activeRoleMenu)?.role)}
+          currentRole={users.find(u => u.id === activeRoleMenu)?.role || ''}
+          onRoleSelect={handleRoleSelect}
+          onClose={() => setActiveRoleMenu(null)}
+        />
+      )}
+
+      {/* Modal de confirmação com senha */}
+      {pendingRoleChange && (
+        <PasswordConfirmModal
+          isOpen={passwordModalOpen}
+          title="Confirmar alteração de privilégios"
+          message="Para garantir a segurança, informe sua senha para alterar os privilégios deste usuário."
+          confirmLabel="Alterar privilégios"
+          onConfirm={handlePasswordConfirm}
+          onCancel={handlePasswordModalClose}
+          user={{ name: pendingRoleChange.userName }}
+          actionDetails={{
+            fromRoleName: pendingRoleChange.fromRoleName,
+            toRoleName: pendingRoleChange.toRoleName
+          }}
+        />
+      )}
     </>
   );
 }
