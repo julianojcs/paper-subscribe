@@ -1,0 +1,151 @@
+/* app/components/ui/UserRoleMenu/UserRoleMenu.module.css */
+
+/* Estilos base do menu */
+.menu {
+  position: fixed;
+  z-index: 9999;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  min-width: 180px;
+  max-width: 280px;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@position-try flip-block {
+  position-area: start;
+}
+
+/* Suporte para posicionamento de âncora nativo */
+@supports (anchor-name: --anchor) {
+  .menu {
+    position: fixed;
+    anchor-name: var(--anchor-name);
+    position-anchor: var(--anchor-name);
+    position-anchor-try: var(--position-fallbacks);
+    position-area: viewport;
+    position-offset: var(--position-offset, 4px);
+  }
+}
+
+/* Resto dos estilos do menu */
+.menuContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.menuHeader {
+  display: flex;
+  flex-direction: row;
+  row-gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 0.5rem;
+  border-bottom: 2px solid rgba(var(--paper-light-rgb), 0.7);
+  background-color: rgba(var(--paper-light-rgb), 0.4);
+  max-width: 178px;
+}
+
+.menuAvatarName {
+  font-size: 0.75rem;
+  font-weight: 500;
+  height: 1.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 8rem;
+}
+
+.menuTitle {
+  font-size: 0.75rem;
+  color: var(--foreground);
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  max-width: 8rem;
+}
+
+.menuOptions {
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: rgba(var(--paper-light-rgb), 0.2);
+}
+
+.roleOption {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+  font-size: 0.875rem;
+  transition: background-color 0.15s;
+}
+
+.roleOption:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.roleOption:focus {
+  outline: none;
+  background-color: #f3f4f6;
+}
+
+.roleOption:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.activeRole {
+  background-color: #f0f9ff;
+  font-weight: 500;
+}
+
+.roleIcon {
+  font-size: 1rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.menuIcon {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.2rem;
+}
+
+/* Cores específicas para cada papel */
+.adminRole .roleIcon {
+  color: var(--paper-danger-500);
+  font-size: 1.1rem;
+}
+
+.managerRole .roleIcon {
+  color: var(--paper-warning-500);
+  font-size: 0.95rem;
+}
+
+.reviewerRole .roleIcon {
+  color: var(--paper-primary-500);
+  font-size: 1.1rem;
+}
+
+.memberRole .roleIcon {
+  color: var(--paper-success-500);
+  font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
