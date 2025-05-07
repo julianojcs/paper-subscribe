@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef } from 'react';
 import { FaEye, FaEyeSlash, FaThumbtack, FaTimes } from 'react-icons/fa';
 import usePasswordValidation from '../../hooks/usePasswordValidation';
 import styles from './PasswordInput.module.css';
 import Tooltip from './Tooltip';
 
-export default function PasswordInput({
+const PasswordInput = forwardRef(({
   label,
   id,
   placeholder,
@@ -24,7 +24,7 @@ export default function PasswordInput({
   onValidationChange = () => {},
   className,
   ...rest
-}) {
+}, ref) => {
   // Estados locais para controle de UI
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -87,6 +87,7 @@ export default function PasswordInput({
 
       <div className={styles.inputWrapper}>
         <input
+          ref={ref} // Adicione esta linha
           id={id}
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
@@ -163,4 +164,8 @@ export default function PasswordInput({
       </div>
     </div>
   );
-}
+});
+
+PasswordInput.displayName = 'PasswordInput';
+
+export default PasswordInput;
