@@ -15,6 +15,28 @@
   color: #333;
 }
 
+.toast.paused {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
+
+.toast.paused .progressBar {
+  /* Quando pausado, adicionamos uma animação pulsante sutil */
+  animation: pulseProgress 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseProgress {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
 .visible {
   opacity: 1;
   transform: translateY(0);
