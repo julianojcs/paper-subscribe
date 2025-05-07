@@ -6,7 +6,7 @@ import { verifyPassword } from '../../../../../lib/auth';
 
 export async function PUT(request, context) {
   try {
-    const params = context.params;
+    const params = await context.params;
     const userId = params.id;
     const session = await getServerSession(authOptions);
 
