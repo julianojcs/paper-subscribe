@@ -1,0 +1,690 @@
+/* help.module.css */
+
+.helpContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.helpNav {
+  display: flex;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.navButton:hover {
+  color: #2563eb;
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.activeNavButton {
+  color: #2563eb;
+  position: relative;
+}
+
+.activeNavButton::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #2563eb;
+}
+
+.navIcon {
+  margin-right: 0.5rem;
+}
+
+.helpContent {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilos para seção Primeiros Passos */
+.gettingStarted h2,
+.paperStatus h2,
+.faqSection h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.gettingStarted h2::after,
+.paperStatus h2::after,
+.faqSection h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: #2563eb;
+}
+
+.card {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #2563eb;
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.card p {
+  margin: 0;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.step {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stepNumber {
+  position: absolute;
+  top: -15px;
+  left: 20px;
+  width: 30px;
+  height: 30px;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.step h4 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #1e293b;
+  font-size: 1.1rem;
+}
+
+.step p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.userTips {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.userTips h3 {
+  margin-top: 0;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.userTips ul {
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.userTips li {
+  margin-bottom: 0.5rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+/* Estilos para seção Status dos Papers */
+.statusFlow {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 3rem 0;
+}
+
+.flowArrow {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #cbd5e1, #3b82f6, #cbd5e1);
+  z-index: 1;
+}
+
+.statusDot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.statusDot:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.statusDot::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dotIcon {
+  font-size: 1rem;
+  color: white;
+}
+
+/* Ajustar cores de fundo para cada status */
+.statusDot[data-status="DRAFT"] {
+  border-color: #64748b;
+  background-color: #64748b;
+}
+
+.statusDot[data-status="PENDING"] {
+  border-color: #f59e0b;
+  background-color: #f59e0b;
+}
+
+.statusDot[data-status="UNDER_REVIEW"] {
+  border-color: #3b82f6;
+  background-color: #3b82f6;
+}
+
+.statusDot[data-status="REVISION_REQUIRED"] {
+  border-color: #8b5cf6;
+  background-color: #8b5cf6;
+}
+
+.statusDot[data-status="ACCEPTED"] {
+  border-color: #10b981;
+  background-color: #10b981;
+}
+
+.statusDot[data-status="REJECTED"] {
+  border-color: #ef4444;
+  background-color: #ef4444;
+}
+
+.statusDot[data-status="PUBLISHED"] {
+  border-color: #14b8a6;
+  background-color: #14b8a6;
+}
+
+.statusDot[data-status="WITHDRAWN"] {
+  border-color: #6b7280;
+  background-color: #6b7280;
+}
+
+.statusBranch {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+
+  & > div {
+    position: relative;
+  }
+
+  & > div:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    width: 2px;
+    height: 20px;
+    background-color: #cbd5e1;
+  }
+}
+
+.statusWithdraw {
+  position: relative;
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.withdrawArrow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background-color: #cbd5e1;
+}
+
+.statusList {
+  margin-top: 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.statusCard {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.statusHeader {
+  display: flex;
+  padding: 1rem;
+  cursor: pointer;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.statusHeader:hover {
+  background-color: #f8fafc;
+}
+
+.statusIconWrapper {
+  margin-right: 1rem;
+}
+
+.statusIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.statusIcon[data-status="DRAFT"] {
+  background-color: #64748b;
+}
+
+.statusIcon[data-status="PENDING"] {
+  background-color: #f59e0b;
+}
+
+.statusIcon[data-status="UNDER_REVIEW"] {
+  background-color: #3b82f6;
+}
+
+.statusIcon[data-status="REVISION_REQUIRED"] {
+  background-color: #8b5cf6;
+}
+
+.statusIcon[data-status="ACCEPTED"] {
+  background-color: #10b981;
+}
+
+.statusIcon[data-status="REJECTED"] {
+  background-color: #ef4444;
+}
+
+.statusIcon[data-status="PUBLISHED"] {
+  background-color: #14b8a6;
+}
+
+.statusIcon[data-status="WITHDRAWN"] {
+  background-color: #6b7280;
+}
+
+.statusTitleWrapper {
+  flex: 1;
+}
+
+.statusTitleWrapper h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+}
+
+.statusTitleWrapper p {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.statusToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.expandedStatus .statusToggle {
+  transform: rotate(180deg);
+}
+
+.statusDetails {
+  max-height: 0;
+  overflow: hidden;
+  background-color: #f8fafc;
+  border-top: 1px solid transparent;
+  padding: 0 1rem;
+  /* Configurar os paddings com valor 0 inicialmente */
+  padding-top: 0;
+  padding-bottom: 0;
+  /* Adicionar transições específicas para os paddings */
+  transition-property: max-height, padding-top, padding-bottom, border-top-color;
+  transition-duration: 0.3s, 0.2s, 0.2s, 0.2s;
+  transition-timing-function: ease-out;
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
+.expandedStatus .statusDetails {
+  max-height: 500px;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-top-color: #e2e8f0;
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
+/* Quando está fechando (perdendo a classe .expandedStatus) */
+.statusCard:not(.expandedStatus) .statusDetails {
+  transition-delay: 0s, 0.2s, 0.2s, 0s; /* Atraso para os paddings no fechamento */
+}
+
+.statusDetails ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.statusDetails li {
+  margin-bottom: 0.5rem;
+  color: #475569;
+}
+
+.nextStatus {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Estilos para seção FAQ */
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faqItem {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.faqQuestion {
+  display: flex;
+  padding: 1.25rem;
+  cursor: pointer;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.faqQuestion:hover {
+  background-color: #f8fafc;
+}
+
+.faqQuestion h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+  flex: 1;
+}
+
+.faqQuestion svg {
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.activeFaq .faqQuestion svg {
+  transform: rotate(180deg);
+}
+
+.faqAnswer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background-color: #f8fafc;
+  border-top: 1px solid transparent;
+  padding: 0 1.25rem;
+  /* Configurar os paddings com valor 0 inicialmente */
+  padding-top: 0;
+  padding-bottom: 0;
+  /* Adicionar transições específicas para os paddings */
+  transition-property: max-height, padding-top, padding-bottom, border-top-color;
+  transition-duration: 0.3s, 0.2s, 0.2s, 0.2s;
+  transition-timing-function: ease-out;
+  /* O padding só começa a diminuir depois que a altura começa a diminuir */
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
+.activeFaq .faqAnswer {
+  max-height: 300px;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-top-color: #e2e8f0;
+  /* Na abertura, o padding começa a aumentar imediatamente */
+  /* No fechamento, o padding só começa a diminuir depois de um atraso */
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
+/* Quando está fechando (perdendo a classe .activeFaq) */
+.faqItem:not(.activeFaq) .faqAnswer {
+  transition-delay: 0s, 0.2s, 0.2s, 0s; /* Atraso para os paddings no fechamento */
+}
+
+.faqAnswer p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.helpContact {
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.helpContact h3 {
+  margin-top: 0;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.helpContact p {
+  margin: 0;
+  color: #475569;
+}
+
+.helpContact a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.helpContact a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Footer para link do site oficial */
+.footer {
+  margin-top: 2rem;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footer a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.footer a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .helpNav {
+    justify-content: center;
+  }
+
+  .stepGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .helpContent {
+    padding: 1.5rem;
+  }
+
+  .statusFlow {
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 2rem 0;
+    gap: 1.5rem;
+  }
+
+  .flowArrow {
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    height: auto;
+    left: 20px;
+    right: auto;
+    background: linear-gradient(to bottom, #cbd5e1, #3b82f6, #cbd5e1);
+  }
+
+  .statusDot {
+    margin-left: 20px;
+  }
+
+  .statusDot::after {
+    left: 50px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .statusBranch {
+    margin-left: 40px;
+    gap: 1.5rem;
+  }
+
+  .branchItem::before {
+    top: 50%;
+    left: -40px;
+    width: 40px;
+    height: 2px;
+  }
+
+  .statusWithdraw {
+    margin-top: 1.5rem;
+    margin-left: 20px;
+  }
+
+  .withdrawArrow {
+    top: 50%;
+    left: -40px;
+    width: 40px;
+    height: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .helpNav {
+    padding: 0.5rem;
+  }
+
+  .navButton {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .helpContent {
+    padding: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .gettingStarted h2,
+  .paperStatus h2,
+  .faqSection h2 {
+    font-size: 1.5rem;
+  }
+}

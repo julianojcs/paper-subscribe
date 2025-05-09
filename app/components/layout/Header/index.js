@@ -6,7 +6,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import styles from './Header.module.css';
 import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt,
-         FaHome, FaUsers, FaCog, FaBuilding, FaCaretDown, FaCalendarAlt } from 'react-icons/fa';
+         FaHome, FaUsers, FaCog, FaBuilding, FaCaretDown, FaCalendarAlt,
+         FaQuestionCircle } from 'react-icons/fa';
 
 const Header = () => {
   const { data: session } = useSession();
@@ -218,98 +219,112 @@ const Header = () => {
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <nav className={styles.nav}>
-              <Link
-                href="/"
-                className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
-              >
-                <FaHome className={styles.navIcon} />
-                <span>Home</span>
-              </Link>
+              {/* Item de Ajuda no canto esquerdo */}
+              <div className={styles.leftNavItems}>
+                <Link
+                  href="/help"
+                  className={`${styles.navLink} ${isActive('/help') ? styles.activeLink : ''}`}
+                >
+                  <FaQuestionCircle className={styles.navIcon} />
+                  <span>Ajuda</span>
+                </Link>
+              </div>
 
-              {session ? (
-                <>
-                  <Link
-                    href="/paper"
-                    className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
-                  >
-                    <FaFileAlt className={styles.navIcon} />
-                    <span>Meus Trabalhos</span>
-                  </Link>
+              {/* Itens de navegação principais à direita */}
+              <div className={styles.rightNavItems}>
+                <Link
+                  href="/"
+                  className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
+                >
+                  <FaHome className={styles.navIcon} />
+                  <span>Home</span>
+                </Link>
 
-                  <Link
-                    href="/paper/subscribe"
-                    className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
-                  >
-                    <FaCloudUploadAlt className={styles.navIcon} />
-                    <span>Enviar Trabalho</span>
-                  </Link>
+                {session ? (
+                  <>
+                    <Link
+                      href="/paper"
+                      className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
+                    >
+                      <FaFileAlt className={styles.navIcon} />
+                      <span>Meus Trabalhos</span>
+                    </Link>
 
-                  {/* Menu da Empresa para administradores */}
-                  {isAdmin && (
-                    <div className={styles.adminMenuContainer} ref={adminMenuRef}>
-                      <a
-                        href="#"
-                        className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
-                        onClick={toggleAdminSubmenu}
-                      >
-                        <FaBuilding className={styles.navIcon} />
-                        <span>Empresa</span>
-                        <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
-                      </a>
+                    <Link
+                      href="/paper/subscribe"
+                      className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                    >
+                      <FaCloudUploadAlt className={styles.navIcon} />
+                      <span>Enviar Trabalho</span>
+                    </Link>
 
-                      <div className={`${styles.submenuContainer} ${adminSubmenuOpen ? styles.submenuVisible : ''}`}>
-                        <Link
-                          href="/admin/organization/users"
-                          className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
+                    {/* Menu da Empresa para administradores */}
+                    {isAdmin && (
+                      <div className={styles.adminMenuContainer} ref={adminMenuRef}>
+                        <a
+                          href="#"
+                          className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
+                          onClick={toggleAdminSubmenu}
                         >
-                          <FaUsers className={styles.submenuIcon} />
-                          <span>Usuários</span>
-                        </Link>
+                          <FaBuilding className={styles.navIcon} />
+                          <span>Empresa</span>
+                          <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
+                        </a>
 
-                        <Link
-                          href="/admin/organization/settings"
-                          className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
-                        >
-                          <FaCog className={styles.submenuIcon} />
-                          <span>Configurações</span>
-                        </Link>
+                        <div className={`${styles.submenuContainer} ${adminSubmenuOpen ? styles.submenuVisible : ''}`}>
+                          <Link
+                            href="/admin/organization/users"
+                            className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
+                          >
+                            <FaUsers className={styles.submenuIcon} />
+                            <span>Usuários</span>
+                          </Link>
 
-                        <Link
-                          href="/admin/organization/events"
-                          className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
-                        >
-                          <FaCalendarAlt className={styles.submenuIcon} />
-                          <span>Eventos</span>
-                        </Link>
+                          <Link
+                            href="/admin/organization/settings"
+                            className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
+                          >
+                            <FaCog className={styles.submenuIcon} />
+                            <span>Configurações</span>
+                          </Link>
+
+                          <Link
+                            href="/admin/organization/events"
+                            className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
+                          >
+                            <FaCalendarAlt className={styles.submenuIcon} />
+                            <span>Eventos</span>
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
+                    <Link
+                      href="/profile"
+                      className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                    >
+                      <FaUser className={styles.navIcon} />
+                      <span>Perfil</span>
+                    </Link>
+
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/login' })}
+                      className={styles.signOutButton}
+                    >
+                      <FaSignOutAlt className={styles.navIcon} />
+                      <span>Sair</span>
+                    </button>
+                  </>
+                ) : (
                   <Link
-                    href="/profile"
-                    className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                    href="/login"
+                    className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
                   >
                     <FaUser className={styles.navIcon} />
-                    <span>Perfil</span>
+                    <span>Entrar</span>
                   </Link>
-
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
-                    className={styles.signOutButton}
-                  >
-                    <FaSignOutAlt className={styles.navIcon} />
-                    <span>Sair</span>
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
-                >
-                  <FaUser className={styles.navIcon} />
-                  <span>Entrar</span>
-                </Link>
-              )}
+                )}
+              </div>
             </nav>
           </div>
         </header>
@@ -346,99 +361,112 @@ const Header = () => {
           {menuOpen && (
             <div className={styles.mobileMenuContainer} ref={menuRef}>
               <nav className={styles.mobileNav}>
-                <Link
-                  href="/"
-                  className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
-                >
-                  <FaHome className={styles.navIcon} />
-                  <span>Home</span>
-                </Link>
+                <div className={styles.mobileNavTop}>
+                  <Link
+                    href="/"
+                    className={`${styles.navLink} ${isActive('/') ? styles.activeLink : ''}`}
+                  >
+                    <FaHome className={styles.navIcon} />
+                    <span>Home</span>
+                  </Link>
 
-                {session ? (
-                  <>
+                  {session ? (
+                    <>
+                      <Link
+                        href="/paper"
+                        className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
+                      >
+                        <FaFileAlt className={styles.navIcon} />
+                        <span>Meus Trabalhos</span>
+                      </Link>
+
+                      <Link
+                        href="/paper/subscribe"
+                        className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                      >
+                        <FaCloudUploadAlt className={styles.navIcon} />
+                        <span>Enviar Trabalho</span>
+                      </Link>
+
+                      {/* Menu da Empresa para administradores */}
+                      {isAdmin && (
+                        <>
+                          <button
+                            className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
+                            onClick={toggleAdminSubmenu}
+                          >
+                            <FaBuilding className={styles.navIcon} />
+                            <span>Empresa</span>
+                            <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
+                          </button>
+
+                          {adminSubmenuOpen && (
+                            <div className={styles.mobileSubmenu}>
+                              <Link
+                                href="/admin/organization/users"
+                                className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
+                              >
+                                <FaUsers className={styles.submenuIcon} />
+                                <span>Usuários</span>
+                              </Link>
+
+                              <Link
+                                href="/admin/organization/settings"
+                                className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
+                              >
+                                <FaCog className={styles.submenuIcon} />
+                                <span>Configurações</span>
+                              </Link>
+
+                              <Link
+                                href="/admin/organization/events"
+                                className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
+                              >
+                                <FaCalendarAlt className={styles.submenuIcon} />
+                                <span>Eventos</span>
+                              </Link>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      <Link
+                        href="/profile"
+                        className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                      >
+                        <FaUser className={styles.navIcon} />
+                        <span>Perfil</span>
+                      </Link>
+
+                      <button
+                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        className={styles.signOutButton}
+                      >
+                        <FaSignOutAlt className={styles.navIcon} />
+                        <span>Sair</span>
+                      </button>
+                    </>
+                  ) : (
                     <Link
-                      href="/paper"
-                      className={`${styles.navLink} ${isActive('/paper') ? styles.activeLink : ''}`}
-                    >
-                      <FaFileAlt className={styles.navIcon} />
-                      <span>Meus Trabalhos</span>
-                    </Link>
-
-                    <Link
-                      href="/paper/subscribe"
-                      className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
-                    >
-                      <FaCloudUploadAlt className={styles.navIcon} />
-                      <span>Enviar Trabalho</span>
-                    </Link>
-
-                    {/* Menu da Empresa para administradores */}
-                    {isAdmin && (
-                      <>
-                        <button
-                          className={`${styles.navLink} ${styles.adminLink} ${isAdminMenuActive() ? styles.activeLink : ''}`}
-                          onClick={toggleAdminSubmenu}
-                        >
-                          <FaBuilding className={styles.navIcon} />
-                          <span>Empresa</span>
-                          <FaCaretDown className={`${styles.submenuIndicator} ${adminSubmenuOpen ? styles.rotated : ''}`} />
-                        </button>
-
-                        {adminSubmenuOpen && (
-                          <div className={styles.mobileSubmenu}>
-                            <Link
-                              href="/admin/organization/users"
-                              className={`${styles.submenuLink} ${isActive('/admin/organization/users') ? styles.activeSubmenuLink : ''}`}
-                            >
-                              <FaUsers className={styles.submenuIcon} />
-                              <span>Usuários</span>
-                            </Link>
-
-                            <Link
-                              href="/admin/organization/settings"
-                              className={`${styles.submenuLink} ${isActive('/admin/organization/settings') ? styles.activeSubmenuLink : ''}`}
-                            >
-                              <FaCog className={styles.submenuIcon} />
-                              <span>Configurações</span>
-                            </Link>
-
-                            <Link
-                              href="/admin/organization/events"
-                              className={`${styles.submenuLink} ${isActive('/admin/organization/events') ? styles.activeSubmenuLink : ''}`}
-                            >
-                              <FaCalendarAlt className={styles.submenuIcon} />
-                              <span>Eventos</span>
-                            </Link>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    <Link
-                      href="/profile"
-                      className={`${styles.navLink} ${isActive('/profile') ? styles.activeLink : ''}`}
+                      href="/login"
+                      className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
                     >
                       <FaUser className={styles.navIcon} />
-                      <span>Perfil</span>
+                      <span>Entrar</span>
                     </Link>
+                  )}
+                </div>
 
-                    <button
-                      onClick={() => signOut({ callbackUrl: '/login' })}
-                      className={styles.signOutButton}
-                    >
-                      <FaSignOutAlt className={styles.navIcon} />
-                      <span>Sair</span>
-                    </button>
-                  </>
-                ) : (
+                {/* Item de Ajuda posicionado no fim do menu mobile */}
+                <div className={styles.mobileNavBottom}>
                   <Link
-                    href="/login"
-                    className={`${styles.navLink} ${isActive('/login') ? styles.activeLink : ''}`}
+                    href="/help"
+                    className={`${styles.navLink} ${isActive('/help') ? styles.activeLink : ''}`}
                   >
-                    <FaUser className={styles.navIcon} />
-                    <span>Entrar</span>
+                    <FaQuestionCircle className={styles.navIcon} />
+                    <span>Ajuda</span>
                   </Link>
-                )}
+                </div>
               </nav>
             </div>
           )}
