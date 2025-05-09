@@ -36,7 +36,11 @@ export async function GET(request, context) {
           select: {
             id: true,
             name: true,
-            logoUrl: true
+            logoUrl: true,
+            website: true,
+            email: true,
+            phone: true,
+            address: true
           }
         },
         areas: {
