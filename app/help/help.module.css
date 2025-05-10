@@ -184,6 +184,12 @@
 }
 
 /* Estilos para seção Status dos Papers */
+.flowContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .statusFlow {
   position: relative;
   display: flex;
@@ -302,7 +308,6 @@
 
 .statusWithdraw {
   position: relative;
-  margin-top: 3rem;
   display: flex;
   justify-content: center;
 }
@@ -357,35 +362,35 @@
 }
 
 .statusIcon[data-status="DRAFT"] {
-  background-color: #64748b;
+  background-color: rgba(var(--paper-status-color-draft-rgb), 0.1);
 }
 
 .statusIcon[data-status="PENDING"] {
-  background-color: #f59e0b;
+  background-color: rgba(var(--paper-status-color-pending-rgb), 0.1);
 }
 
 .statusIcon[data-status="UNDER_REVIEW"] {
-  background-color: #3b82f6;
+  background-color: rgba(var(--paper-status-color-under-review-rgb), 0.1);
 }
 
 .statusIcon[data-status="REVISION_REQUIRED"] {
-  background-color: #8b5cf6;
+  background-color: rgba(var(--paper-status-color-revision-required-rgb), 0.1);
 }
 
 .statusIcon[data-status="ACCEPTED"] {
-  background-color: #10b981;
+  background-color: rgba(var(--paper-status-color-accepted-rgb), 0.1);
 }
 
 .statusIcon[data-status="REJECTED"] {
-  background-color: #ef4444;
+  background-color: rgba(var(--paper-status-color-rejected-rgb), 0.1);
 }
 
 .statusIcon[data-status="PUBLISHED"] {
-  background-color: #14b8a6;
+  background-color: rgba(var(--paper-status-color-publisher-rgb), 0.1);
 }
 
 .statusIcon[data-status="WITHDRAWN"] {
-  background-color: #6b7280;
+  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 0.1);
 }
 
 .statusTitleWrapper {
@@ -413,7 +418,7 @@
 }
 
 .expandedStatus .statusToggle {
-  transform: rotate(180deg);
+  /* transform: rotate(180deg); */
 }
 
 .statusDetails {

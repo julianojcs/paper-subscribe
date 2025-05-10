@@ -163,41 +163,42 @@
   flex-shrink: 0;
 }
 
-.statusPending {
-  background-color: #fef3c7;
-  color: #92400e;
+/* Estilos para os status */
+.statusDraft,
+.statusPending,
+.statusRevisionRequired,
+.statusAccepted,
+.statusRejected,
+.statusPublished,
+.statusWithdrawn {
+  color: white;
 }
-
-.statusReviewing {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.statusAccepted {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.statusRejected {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.statusPublished {
-  background-color: #e0e7ff;
-  color: #3730a3;
-}
-
-/* Novos status */
 .statusDraft {
-  background-color: #e2e8f0;
-  color: #4a5568;
+  background-color: var(--paper-status-color-draft, #6c757d);
+}
+.statusPending {
+  background-color: var(--paper-status-color-pending, #f59e0b);
+}
+.statusUnderReview {
+  background-color: var(--paper-status-color-under-review, #3b82f6);
+}
+.statusRevisionRequired {
+  background-color: var(--paper-status-color-revision-required, #8b5cf6);
+}
+.statusAccepted {
+  background-color: var(--paper-status-color-accepted, #4ade80);
+}
+.statusRejected {
+  background-color: var(--paper-status-color-rejected, #ef4444);
+}
+.statusPublished {
+  background-color: var(--paper-status-color-publisher, #14b8a6);
+}
+.statusWithdrawn {
+  background-color: var(--paper-status-color-withdrawn, #495057);
 }
 
-.statusSubmitted {
-  background-color: #bee3f8;
-  color: #2c5282;
-}
+
 
 .paperMeta, .metaItem, .metaText {
   width: 100%;
@@ -384,92 +385,92 @@
   .pageWrapper {
     padding: 1rem 0.5rem;
   }
-  
+
   .container {
     padding: 1rem;
     margin: 1rem auto;
   }
-  
+
   .header {
     border-radius: 8px;
     padding: 1.5rem 1rem;
   }
-  
+
   .title {
     font-size: 1.5rem;
   }
-  
+
   .content {
     padding: 1.5rem 1rem;
   }
-  
+
   .paperControls {
     flex-direction: column;
     margin-bottom: 1.5rem;
   }
-  
+
   .welcomeSection {
     margin-right: 0;
     margin-bottom: 1rem;
     width: 100%;
   }
-  
+
   .newPaperButton {
     width: 100%;
   }
-  
+
   .newPaperButton button {
     width: 100%;
   }
-  
+
   .sectionTitle {
     font-size: 1.3rem;
   }
-  
+
   .sectionDescription {
     font-size: 0.95rem;
   }
-  
+
   .papersList {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .cardActions {
     padding: 0.75rem 1rem;
   }
-  
+
   .actionButton {
     width: 100%;
   }
-  
+
   .unauthenticatedContent {
     padding: 1.5rem 1rem;
     margin: 1rem auto;
   }
-  
+
   .authLinks button {
     width: 100%;
   }
-  
+
   .paperHeader {
     padding: 1rem 1rem 0.75rem;
     flex-direction: column;
   }
-  
+
   .cardTitle {
     margin-bottom: 0.5rem;
     margin-right: 0;
   }
-  
+
   .statusBadge {
     align-self: flex-start;
   }
-  
+
   .paperMeta {
     padding: 0.75rem 1rem;
   }
-  
+
   .paperAbstract {
     padding: 0.75rem 1rem;
   }
@@ -479,15 +480,15 @@
   .header {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .title {
     font-size: 1.3rem;
   }
-  
+
   .content {
     padding: 1.25rem 0.75rem;
   }
-  
+
   .cardTitle {
     font-size: 1rem;
   }
@@ -497,46 +498,46 @@
   .pageWrapper {
     background-color: #0f172a;
   }
-  
+
   .container {
     background-color: #1e293b;
   }
-  
+
   .sectionTitle, .subsectionTitle, .cardTitle {
     color: #e2e8f0;
   }
-  
+
   .sectionDescription {
     color: #94a3b8;
   }
-  
+
   .paperCard {
     background-color: #1e293b;
     border-color: #334155;
   }
-  
+
   .paperCard:hover {
     border-color: #475569;
   }
-  
+
   .paperHeader, .paperMeta {
     border-color: #334155;
   }
-  
+
   .paperAbstract, .metaText {
     color: #94a3b8;
   }
-  
+
   .emptyState, .unauthenticatedContent {
     background-color: #1e293b;
     color: #94a3b8;
   }
-  
+
   .loadingSpinner {
     border-color: rgba(71, 85, 105, 0.3);
     border-top-color: #3b82f6;
   }
-  
+
   .successMessage {
     background-color: rgba(16, 185, 129, 0.1);
     color: #34d399;

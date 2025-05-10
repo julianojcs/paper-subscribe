@@ -63,6 +63,55 @@
   --paper-dark-active: #24292e;
   --paper-dark-dark: #212529;
 
+  --paper-status-color-draft: #6c757d;
+  --paper-status-color-draft-rgb: 108, 117, 125;
+  --paper-status-color-draft-hover: #5a6268;
+  --paper-status-color-draft-active: #4e555b;
+  --paper-status-color-draft-dark: #343a40;
+
+  --paper-status-color-pending: #f59e0b;
+  --paper-status-color-pending-rgb: 245, 158, 11;
+  --paper-status-color-pending-hover: #eab308;
+  --paper-status-color-pending-active: #d97706;
+  --paper-status-color-pending-dark: #ca8a04;
+
+  --paper-status-color-under-review: #3b82f6;
+  --paper-status-color-under-review-rgb: 59, 130, 246;
+  --paper-status-color-under-review-hover: #2563eb;
+  --paper-status-color-under-review-active: #1d4ed8;
+  --paper-status-color-under-review-dark: #1e40af;
+
+  --paper-status-color-revision-required: #8b5cf6;
+  --paper-status-color-revision-required-rgb: 139, 92, 246;
+  --paper-status-color-revision-required-hover: #7c3aed;
+  --paper-status-color-revision-required-active: #6d28d9;
+  --paper-status-color-revision-required-dark: #5b21b6;
+
+  --paper-status-color-accepted: #4ade80;
+  --paper-status-color-accepted-rgb: 74, 222, 128;
+  --paper-status-color-accepted-hover: #3bbf77;
+  --paper-status-color-accepted-active: #36b24f;
+  --paper-status-color-accepted-dark: #2cae4f;
+
+  --paper-status-color-rejected: #ef4444;
+  --paper-status-color-rejected-rgb: 239, 68, 68;
+  --paper-status-color-rejected-hover: #dc2626;
+  --paper-status-color-rejected-active: #c62828;
+  --paper-status-color-rejected-dark: #b91c1c;
+
+  --paper-status-color-published: #14b8a6;
+  --paper-status-color-published-rgb: 20, 184, 166;
+  --paper-status-color-published-hover: #12a98c;
+  --paper-status-color-published-active: #0fae7a;
+  --paper-status-color-published-dark: #0f766e;
+
+  --paper-status-color-withdrawn: #495057;
+  --paper-status-color-withdrawn-rgb: 73, 80, 87;
+  --paper-status-color-withdrawn-hover: #3d4349;
+  --paper-status-color-withdrawn-active: #343a40;
+  --paper-status-color-withdrawn-dark: #212529;
+
+
   --paper-primary-100: rgb(204, 213.6, 241);
   --paper-primary-200: rgb(153, 172.2, 227);
   --paper-primary-300: rgb(102, 130.8, 213);
