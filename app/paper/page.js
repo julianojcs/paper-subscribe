@@ -98,12 +98,13 @@ console.log('session', session);
   const getStatusBadge = (status) => {
     const statusMap = {
       'DRAFT': { label: 'Rascunho', className: styles.statusDraft },
-      'SUBMITTED': { label: 'Enviado', className: styles.statusSubmitted },
-      'PENDING': { label: 'Em análise', className: styles.statusPending },
-      'REVIEWING': { label: 'Em revisão', className: styles.statusReviewing },
+      'PENDING': { label: 'Pendente', className: styles.statusPending },
+      'UNDER_REVIEW': { label: 'Em revisão', className: styles.underReview },
+      'REVISION_REQUIRED': { label: 'Revisão Necessária', className: styles.statusRevisionRequired },
       'ACCEPTED': { label: 'Aprovado', className: styles.statusAccepted },
       'REJECTED': { label: 'Recusado', className: styles.statusRejected },
-      'PUBLISHED': { label: 'Publicado', className: styles.statusPublished }
+      'PUBLISHED': { label: 'Publicado', className: styles.statusPublished },
+      'WITHDRAWN': { label: 'Retirado', className: styles.statusWithdrawn },
     };
 
     const statusInfo = statusMap[status] || { label: 'Desconhecido', className: '' };
