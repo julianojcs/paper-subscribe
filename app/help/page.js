@@ -410,84 +410,84 @@ export default function HelpPage() {
                       e saber o que esperar em cada etapa.
                     </p>
                   </div>
-
-                  <div className={styles.statusFlow}>
-                    <div className={styles.flowArrow}></div>
-                    <div
-                      className={styles.statusDot}
-                      data-status="DRAFT"
-                      data-label="Rascunho"
-                      onClick={() => handleStatusDotClick("DRAFT")}
-                    >
-                      <FaEdit className={styles.dotIcon} />
-                    </div>
-                    <div
-                      className={styles.statusDot}
-                      data-status="PENDING"
-                      data-label="Pendente"
-                      onClick={() => handleStatusDotClick("PENDING")}
-                    >
-                      <FaCloudUploadAlt className={styles.dotIcon} />
-                    </div>
-                    <div
-                      className={styles.statusDot}
-                      data-status="UNDER_REVIEW"
-                      data-label="Em Revisão"
-                      onClick={() => handleStatusDotClick("UNDER_REVIEW")}
-                    >
-                      <FaSearch className={styles.dotIcon} />
-                    </div>
-                    <div className={styles.statusBranch}>
-                      <div className={styles.branchItem}>
-                        <div
-                          className={styles.statusDot}
-                          data-status="REVISION_REQUIRED"
-                          data-label="Revisão Necessária"
-                          onClick={() => handleStatusDotClick("REVISION_REQUIRED")}
-                        >
-                          <FaExclamationCircle className={styles.dotIcon} />
+                  <div className={styles.flowContainer}>
+                    <div className={styles.statusFlow}>
+                      <div className={styles.flowArrow}></div>
+                      <div
+                        className={styles.statusDot}
+                        data-status="DRAFT"
+                        data-label="Rascunho"
+                        onClick={() => handleStatusDotClick("DRAFT")}
+                      >
+                        <FaEdit className={styles.dotIcon} />
+                      </div>
+                      <div
+                        className={styles.statusDot}
+                        data-status="PENDING"
+                        data-label="Pendente"
+                        onClick={() => handleStatusDotClick("PENDING")}
+                      >
+                        <FaCloudUploadAlt className={styles.dotIcon} />
+                      </div>
+                      <div
+                        className={styles.statusDot}
+                        data-status="UNDER_REVIEW"
+                        data-label="Em Revisão"
+                        onClick={() => handleStatusDotClick("UNDER_REVIEW")}
+                      >
+                        <FaSearch className={styles.dotIcon} />
+                      </div>
+                      <div className={styles.statusBranch}>
+                        <div className={styles.branchItem}>
+                          <div
+                            className={styles.statusDot}
+                            data-status="REVISION_REQUIRED"
+                            data-label="Revisão Necessária"
+                            onClick={() => handleStatusDotClick("REVISION_REQUIRED")}
+                          >
+                            <FaExclamationCircle className={styles.dotIcon} />
+                          </div>
+                        </div>
+                        <div className={styles.branchItem}>
+                          <div
+                            className={styles.statusDot}
+                            data-status="ACCEPTED"
+                            data-label="Aceito"
+                            onClick={() => handleStatusDotClick("ACCEPTED")}
+                          >
+                            <FaCheckCircle className={styles.dotIcon} />
+                          </div>
+                        </div>
+                        <div className={styles.branchItem}>
+                          <div
+                            className={styles.statusDot}
+                            data-status="REJECTED"
+                            data-label="Rejeitado"
+                            onClick={() => handleStatusDotClick("REJECTED")}
+                          >
+                            <FaBan className={styles.dotIcon} />
+                          </div>
                         </div>
                       </div>
-                      <div className={styles.branchItem}>
-                        <div
-                          className={styles.statusDot}
-                          data-status="ACCEPTED"
-                          data-label="Aceito"
-                          onClick={() => handleStatusDotClick("ACCEPTED")}
-                        >
-                          <FaCheckCircle className={styles.dotIcon} />
-                        </div>
-                      </div>
-                      <div className={styles.branchItem}>
-                        <div
-                          className={styles.statusDot}
-                          data-status="REJECTED"
-                          data-label="Rejeitado"
-                          onClick={() => handleStatusDotClick("REJECTED")}
-                        >
-                          <FaBan className={styles.dotIcon} />
-                        </div>
+                      <div
+                        className={styles.statusDot}
+                        data-status="PUBLISHED"
+                        data-label="Publicado"
+                        onClick={() => handleStatusDotClick("PUBLISHED")}
+                      >
+                        <FaFileUpload className={styles.dotIcon} />
                       </div>
                     </div>
-                    <div
-                      className={styles.statusDot}
-                      data-status="PUBLISHED"
-                      data-label="Publicado"
-                      onClick={() => handleStatusDotClick("PUBLISHED")}
-                    >
-                      <FaFileUpload className={styles.dotIcon} />
-                    </div>
-                  </div>
-
-                  <div className={styles.statusWithdraw}>
-                    <div className={styles.withdrawArrow}></div>
-                    <div
-                      className={styles.statusDot}
-                      data-status="WITHDRAWN"
-                      data-label="Retirado"
-                      onClick={() => handleStatusDotClick("WITHDRAWN")}
-                    >
-                      <FaTrashAlt className={styles.dotIcon} />
+                    <div className={styles.statusWithdraw}>
+                      <div className={styles.withdrawArrow}></div>
+                      <div
+                        className={styles.statusDot}
+                        data-status="WITHDRAWN"
+                        data-label="Retirado"
+                        onClick={() => handleStatusDotClick("WITHDRAWN")}
+                      >
+                        <FaTrashAlt className={styles.dotIcon} />
+                      </div>
                     </div>
                   </div>
 

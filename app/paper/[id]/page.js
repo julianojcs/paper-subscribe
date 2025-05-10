@@ -9,7 +9,7 @@ import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
   FaFileDownload, FaBuilding, FaTags, FaEdit, FaStethoscope,
-  FaFilePdf, FaArrowLeft,
+  FaFilePdf, FaArrowLeft, FaCloudUploadAlt,
   FaSuitcase
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
@@ -26,6 +26,7 @@ export default function PaperDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dynamicFields, setDynamicFields] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated' && id) {
@@ -95,6 +96,36 @@ export default function PaperDetailPage() {
   // Função para voltar à lista de papers
   const handleBack = () => {
     router.push('/paper');
+  };
+
+  // Função para submeter o trabalho
+  const handleSubmitPaper = async () => {
+    if (!paper?.id) return;
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/paper/${paper.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'PENDING',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao submeter trabalho');
+      }
+
+      // Redirecionar para a página de trabalhos
+      router.push('/paper?submitted=true'); // Parâmetro para mostrar mensagem de sucesso
+    } catch (error) {
+      console.error('Erro ao submeter trabalho:', error);
+      alert(`Erro ao submeter trabalho: ${error.message}`); // Feedback simples
+      setSubmitting(false);
+    }
   };
 
   // Definição do status com cores
@@ -520,23 +551,47 @@ export default function PaperDetailPage() {
 
           {/* Botões de ação */}
           <section className={styles.actionsSection}>
-            <Button
-              variant="secondary"
-              onClick={handleBack}
-              className={styles.actionButton}
-            >
-              Voltar para meus trabalhos
-            </Button>
-
-            {canEdit && (
+            <div className={styles.leftActions}>
               <Button
-                variant="primary"
-                onClick={() => router.push(`/paper/edit/${paper.id}`)}
+                variant="secondary"
+                onClick={handleBack}
                 className={styles.actionButton}
               >
-                <FaEdit className={styles.buttonIcon} /> Editar trabalho
+                <FaArrowLeft className={styles.buttonIcon} /> Voltar para meus trabalhos
               </Button>
-            )}
+            </div>
+
+            <div className={styles.rightActions}>
+              {paper.status === 'DRAFT' && (
+                <Button
+                  variant="primary"
+                  onClick={handleSubmitPaper}
+                  className={styles.submitButton}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt className={styles.buttonIcon} /> Submeter Trabalho
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {canEdit && (
+                <Button
+                  variant="primary"
+                  onClick={() => router.push(`/paper/edit/${paper.id}`)}
+                  className={styles.actionButton}
+                >
+                  <FaEdit className={styles.buttonIcon} /> Editar trabalho
+                </Button>
+              )}
+            </div>
           </section>
         </div>
       </div>
