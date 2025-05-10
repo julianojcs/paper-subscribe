@@ -362,35 +362,35 @@
 }
 
 .statusIcon[data-status="DRAFT"] {
-  background-color: rgba(var(--paper-status-color-draft-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-draft-rgb), 1);
 }
 
 .statusIcon[data-status="PENDING"] {
-  background-color: rgba(var(--paper-status-color-pending-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-pending-rgb), 1);
 }
 
 .statusIcon[data-status="UNDER_REVIEW"] {
-  background-color: rgba(var(--paper-status-color-under-review-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-under-review-rgb), 1);
 }
 
 .statusIcon[data-status="REVISION_REQUIRED"] {
-  background-color: rgba(var(--paper-status-color-revision-required-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
 }
 
 .statusIcon[data-status="ACCEPTED"] {
-  background-color: rgba(var(--paper-status-color-accepted-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-accepted-rgb), 1);
 }
 
 .statusIcon[data-status="REJECTED"] {
-  background-color: rgba(var(--paper-status-color-rejected-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-rejected-rgb), 1);
 }
 
 .statusIcon[data-status="PUBLISHED"] {
-  background-color: rgba(var(--paper-status-color-publisher-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-publisher-rgb), 1);
 }
 
 .statusIcon[data-status="WITHDRAWN"] {
-  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 0.1);
+  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
 }
 
 .statusTitleWrapper {
