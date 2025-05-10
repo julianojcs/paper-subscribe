@@ -195,7 +195,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 3rem 0;
+  margin: 1rem 0;
 }
 
 .flowArrow {
@@ -213,7 +213,6 @@
   height: 40px;
   border-radius: 50%;
   background-color: white;
-  border: 2px solid;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +230,7 @@
 .statusDot::after {
   content: attr(data-label);
   position: absolute;
-  bottom: -25px;
+  bottom: -21px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
@@ -246,44 +245,68 @@
 }
 
 /* Ajustar cores de fundo para cada status */
+
+.statusIcon[data-status="DRAFT"],
 .statusDot[data-status="DRAFT"] {
-  border-color: #64748b;
-  background-color: #64748b;
+  border-color: rgba(var(--paper-status-color-draft-rgb), 1);
+  background-color: rgba(var(--paper-status-color-draft-rgb), 1);
 }
 
-.statusDot[data-status="PENDING"] {
-  border-color: #f59e0b;
-  background-color: #f59e0b;
+.statusIcon[data-status="PENDING"],
+.statusDot[data-status="PENDING"]  {
+  border-color: rgba(var(--paper-status-color-pending-rgb), 1);
+  background-color: rgba(var(--paper-status-color-pending-rgb), 1);
 }
 
+.statusIcon[data-status="UNDER_REVIEW"],
 .statusDot[data-status="UNDER_REVIEW"] {
-  border-color: #3b82f6;
-  background-color: #3b82f6;
+  border-color: rgba(var(--paper-status-color-under-review-rgb), 1);
+  background-color: rgba(var(--paper-status-color-under-review-rgb), 1);
 }
 
+.statusIcon[data-status="REVISION_REQUIRED"],
 .statusDot[data-status="REVISION_REQUIRED"] {
-  border-color: #8b5cf6;
-  background-color: #8b5cf6;
+  border-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
+  background-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
+
+  &::before {
+    content: '?';
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    top: -8px;
+    right: -13px;
+    color: red;
+  }
 }
 
+.statusIcon[data-status="ACCEPTED"],
 .statusDot[data-status="ACCEPTED"] {
-  border-color: #10b981;
-  background-color: #10b981;
+  border-color: rgba(var(--paper-status-color-accepted-rgb), 1);
+  background-color: rgba(var(--paper-status-color-accepted-rgb), 1);
 }
 
+.statusIcon[data-status="REJECTED"],
 .statusDot[data-status="REJECTED"] {
-  border-color: #ef4444;
-  background-color: #ef4444;
+  border-color: rgba(var(--paper-status-color-rejected-rgb), 1);
+  background-color: rgba(var(--paper-status-color-rejected-rgb), 1);
 }
 
+.statusIcon[data-status="PUBLISHED"],
 .statusDot[data-status="PUBLISHED"] {
-  border-color: #14b8a6;
-  background-color: #14b8a6;
+  border-color: rgba(var(--paper-status-color-published-rgb), 1);
+  background-color: rgba(var(--paper-status-color-published-rgb), 1);
 }
 
+.statusIcon[data-status="WITHDRAWN"],
 .statusDot[data-status="WITHDRAWN"] {
-  border-color: #6b7280;
-  background-color: #6b7280;
+  border-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
+  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
 }
 
 .statusBranch {
@@ -306,6 +329,26 @@
   }
 }
 
+.statusBranch2 {
+  display: flex;
+  flex-direction: column;
+  gap: 7rem;
+
+  & > div {
+    position: relative;
+  }
+
+  & > div:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: -85px;
+    left: 50%;
+    width: 2px;
+    height: 85px;
+    background: linear-gradient(to right, #cbd5e1, #3b82f6, #cbd5e1);
+  }
+}
+
 .statusWithdraw {
   position: relative;
   display: flex;
@@ -314,11 +357,11 @@
 
 .withdrawArrow {
   position: absolute;
-  top: -20px;
+  top: -55px;
   left: 50%;
   width: 2px;
-  height: 20px;
-  background-color: #cbd5e1;
+  height: 55px;
+  background: linear-gradient(to right, #cbd5e1, #3b82f6, #cbd5e1);
 }
 
 .statusList {
@@ -359,38 +402,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-}
-
-.statusIcon[data-status="DRAFT"] {
-  background-color: rgba(var(--paper-status-color-draft-rgb), 1);
-}
-
-.statusIcon[data-status="PENDING"] {
-  background-color: rgba(var(--paper-status-color-pending-rgb), 1);
-}
-
-.statusIcon[data-status="UNDER_REVIEW"] {
-  background-color: rgba(var(--paper-status-color-under-review-rgb), 1);
-}
-
-.statusIcon[data-status="REVISION_REQUIRED"] {
-  background-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
-}
-
-.statusIcon[data-status="ACCEPTED"] {
-  background-color: rgba(var(--paper-status-color-accepted-rgb), 1);
-}
-
-.statusIcon[data-status="REJECTED"] {
-  background-color: rgba(var(--paper-status-color-rejected-rgb), 1);
-}
-
-.statusIcon[data-status="PUBLISHED"] {
-  background-color: rgba(var(--paper-status-color-publisher-rgb), 1);
-}
-
-.statusIcon[data-status="WITHDRAWN"] {
-  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
+  position: relative;
 }
 
 .statusTitleWrapper {

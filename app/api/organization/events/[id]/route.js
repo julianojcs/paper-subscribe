@@ -43,6 +43,17 @@ export async function GET(request, context) {
             address: true
           }
         },
+        statusConfigs: {
+          select: {
+            id: true,
+            status: true,
+            label: true,
+            description: true,
+            sortOrder: true
+          },
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' }
+        },
         areas: {
           select: {
             id: true,

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaAngleDown, FaAngleUp, FaFileAlt, FaCloudUploadAlt, FaSearch, FaExclamationCircle, FaInfoCircle, FaUser, FaEdit, FaCheckCircle, FaBan, FaFileUpload, FaTrashAlt } from 'react-icons/fa';
+import { FaSitemap, FaAngleDown, FaAngleUp, FaFileAlt, FaCloudUploadAlt, FaSearch, FaExclamationCircle, FaInfoCircle, FaUser, FaEdit, FaCheckCircle, FaBan, FaFileUpload, FaTrashAlt,
+  FaCodeBranch } from 'react-icons/fa';
 import PageContainer from '/app/components/layout/PageContainer';
 import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
 import LoadingSpinner from '/app/components/ui/LoadingSpinner';
@@ -26,6 +27,7 @@ export default function HelpPage() {
   const [eventData, setLocalEventData] = useState(null);
   const [sourceData, setSourceData] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [paperStatuses, setPaperStatuses] = useState(false);
 
   const { getEventData, saveEventDataToLocalStorage } = useEventDataService();
 
@@ -45,7 +47,7 @@ export default function HelpPage() {
     title: 'Acompanhe o processo',
     description: 'Use a seção "Meus Trabalhos" para monitorar o status das suas submissões. Você será notificado por email quando houver atualizações importantes no processo de revisão.'
   }, {
-    title: 'Responda às revisões',
+    title: 'Responda às revisões (opcional)',
     description: 'Se seu trabalho necessitar de revisões, você receberá feedback detalhado dos revisores. Faça as correções solicitadas e reenvie seu trabalho dentro do prazo estabelecido.'
   }];
 
@@ -84,7 +86,8 @@ export default function HelpPage() {
     }
   ];
 
-  const paperStatuses = [
+  // Use useMemo to prevent the defaultPaperStatuses from being recreated on every render
+  const defaultPaperStatuses = useMemo(() => [
     {
       status: "DRAFT",
       icon: <FaEdit />,
@@ -130,9 +133,12 @@ export default function HelpPage() {
     {
       status: "REVISION_REQUIRED",
       icon: <FaExclamationCircle />,
-      title: "Revisão Necessária",
+      title: "Revisão Necessária (opcional)",
       description: "Trabalho que precisa de modificações após a primeira rodada de revisão",
       details: [
+        <span key="optional-state">
+          Estado opcional [<span style={{ color: "red", fontWeight: 600 }}>?</span>], podendo ser aplicado ou não, dependendo do evento
+        </span>,
         "Visível para autores (com acesso aos comentários dos revisores), organizadores e revisores",
         "Autor pode editar para atender às solicitações de revisão",
         "Entre ciclos de revisão, após feedback inicial",
@@ -197,8 +203,74 @@ export default function HelpPage() {
       ],
       nextStatus: "Nenhum (processo encerrado a pedido do autor)"
     }
-  ];
+  ], []); // Empty dependency array ensures this is only created once
 
+  // Adicionando esta função para mapear statusConfigs para o formato de paperStatuses
+  // Adicionando esta função para mapear statusConfigs para o formato de paperStatuses
+  const mapStatusConfigsToPaperStatuses = useCallback((eventData) => {
+    // Verificar se temos configurações de status do evento
+    const statusConfigs = eventData?.event?.statusConfigs || eventData?.statusConfigs;
+
+    if (!statusConfigs || !Array.isArray(statusConfigs) || statusConfigs.length === 0) {
+      console.log('Nenhuma configuração de status encontrada, usando valores padrão');
+      return defaultPaperStatuses;
+    }
+
+    console.log('Mapeando configurações de status do evento:', statusConfigs);
+
+    // Criar um mapa dos status padrão para poder combinar os dados
+    const defaultStatusMap = defaultPaperStatuses.reduce((map, status) => {
+      map[status.status] = status;
+      return map;
+    }, {});
+
+    // Mapear as configurações para o formato esperado
+    const mappedStatuses = statusConfigs.map(config => {
+      const defaultStatus = defaultStatusMap[config.status] || {};
+
+      return {
+        status: config.status,
+        icon: defaultStatus.icon || getDefaultIconForStatus(config.status),
+        title: config.label || defaultStatus.title || config.status,
+        description: config.description || defaultStatus.description || '',
+        details: defaultStatus.details || [
+          "Informações detalhadas não disponíveis para este status."
+        ],
+        nextStatus: defaultStatus.nextStatus || "Próximo estado não especificado"
+      };
+    });
+
+    // Ordenar por sortOrder se disponível
+    mappedStatuses.sort((a, b) => {
+      const configA = statusConfigs.find(c => c.status === a.status);
+      const configB = statusConfigs.find(c => c.status === b.status);
+
+      // Se o sortOrder for null ou undefined, considerar como valor alto
+      const orderA = configA?.sortOrder ?? 999;
+      const orderB = configB?.sortOrder ?? 999;
+
+      return orderA - orderB;
+    });
+
+    return mappedStatuses;
+  }, [defaultPaperStatuses]);
+
+  // Função auxiliar para obter ícones baseados no status
+  const getDefaultIconForStatus = (status) => {
+    switch (status) {
+      case 'DRAFT': return <FaEdit />;
+      case 'PENDING': return <FaCloudUploadAlt />;
+      case 'UNDER_REVIEW': return <FaSearch />;
+      case 'REVISION_REQUIRED': return <FaExclamationCircle />;
+      case 'ACCEPTED': return <FaCheckCircle />;
+      case 'REJECTED': return <FaBan />;
+      case 'PUBLISHED': return <FaFileUpload />;
+      case 'WITHDRAWN': return <FaTrashAlt />;
+      default: return <FaFileAlt />;
+    }
+  };
+
+  // No loadEventData, modifique para incluir o mapeamento e atualização dos paperStatuses
   const loadEventData = useCallback(async (force = false) => {
     if (!force && eventData && !loading) return;
 
@@ -217,6 +289,10 @@ export default function HelpPage() {
           normalizedData = saveEventDataToLocalStorage(storedData);
         }
 
+        // Extrair e definir os status dos papers baseados nos dados do evento
+        const mappedStatuses = mapStatusConfigsToPaperStatuses(normalizedData);
+        setPaperStatuses(mappedStatuses);
+
         setLocalEventData(normalizedData);
         setEventData(normalizedData);
         setSourceData('localStorage');
@@ -229,29 +305,61 @@ export default function HelpPage() {
       console.log("Dados obtidos da API para página de ajuda:", result);
 
       if (result?.dataEvent) {
-        saveEventDataToLocalStorage(result.dataEvent);
-        setLocalEventData(result.dataEvent);
-        setEventData(result.dataEvent);
+        const savedData = saveEventDataToLocalStorage(result.dataEvent);
+
+        // Extrair e definir os status dos papers baseados nos dados do evento
+        const mappedStatuses = mapStatusConfigsToPaperStatuses(savedData);
+        setPaperStatuses(mappedStatuses);
+
+        setLocalEventData(savedData);
+        setEventData(savedData);
         setSourceData(result.sourceDataEvent);
       } else {
         console.log('Nenhum dado de evento disponível para página de ajuda');
+        // Usar valores padrão quando não há dados do evento
+        setPaperStatuses(defaultPaperStatuses);
       }
     } catch (error) {
       console.error('Erro ao inicializar dados na página de ajuda:', error);
+      // Em caso de erro, use os valores padrão
+      setPaperStatuses(defaultPaperStatuses);
     } finally {
       setLoading(false);
       setImageReady(true);
       setIsInitialized(true);
     }
-  }, [authStatus, session, loading, getEventData, eventData, setEventData, saveEventDataToLocalStorage]);
+  }, [authStatus,
+      session,
+      loading,
+      getEventData,
+      eventData,
+      setEventData,
+      saveEventDataToLocalStorage,
+      mapStatusConfigsToPaperStatuses,
+      defaultPaperStatuses
+    ]
+  );
 
+  // Também é necessário atualizar este useEffect para garantir que os paperStatuses sejam definidos
   useEffect(() => {
     if (contextEventData && !eventData) {
       setLocalEventData(contextEventData);
+
+      // Mapeie os status quando os dados vierem do contexto
+      const mappedStatuses = mapStatusConfigsToPaperStatuses(contextEventData);
+      setPaperStatuses(mappedStatuses);
+
       setLoading(false);
       setImageReady(true);
     }
-  }, [contextEventData, eventData]);
+  }, [contextEventData, eventData, mapStatusConfigsToPaperStatuses]);
+
+  // Adicione um useEffect inicial para garantir que paperStatuses nunca seja falso/undefined
+  useEffect(() => {
+    if (!paperStatuses) {
+      setPaperStatuses(defaultPaperStatuses);
+    }
+  }, [paperStatuses, defaultPaperStatuses]);
 
   useEffect(() => {
     if (authStatus === 'loading') return;
@@ -351,7 +459,7 @@ export default function HelpPage() {
                 className={`${styles.navButton} ${activeSection === 'paper-status' ? styles.activeNavButton : ''}`}
                 onClick={() => setActiveSection('paper-status')}
               >
-                <FaFileAlt className={styles.navIcon} />
+                <FaSitemap className={styles.navIcon} />
                 <span>Status dos Trabalhos</span>
               </button>
               <button
@@ -379,13 +487,17 @@ export default function HelpPage() {
                   </div>
 
                   <div className={styles.stepGrid}>
-                    {steps.map((step, index) => (
-                      <div key={index} className={styles.step}>
-                        <div className={styles.stepNumber}>{index + 1}</div>
-                        <h4>{step.title}</h4>
-                        <p>{step.description}</p>
-                      </div>
-                    ))}
+                    {steps.map((step, index) => {
+                      if (index !== 5 || (index === 5 && paperStatuses.some(status => status.status === 'REVISION_REQUIRED'))) {
+                        return (
+                          <div key={index} className={styles.step}>
+                            <div className={styles.stepNumber}>{index + 1}</div>
+                            <h4>{step.title}</h4>
+                            <p>{step.description}</p>
+                          </div>
+                        );
+                      }
+                    })}
                   </div>
 
                   <div className={styles.userTips}>
@@ -407,7 +519,8 @@ export default function HelpPage() {
                     <p>
                       Seu trabalho passa por diferentes estados durante o processo de submissão e avaliação.
                       Entender o significado de cada status ajudará você a acompanhar o progresso do seu trabalho
-                      e saber o que esperar em cada etapa.
+                      e saber o que esperar em cada etapa. Dependendo do evento, o estado do trabalho pode ser
+                      opcional, podendo ou nao ser aplicado.
                     </p>
                   </div>
                   <div className={styles.flowContainer}>
@@ -437,30 +550,49 @@ export default function HelpPage() {
                       >
                         <FaSearch className={styles.dotIcon} />
                       </div>
-                      <div className={styles.statusBranch}>
-                        <div className={styles.branchItem}>
-                          <div
-                            className={styles.statusDot}
-                            data-status="REVISION_REQUIRED"
-                            data-label="Revisão Necessária"
-                            onClick={() => handleStatusDotClick("REVISION_REQUIRED")}
-                          >
-                            <FaExclamationCircle className={styles.dotIcon} />
+                      { paperStatuses.some(status => status.status === 'REVISION_REQUIRED') ? (
+                        <div className={styles.statusBranch}>
+                          <div className={styles.branchItem}>
+                            <div
+                              className={styles.statusDot}
+                              data-status="REVISION_REQUIRED"
+                              data-label="Revisão Necessária"
+                              onClick={() => handleStatusDotClick("REVISION_REQUIRED")}
+                            >
+                              <FaExclamationCircle className={styles.dotIcon} />
+                            </div>
+                          </div>
+                          <div className={styles.branchItem}>
+                            <div
+                              className={styles.statusDot}
+                              data-status="ACCEPTED"
+                              data-label="Aceito"
+                              onClick={() => handleStatusDotClick("ACCEPTED")}
+                            >
+                              <FaCheckCircle className={styles.dotIcon} />
+                            </div>
+                          </div>
+                          <div className={styles.branchItem}>
+                            <div
+                              className={styles.statusDot}
+                              data-status="REJECTED"
+                              data-label="Rejeitado"
+                              onClick={() => handleStatusDotClick("REJECTED")}
+                            >
+                              <FaBan className={styles.dotIcon} />
+                            </div>
                           </div>
                         </div>
-                        <div className={styles.branchItem}>
-                          <div
-                            className={styles.statusDot}
+                      ) : (
+                        <div className={styles.statusBranch2}>
+                          <div className={styles.statusDot}
                             data-status="ACCEPTED"
                             data-label="Aceito"
                             onClick={() => handleStatusDotClick("ACCEPTED")}
                           >
                             <FaCheckCircle className={styles.dotIcon} />
                           </div>
-                        </div>
-                        <div className={styles.branchItem}>
-                          <div
-                            className={styles.statusDot}
+                          <div className={styles.statusDot}
                             data-status="REJECTED"
                             data-label="Rejeitado"
                             onClick={() => handleStatusDotClick("REJECTED")}
@@ -468,7 +600,7 @@ export default function HelpPage() {
                             <FaBan className={styles.dotIcon} />
                           </div>
                         </div>
-                      </div>
+                      )}
                       <div
                         className={styles.statusDot}
                         data-status="PUBLISHED"
