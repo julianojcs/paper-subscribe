@@ -611,6 +611,12 @@
   color: #6b7280;
   opacity: 0.7;
 }
+.versionName {
+  color: rgba(var(--paper-danger-rgb), 0.4);
+  font-weight: 500;
+  font-weight: 500;
+  font-style: italic;
+}
 
 /* Responsividade */
 @media (max-width: 768px) {

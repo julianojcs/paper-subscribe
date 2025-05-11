@@ -22,14 +22,13 @@ export default function HelpPage() {
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeStatus, setActiveStatus] = useState(null);
   const statusCardRefs = useRef({});
-
   const { eventData: contextEventData, setEventData } = useDataContext();
   const [eventData, setLocalEventData] = useState(null);
   const [sourceData, setSourceData] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [paperStatuses, setPaperStatuses] = useState(false);
-
   const { getEventData, saveEventDataToLocalStorage } = useEventDataService();
+  const [dbName, setDbName] = useState('');
 
   const steps = [ {
     title: "Crie sua conta",
@@ -386,6 +385,14 @@ export default function HelpPage() {
     return () => clearTimeout(timer);
   }, [loading, eventData, contextEventData]);
 
+  useEffect(() => {
+    // Buscar a variável de ambiente via API
+    fetch('/api/env')
+      .then(response => response.json())
+      .then(data => setDbName(data.dbName))
+      .catch(error => console.error('Erro ao buscar versão do sistema:', error));
+  }, []);
+
   const toggleFaq = (index) => {
     setActiveFaq(activeFaq === index ? null : index);
   };
@@ -712,7 +719,7 @@ export default function HelpPage() {
               <a href={headerData.website} target="_blank" rel="noopener noreferrer">
                 Visite o site oficial do evento
               </a>
-              <span className={styles.versionTag}>versão: {process.env.NEXT_PUBLIC_VNAME}</span>
+              <span className={styles.versionTag}>versão: <span className={styles.versionName}>{dbName}</span></span>
             </footer>
           )}
         </PageContainer>
