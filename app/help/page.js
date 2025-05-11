@@ -712,6 +712,7 @@ export default function HelpPage() {
               <a href={headerData.website} target="_blank" rel="noopener noreferrer">
                 Visite o site oficial do evento
               </a>
+              <span className={styles.versionTag}>versão: {process.env.NEXT_PUBLIC_VNAME}</span>
             </footer>
           )}
         </PageContainer>

@@ -581,37 +581,35 @@
   color: #475569;
 }
 
-.helpContact a {
+.helpContact a,
+.footer a {
   color: #2563eb;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
 }
 
-.helpContact a:hover {
+.helpContact a:hover ,
+.footer a:hover {
   color: #1d4ed8;
   text-decoration: underline;
 }
 
 /* Footer para link do site oficial */
 .footer {
-  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 1rem;
-  text-align: center;
-  border-top: 1px solid #e2e8f0;
+  position: relative;
 }
 
-.footer a {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: color 0.2s;
-}
-
-.footer a:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
+.versionTag {
+  position: absolute;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  opacity: 0.7;
 }
 
 /* Responsividade */
