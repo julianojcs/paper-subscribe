@@ -39,20 +39,20 @@ model Session {
 }
 
 model User {
-  id                      String    @id @default(cuid())
-  name                    String
-  email                   String    @unique
-  emailVerified            DateTime?
-  password                String?
-  image                   String?
-  cpf                     String?   @unique // CPF do usuário
-  phone                   String?   // Telefone do usuário
-  institution             String?   // Instituição do usuário
-  city                    String?   // Cidade do usuário
-  stateId                 String?   @db.Char(2) // Relação com o estado usando UF
-  isActive                Boolean   @default(true)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified  DateTime?
+  password      String?
+  image         String?
+  cpf           String?   @unique // CPF do usuário
+  phone         String? // Telefone do usuário
+  institution   String? // Instituição do usuário
+  city          String? // Cidade do usuário
+  stateId       String?   @db.Char(2) // Relação com o estado usando UF
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   accounts                Account[]
   evaluatorAssignments    EvaluatorAssignment[]
@@ -61,15 +61,16 @@ model User {
   papers                  Paper[]
   paperAuthors            PaperAuthor[]
   reviewedPapers          PaperReview[]
+  paperHistoryEntries     PaperHistory[]
   sessions                Session[]
-  state                   State?    @relation(fields: [stateId], references: [id])
+  state                   State?                @relation(fields: [stateId], references: [id])
   passwordResets          PasswordReset[]
 
   @@index([stateId]) // Adicionar índice para melhorar performance de consultas
 }
 
 model Organization {
-  id               String               @id @default(cuid())
+  id               String    @id @default(cuid())
   name             String
   shortName        String?
   description      String?
@@ -78,17 +79,16 @@ model Organization {
   email            String?
   phone            String?
   address          String?
-  isActive         Boolean              @default(true)
-  isPremium        Boolean              @default(false)
+  isActive         Boolean   @default(true)
+  isPremium        Boolean   @default(false)
   subscriptionEnds DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  events           Event[]
-  members          OrganizationMember[]
-  accessTokens     OrganizationToken[]
+  events       Event[]
+  members      OrganizationMember[]
+  accessTokens OrganizationToken[]
 }
-
 
 model OrganizationMember {
   id             String       @id @default(cuid())
@@ -104,18 +104,18 @@ model OrganizationMember {
 }
 
 model OrganizationToken {
-  id             String       @id @default(cuid())
-  token          String       @unique
+  id             String    @id @default(cuid())
+  token          String    @unique
   description    String?
   organizationId String
   eventId        String?
-  isActive       Boolean      @default(true)
+  isActive       Boolean   @default(true)
   expiresAt      DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  event          Event?       @relation(fields: [eventId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  event        Event?       @relation(fields: [eventId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([token])
 }
@@ -124,13 +124,13 @@ model EventArea {
   id          String   @id @default(cuid())
   name        String
   description String?
-  sortOrder   Int     @default(0)
+  sortOrder   Int      @default(0)
   eventId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  papers      Paper[]
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  papers Paper[]
 
   @@unique([eventId, name])
 }
@@ -139,13 +139,13 @@ model EventPaperType {
   id          String   @id @default(cuid())
   name        String
   description String?
-  sortOrder    Int     @default(0)
+  sortOrder   Int      @default(0)
   eventId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  papers      Paper[]
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  papers Paper[]
 
   @@unique([eventId, name])
 }
@@ -181,60 +181,61 @@ model EventField {
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   event        Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  fieldValues   PaperFieldValue[]
+  fieldValues  PaperFieldValue[]
 
   @@unique([eventId, label])
 }
 
 model Event {
-  id              String                @id @default(cuid())
+  id              String    @id @default(cuid())
   name            String
   shortName       String
   logoUrl         String?
   website         String?
   description     String?
-  startDate       DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  endDate         DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  submissionStart DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  submissionEnd   DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  reviewStart     DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  reviewEnd       DateTime?            // Mantidos para compatibilidade, mas timeline é preferencial
-  maxAuthors      Int                   @default(5)
-  minKeywords     Int                   @default(1)
-  maxKeywords     Int                   @default(5)
-  maxFileSize     Int?                  @default(3) // em MB
-  maxFiles        Int?                  @default(0)
+  startDate       DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  endDate         DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  submissionStart DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  submissionEnd   DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  reviewStart     DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  reviewEnd       DateTime? // Mantidos para compatibilidade, mas timeline é preferencial
+  maxAuthors      Int       @default(5)
+  minKeywords     Int       @default(1)
+  maxKeywords     Int       @default(5)
+  maxFileSize     Int?      @default(3) // em MB
+  maxFiles        Int?      @default(0)
   organizationId  String
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  isActive        Boolean               @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
 
-  timelines       EventTimeline[]      // Nova relação com timeline
-  evaluators      EvaluatorAssignment[]
-  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  areas           EventArea[]
-  paperTypes      EventPaperType[]
-  eventTokens     OrganizationToken[]
-  papers          Paper[]
-  eventFields     EventField[]
+  timelines    EventTimeline[] // Nova relação com timeline
+  evaluators   EvaluatorAssignment[]
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  areas        EventArea[]
+  paperTypes   EventPaperType[]
+  eventTokens  OrganizationToken[]
+  papers       Paper[]
+  eventFields  EventField[]
+  statusConfigs EventPaperStatusConfig[]
 
   @@unique([organizationId, shortName])
 }
 
 model EventTimeline {
-  id              String    @id @default(cuid())
-  eventId         String
-  name            String
-  description     String?
-  date            DateTime
-  type            TimelineType
-  isPublic        Boolean   @default(true)
-  isCompleted     Boolean   @default(false)
-  sortOrder       Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String       @id @default(cuid())
+  eventId     String
+  name        String
+  description String?
+  date        DateTime
+  type        TimelineType
+  isPublic    Boolean      @default(true)
+  isCompleted Boolean      @default(false)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@index([type])
@@ -264,6 +265,7 @@ model PaperFieldValue {
 
   @@unique([paperId, fieldId])
 }
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -275,42 +277,42 @@ model VerificationToken {
 model LoginLog {
   id        String   @id @default(cuid())
   userId    String
-  loginType String   // "password", "google", "github", etc.
+  loginType String // "password", "google", "github", etc.
   ip        String?
   userAgent String?  @db.Text
   createdAt DateTime @default(now())
   success   Boolean
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Paper {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   title           String
   keywords        String
   fileUrl          String?
   fileName         String?
-  fileStoragePath  String?    // pasta/caminho no Firebase
+  fileStoragePath  String? // pasta/caminho no Firebase
   fileSize         Int?
-  isPublic        Boolean           @default(false)
+  isPublic        Boolean  @default(false)
   publicUrl       String?
   organizationId  String?
   userId          String
   eventId         String?
   areaId          String?
   paperTypeId     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  area            EventArea?        @relation(fields: [areaId], references: [id])
-  event           Event?            @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  paperType       EventPaperType?   @relation(fields: [paperTypeId], references: [id])
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  authors         PaperAuthor[]
-  status          PaperStatus       @default(PENDING)
-  fieldValues      PaperFieldValue[] // Opposite relation for PaperFieldValue
-  history         PaperHistory[]
-  reviews         PaperReview[]
+  area        EventArea?        @relation(fields: [areaId], references: [id])
+  event       Event?            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  paperType   EventPaperType?   @relation(fields: [paperTypeId], references: [id])
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authors     PaperAuthor[]
+  status      PaperStatus       @default(PENDING)
+  fieldValues  PaperFieldValue[] // Opposite relation for PaperFieldValue
+  history     PaperHistory[]
+  reviews     PaperReview[]
 
   @@index([userId])
   @@index([eventId])
@@ -318,21 +320,21 @@ model Paper {
 }
 
 model PaperAuthor {
-  id            String   @id @default(cuid())
-  paperId       String
-  userId        String?
-  name          String?
-  institution   String?   // Instituição do usuário
-  city          String?   // Cidade do usuário
-  stateId       String?   @db.Char(2) // Relação com o estado usando UF
-  isPresenter   Boolean  @default(false)
-  isMainAuthor  Boolean  @default(false)
+  id           String  @id @default(cuid())
+  paperId      String
+  userId       String?
+  name         String?
+  institution  String? // Instituição do usuário
+  city         String? // Cidade do usuário
+  stateId      String? @db.Char(2) // Relação com o estado usando UF
+  isPresenter  Boolean @default(false)
+  isMainAuthor Boolean @default(false)
 
-  authorOrder   Int      @default(0)
-  createdAt     DateTime @default(now())
+  authorOrder Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  paper         Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
-  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paper Paper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([paperId, userId])
 }
@@ -354,23 +356,26 @@ model PaperReview {
 }
 
 model PaperHistory {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
-  status     String
-  comment    String   @db.Text
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  status    String
+  comment   String   @db.Text
+  userId    String // Adicionando campo de usuário
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // Relação com usuário
 
-  paperId    String
-  paper      Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  paperId String
+  paper   Paper  @relation(fields: [paperId], references: [id], onDelete: Cascade)
 
   @@index([paperId])
+  @@index([userId]) // Adicionar índice para o userId
 }
 
 model State {
-  id         String @id @db.Char(2)
-  name       String
-  flag        String
+  id   String @id @db.Char(2)
+  name String
+  flag String
 
-  users User[]  // Relacionamento reverso
+  users User[] // Relacionamento reverso
 }
 
 enum UserRole {
@@ -389,6 +394,22 @@ enum PaperStatus {
   REJECTED
   PUBLISHED
   WITHDRAWN
+}
+
+model EventPaperStatusConfig {
+  id          String      @id @default(cuid())
+  eventId     String
+  status      PaperStatus
+  label       String
+  description String?
+  isActive    Boolean     @default(true)
+  sortOrder   Int?
+  createdAt   DateTime    @default(now())
+
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, status])
+  @@index([eventId])
 }
 
 enum ReviewRecommendation {
