@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 /**
  * Manipulador da rota GET para buscar um evento específico pelo ID
@@ -19,73 +20,127 @@ export async function GET(request, context) {
       );
     }
 
+    // Verificar conexão com banco de dados antes da consulta principal
+    try {
+      // Consulta simples para verificar a conexão
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (dbConnectionError) {
+      console.error('Erro de conexão com o banco de dados:', dbConnectionError);
+      return NextResponse.json(
+        {
+          error: 'Erro de conexão com o banco de dados',
+          details: dbConnectionError.message,
+          code: dbConnectionError.code || 'DB_CONNECTION_ERROR'
+        },
+        { status: 503 }
+      );
+    }
+
     // Buscar o evento com todos os dados relacionados necessários
-    const event = await prisma.event.findUnique({
-      where: { id },
-      include: {
-        // Incluir os itens de timeline para calcular os status
-        timelines: {
-          where: { isPublic: true },
-          orderBy: [
-            { sortOrder: 'asc' },
-            { date: 'asc' }
-          ]
-        },
-        // Incluir outros relacionamentos que possam ser úteis
-        organization: {
-          select: {
-            id: true,
-            name: true,
-            logoUrl: true,
-            website: true,
-            email: true,
-            phone: true,
-            address: true
-          }
-        },
-        statusConfigs: {
-          select: {
-            id: true,
-            status: true,
-            label: true,
-            description: true,
-            sortOrder: true
+    let event;
+    try {
+      event = await prisma.event.findUnique({
+        where: { id },
+        include: {
+          // Incluir os itens de timeline para calcular os status
+          timelines: {
+            where: { isPublic: true },
+            orderBy: [
+              { sortOrder: 'asc' },
+              { date: 'asc' }
+            ]
           },
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' }
-        },
-        areas: {
-          select: {
-            id: true,
-            name: true,
-            description: true
-          }
-        },
-        paperTypes: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            sortOrder: true
-          }
-        },
-        timelines: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            date: true,
-            type: true,
-            isPublic: true
-          }
-        },
+          // Incluir outros relacionamentos que possam ser úteis
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              logoUrl: true,
+              website: true,
+              email: true,
+              phone: true,
+              address: true
+            }
+          },
+          statusConfigs: {
+            select: {
+              id: true,
+              status: true,
+              label: true,
+              description: true,
+              sortOrder: true,
+              isActive: true
+            },
+            orderBy: { sortOrder: 'asc' }
+          },
+          areas: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          },
+          paperTypes: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              sortOrder: true
+            }
+          },
+          timelines: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              date: true,
+              type: true,
+              isPublic: true
+            }
+          },
+        }
+      });
+    } catch (queryError) {
+      console.error('Erro na consulta do evento:', queryError);
+
+      // Tratamento específico para erros do Prisma
+      if (queryError instanceof PrismaClientKnownRequestError) {
+        return NextResponse.json(
+          {
+            error: 'Erro na consulta do banco de dados',
+            details: queryError.message,
+            code: queryError.code,
+            meta: queryError.meta
+          },
+          { status: 422 }
+        );
+      } else if (queryError instanceof PrismaClientValidationError) {
+        return NextResponse.json(
+          {
+            error: 'Erro de validação na consulta',
+            details: queryError.message
+          },
+          { status: 400 }
+        );
       }
-    });
+
+      throw queryError; // Repassar outros erros para o catch global
+    }
 
     if (!event) {
       return NextResponse.json(
-        { error: 'Evento não encontrado' },
+        {
+          error: 'Evento não encontrado',
+          eventId: id
+        },
         { status: 404 }
+      );
+    }
+
+    // Filtrar statusConfigs para incluir apenas os ativos
+    if (event.statusConfigs) {
+      event.statusConfigs = event.statusConfigs.filter(config =>
+        config.isActive === undefined || config.isActive === true
       );
     }
 
@@ -139,10 +194,42 @@ export async function GET(request, context) {
     };
 
     return NextResponse.json({ event: eventWithStatus });
+
   } catch (error) {
     console.error('Erro ao buscar evento:', error);
+
+    // Extrair informações detalhadas do erro
+    const errorDetails = {
+      name: error.name,
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      code: error.code,
+      clientVersion: error.clientVersion,
+      timestamp: new Date().toISOString()
+    };
+
+    // Em ambiente de desenvolvimento, retornar detalhes completos
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.json(
+        {
+          error: 'Erro interno ao buscar evento',
+          details: errorDetails
+        },
+        { status: 500 }
+      );
+    }
+
+    // Em produção, retornar mensagem genérica com identificador de erro
+    // mas sem expor detalhes sensíveis como stack trace
+    const errorId = `err_${Date.now().toString(36)}`;
+    console.error(`[${errorId}] Erro interno:`, errorDetails);
+
     return NextResponse.json(
-      { error: 'Erro interno ao buscar evento' },
+      {
+        error: 'Erro interno ao buscar evento',
+        errorId: errorId,
+        message: error.message
+      },
       { status: 500 }
     );
   }
