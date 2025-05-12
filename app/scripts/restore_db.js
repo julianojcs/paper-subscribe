@@ -14,12 +14,12 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 // Configurações do banco de dados
 const dbConfig = {
-  user: process.env.DB_USER || 'jornada',
-  password: process.env.DB_PASSWORD || 'J0rn4d45rm6',
-  host: process.env.DB_HOST || '195.200.4.220',
-  port: process.env.DB_PORT || '5432',
-  oldDatabase: process.env.DB_NAME || 'jornadav1',
-  newDatabase: process.env.NEW_DB_NAME || 'jornadav2',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  oldDatabase: process.env.DB_NAME,
+  newDatabase: process.env.NEW_DB_NAME,
 };
 
 // Executa um comando como uma Promise
