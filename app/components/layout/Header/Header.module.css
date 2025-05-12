@@ -260,6 +260,10 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
+  .navLink:hover:not(.activeLink) {
+    border-block-end: unset;
+  }
+
   .activeLink::after {
     display: none;
   }
