@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../auth/[...nextauth]/route';
+import * as Statuses from '../../../../utils/statuses';
 
 // Atualiza o status de um paper
 export async function PUT(request, context ) {
@@ -11,17 +12,13 @@ export async function PUT(request, context ) {
     const { status, reason } = await request.json();
 
     // Verificar se o status é válido
-    const validStatuses = [
-      'DRAFT', 'PENDING', 'UNDER_REVIEW', 'REVISION_REQUIRED',
-      'ACCEPTED', 'REJECTED', 'PUBLISHED', 'WITHDRAWN'
-    ];
-
-    if (!validStatuses.includes(status)) {
+    if (!Statuses.statusExists(status)) {
       return NextResponse.json(
-        { message: 'Status inválido' },
-        { status: 400 }
+      { message: 'Status inválido' },
+      { status: 400 }
       );
     }
+    const statusPtBR = Statuses.getStatusPtBR(status);
 
     // Verificar a autenticação
     const session = await getServerSession(authOptions);
@@ -81,7 +78,7 @@ export async function PUT(request, context ) {
         paperId: id,
         status,
         userId: session.user.id,
-        comment: reason || `Status alterado para ${status} pelo usuário`
+        comment: reason || `Status alterado para ${statusPtBR} pelo usuário`
       }
     });
 
