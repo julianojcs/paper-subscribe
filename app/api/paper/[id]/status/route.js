@@ -47,6 +47,12 @@ export async function PUT(request, context ) {
       author => author.userId === session.user.id && author.isMainAuthor
     );
 
+console.log('sesssion userId cmamvb36p0000l10axdrebz1h: ', session.user.id);
+console.log('isAuthorized', isAuthorized);
+console.log('session.user.role', session.user.role);
+console.log('currentPaper.authors', currentPaper.authors);
+
+
     if (!isAuthorized && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Você não tem permissão para modificar este trabalho' },
@@ -78,7 +84,7 @@ export async function PUT(request, context ) {
         paperId: id,
         status,
         userId: session.user.id,
-        comment: reason || `Status alterado para ${statusPtBR} pelo usuário`
+        comment: reason || `Trabalho ${statusPtBR} pelo autor`
       }
     });
 
