@@ -327,14 +327,6 @@
   gap: 0.5rem;
 }
 
-.submitButton {
-  background-color: #0ea5e9; /* Cor diferente para destacar */
-}
-
-.submitButton:hover {
-  background-color: #0284c7;
-}
-
 /* Responsividade para a seção de ações */
 @media (max-width: 768px) {
   .actionsSection {
