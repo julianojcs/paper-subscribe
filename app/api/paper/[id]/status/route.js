@@ -44,14 +44,8 @@ export async function PUT(request, context ) {
 
     // Verificar se o usuário tem permissão (é autor principal)
     const isAuthorized = currentPaper.authors.some(
-      author => author.userId === session.user.id && author.isMainAuthor
+      author => author.userId === session.user.id
     );
-
-console.log('sesssion userId cmamvb36p0000l10axdrebz1h: ', session.user.id);
-console.log('isAuthorized', isAuthorized);
-console.log('session.user.role', session.user.role);
-console.log('currentPaper.authors', currentPaper.authors);
-
 
     if (!isAuthorized && session.user.role !== 'ADMIN') {
       return NextResponse.json(
