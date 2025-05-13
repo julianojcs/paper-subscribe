@@ -4,9 +4,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../auth/[...nextauth]/route';
 
 // Atualiza o status de um paper
-export async function PUT(request, { params }) {
+export async function PUT(request, context ) {
   try {
-    const { id } = params;
+    const params = await context.params;
+    const eventId = params.id;
     const { status, reason } = await request.json();
 
     // Verificar se o status é válido
