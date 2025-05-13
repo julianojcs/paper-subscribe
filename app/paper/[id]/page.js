@@ -543,7 +543,7 @@ export default function PaperDetailPage() {
             <div className={styles.metaItem}>
               <div className={styles.metaHeader}>
                 <FaCalendarAlt className={styles.metaIcon} />
-                <span className={styles.metaLabel}>Data de submissão</span>
+                <span className={styles.metaLabel}>Data de criação</span>
               </div>
               <div className={styles.metaContent}>
                 {formatDate(paper.createdAt)}

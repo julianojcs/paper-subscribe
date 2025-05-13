@@ -16,13 +16,16 @@ export default function PaperPage({ searchParams }) {
   const router = useRouter();
 
   // Extrair valores do searchParams conforme necessário
-  const success = searchParams?.success === 'true';
   const page = parseInt(searchParams?.page || '1', 10);
-  const withdrawn = searchParams?.withdrawn === 'true';
-
-  console.log('page', page);
-  console.log('success', success);
-  console.log('withdrawn', withdrawn);
+  const SearchParamsActions = [
+    { param: 'success', label: 'Sucesso' },
+    { param: 'withdrawn', label: 'Retirado' },
+    { param: 'submitted2', label: 'Submetido' }
+  ];
+  const searchParamsReceived = SearchParamsActions.find(action => {
+    const paramValue = searchParams?.[action.param];
+    return paramValue === 'true' || paramValue === 'false';
+  })
 
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true); // Iniciar como true para mostrar loading imediatamente
@@ -36,7 +39,7 @@ export default function PaperPage({ searchParams }) {
   });
   const eventLogoUrl = session?.user?.activeEventLogoUrl;
   const eventName = session?.user?.activeEventName;
-console.log('session', session);
+
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
     // Se o status está mudando ou é desconhecido, mostrar loading
@@ -210,16 +213,10 @@ console.log('session', session);
         fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
       />
       <div className={styles.content}>
-        {success && (
+        {searchParamsReceived && (
           <div className={styles.successMessage}>
             <FaFileAlt className={styles.successIcon} />
-            <span>Seu trabalho foi enviado com sucesso!</span>
-          </div>
-        )}
-        {withdrawn && (
-          <div className={styles.successMessage}>
-            <FaFileExport className={styles.successIcon} />
-            <span>Seu trabalho foi Retirado com sucesso!</span>
+            <span>Seu trabalho foi {searchParamsReceived.label} com sucesso!</span>
           </div>
         )}
 
