@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { use } from 'react';
 import styles from './paper.module.css';
 import Button from '../components/ui/Button';
 import { FaFileAlt, FaCalendarAlt, FaUsers, FaBuilding, FaDownload, FaStethoscope, FaSuitcase } from 'react-icons/fa';
@@ -16,7 +15,7 @@ export default function PaperPage({ searchParams }) {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const params = searchParams ? React.use(searchParams) : {};
+  const params = searchParams || {};
 
   const success = params.success;
   const page = parseInt(params.page || '1');
