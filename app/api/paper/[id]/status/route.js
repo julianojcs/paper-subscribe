@@ -7,7 +7,7 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 export async function PUT(request, context ) {
   try {
     const params = await context.params;
-    const eventId = params.id;
+    const id = params.id;
     const { status, reason } = await request.json();
 
     // Verificar se o status é válido
