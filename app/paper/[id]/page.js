@@ -9,7 +9,7 @@ import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
   FaFileDownload, FaBuilding, FaTags, FaEdit, FaStethoscope,
-  FaFilePdf, FaArrowLeft, FaCloudUploadAlt,
+  FaFilePdf, FaArrowLeft, FaCloudUploadAlt, FaTrashAlt,
   FaSuitcase
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
@@ -128,13 +128,51 @@ export default function PaperDetailPage() {
     }
   };
 
+  // Função para retirar o trabalho
+  const handleWithdrawPaper = async () => {
+    if (!paper?.id) return;
+
+    // Confirmação antes de prosseguir
+    const confirmed = window.confirm(
+      'Tem certeza que deseja retirar este trabalho? Esta ação não pode ser desfeita.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/paper/${paper.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'WITHDRAWN',
+          reason: 'Trabalho retirado pelo autor',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao retirar trabalho');
+      }
+
+      // Redirecionar para a página de trabalhos
+      router.push('/paper?withdrawn=true');
+    } catch (error) {
+      console.error('Erro ao retirar trabalho:', error);
+      alert(`Erro ao retirar trabalho: ${error.message}`);
+      setSubmitting(false);
+    }
+  };
+
   // Definição do status com cores
   const getStatusBadge = (status) => {
     if (!status) return null;
 
     const statusMap = {
       'DRAFT': { label: 'Rascunho', className: styles.statusDraft },
-      'PENDING': { label: 'Pendente', className: styles.statusPending },
+      'PENDING': { label: 'Submetido', className: styles.statusPending },
       'UNDER_REVIEW': { label: 'Em Revisão', className: styles.statusReviewing },
       'REVISION_REQUIRED': { label: 'Revisão Necessária', className: styles.statusRevision },
       'ACCEPTED': { label: 'Aprovado', className: styles.statusAccepted },
@@ -357,7 +395,7 @@ export default function PaperDetailPage() {
   }
 
   // Determinar se o trabalho pode ser editado
-  const canEdit = ['DRAFT', 'PENDING'].includes(paper.status);
+  const canEdit = ['DRAFT'].includes(paper.status);
   // const canEdit = false; // ['DRAFT', 'PENDING'].includes(paper.status);
 
   return (
@@ -557,14 +595,45 @@ export default function PaperDetailPage() {
                 onClick={handleBack}
                 className={styles.actionButton}
               >
-                <FaArrowLeft className={styles.buttonIcon} /> Voltar para meus trabalhos
+                <FaArrowLeft className={styles.buttonIcon} /> Voltar
               </Button>
             </div>
 
             <div className={styles.rightActions}>
-              {paper.status === 'DRAFT' && (
+              {canEdit && (
                 <Button
                   variant="primary"
+                  onClick={() => router.push(`/paper/edit/${paper.id}`)}
+                  className={styles.actionButton}
+                >
+                  <FaEdit className={styles.buttonIcon} /> Editar
+                </Button>
+              )}
+
+              {/* Botão para retirar o trabalho  */}
+              {paper.status !== 'WITHDRAWN' && (
+                <Button
+                  variant="danger"
+                  onClick={handleWithdrawPaper}
+                  className={styles.withdrawButton}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <FaTrashAlt className={styles.buttonIcon} /> Retirar
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {paper.status === 'DRAFT' && (
+                <Button
+                  variant="pending"
                   onClick={handleSubmitPaper}
                   className={styles.submitButton}
                   disabled={submitting}
@@ -576,19 +645,9 @@ export default function PaperDetailPage() {
                     </>
                   ) : (
                     <>
-                      <FaCloudUploadAlt className={styles.buttonIcon} /> Submeter Trabalho
+                      <FaCloudUploadAlt className={styles.buttonIcon} /> Submeter
                     </>
                   )}
-                </Button>
-              )}
-
-              {canEdit && (
-                <Button
-                  variant="primary"
-                  onClick={() => router.push(`/paper/edit/${paper.id}`)}
-                  className={styles.actionButton}
-                >
-                  <FaEdit className={styles.buttonIcon} /> Editar trabalho
                 </Button>
               )}
             </div>

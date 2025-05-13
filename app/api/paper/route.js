@@ -30,7 +30,12 @@ export async function GET(request) {
     const filter = {
       userId: session.user.id,
       ...(eventId ? { eventId } : {}),
-      ...(status ? { status: status.toUpperCase() } : {})
+      ...(session.user.role === 'MEMBER'
+        ? { NOT: { status: 'WITHDRAWN' } }
+        : ( status
+            ? { status: status.toUpperCase() }
+            : {}
+        ))
     };
 
     // Buscar todos os papers do usuário com filtros aplicados
@@ -363,7 +368,7 @@ export async function POST(request) {
           paperTypeId,
           organizationId: event?.organizationId,
           eventId,
-          status: 'DRAFT', 
+          status: 'DRAFT',
           userId: session.user.id,
           // Campos do arquivo, se existir
           fileName: fileData.fileName,
@@ -376,7 +381,7 @@ export async function POST(request) {
       // 2. Criar os autores associados
       if (authors && authors.length > 0) {
         console.log("Criando autores para o paper:", authors);
-        
+
         // Como o createMany não retorna os registros criados, usamos um loop para criar cada um
         const paperAuthors = [];
         for (const author of authors) {
@@ -413,7 +418,7 @@ export async function POST(request) {
       }
 
       // Retornar o paper criado e seus relacionamentos para uso após a transação
-      return { 
+      return {
         paper,
         fieldValues
       };
@@ -430,7 +435,7 @@ export async function POST(request) {
     }, { status: 201 });
   } catch (error) {
     console.error("Erro ao criar paper:", error);
-    
+
     // Se o erro for de uma transação, podemos ter mensagens mais específicas
     let errorMessage = "Falha ao criar trabalho";
     if (error.meta && error.meta.cause) {
@@ -438,7 +443,7 @@ export async function POST(request) {
     } else if (error.message) {
       errorMessage += `: ${error.message}`;
     }
-    
+
     return NextResponse.json(
       { error: errorMessage, details: error.message },
       { status: 500 }

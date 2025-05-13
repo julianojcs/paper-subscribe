@@ -105,11 +105,11 @@
   --paper-status-color-published-active: #0fae7a;
   --paper-status-color-published-dark: #0f766e;
 
-  --paper-status-color-withdrawn: #495057;
-  --paper-status-color-withdrawn-rgb: 73, 80, 87;
-  --paper-status-color-withdrawn-hover: #3d4349;
-  --paper-status-color-withdrawn-active: #343a40;
-  --paper-status-color-withdrawn-dark: #212529;
+  --paper-status-color-withdrawn:#000000;
+  --paper-status-color-withdrawn-rgb: 0, 0, 0;
+  --paper-status-color-withdrawn-hover:rgb(15, 15, 15);
+  --paper-status-color-withdrawn-active:rgb(20, 20, 20);
+  --paper-status-color-withdrawn-dark:rgb(10, 10, 10);
 
 
   --paper-primary-100: rgb(204, 213.6, 241);

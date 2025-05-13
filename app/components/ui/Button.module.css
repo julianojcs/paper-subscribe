@@ -49,6 +49,95 @@
   background-color: var(--paper-secondary-700);
 }
 
+.draft {
+  background-color: var(--paper-status-color-draft);
+  color: white;
+}
+.draft:hover:not(:disabled) {
+  background-color: var(--paper-status-color-draft-hover);
+}
+.draft:active:not(:disabled) {
+  background-color: var(--paper-status-color-draft-active);
+}
+
+.pending {
+  background-color: var(--paper-status-color-pending);
+  color: white;
+}
+.pending:hover:not(:disabled) {
+  background-color: var(--paper-status-color-pending-hover);
+}
+.pending:active:not(:disabled) {
+  background-color: var(--paper-status-color-pending-active);
+}
+
+.review {
+  background-color: var(--paper-status-color-review);
+  color: white;
+}
+.review:hover:not(:disabled) {
+  background-color: var(--paper-status-color-review-hover);
+}
+.review:active:not(:disabled) {
+  background-color: var(--paper-status-color-review-active);
+}
+
+.required {
+  background-color: var(--paper-status-color-required);
+  color: white;
+}
+.required:hover:not(:disabled) {
+  background-color: var(--paper-status-color-required-hover);
+}
+.required:active:not(:disabled) {
+  background-color: var(--paper-status-color-required-active);
+}
+
+.accepted {
+  background-color: var(--paper-status-color-accepted);
+  color: white;
+}
+.accepted:hover:not(:disabled) {
+  background-color: var(--paper-status-color-accepted-hover);
+}
+.accepted:active:not(:disabled) {
+  background-color: var(--paper-status-color-accepted-active);
+}
+
+.rejected {
+  background-color: var(--paper-status-color-rejected);
+  color: white;
+}
+.rejected:hover:not(:disabled) {
+  background-color: var(--paper-status-color-rejected-hover);
+}
+.rejected:active:not(:disabled) {
+  background-color: var(--paper-status-color-rejected-active);
+}
+
+.published {
+  background-color: var(--paper-status-color-published);
+  color: white;
+}
+.published:hover:not(:disabled) {
+  background-color: var(--paper-status-color-published-hover);
+}
+.published:active:not(:disabled) {
+  background-color: var(--paper-status-color-published-active);
+}
+
+.withdrawn {
+  background-color: var(--paper-status-color-withdrawn);
+  color: white;
+}
+.withdrawn:hover:not(:disabled) {
+  background-color: var(--paper-status-color-withdrawn-hover);
+}
+.withdrawn:active:not(:disabled) {
+  background-color: var(--paper-status-color-withdrawn-active);
+}
+
+
 .outline {
   background-color: transparent;
   border-color: var(--paper-secondary-300);

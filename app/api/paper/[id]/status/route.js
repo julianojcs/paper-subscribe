@@ -7,7 +7,7 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 export async function PUT(request, { params }) {
   try {
     const { id } = params;
-    const { status } = await request.json();
+    const { status, reason } = await request.json();
 
     // Verificar se o status é válido
     const validStatuses = [
@@ -67,16 +67,20 @@ export async function PUT(request, { params }) {
     // Atualizar o status do paper
     const updatedPaper = await prisma.paper.update({
       where: { id },
-      data: { status }
+      data: {
+        status,
+        // Se o status for WITHDRAWN, define deletedAt como a data atual
+        ...(status === 'WITHDRAWN' ? { deletedAt: new Date() } : {})
+      }
     });
 
     // Registrar a mudança no histórico
-    await prisma.paperHistory.create({  // Corrigido de paperStatusHistory para paperHistory
+    await prisma.paperHistory.create({
       data: {
         paperId: id,
         status,
         userId: session.user.id,
-        comment: `Status alterado para ${status} pelo usuário`
+        comment: reason || `Status alterado para ${status} pelo usuário`
       }
     });
 

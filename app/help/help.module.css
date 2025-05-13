@@ -309,7 +309,7 @@
 
 .statusIcon[data-status="WITHDRAWN"],
 .statusDot[data-status="WITHDRAWN"] {
-  border-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
+  border: 2px, solid, gold;
   background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
 }
 

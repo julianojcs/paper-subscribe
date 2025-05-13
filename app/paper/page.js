@@ -98,7 +98,7 @@ console.log('session', session);
   const getStatusBadge = (status) => {
     const statusMap = {
       'DRAFT': { label: 'Rascunho', className: styles.statusDraft },
-      'PENDING': { label: 'Pendente', className: styles.statusPending },
+      'PENDING': { label: 'Submetido', className: styles.statusPending },
       'UNDER_REVIEW': { label: 'Em revisão', className: styles.underReview },
       'REVISION_REQUIRED': { label: 'Revisão Necessária', className: styles.statusRevisionRequired },
       'ACCEPTED': { label: 'Aprovado', className: styles.statusAccepted },

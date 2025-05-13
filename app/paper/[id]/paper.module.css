@@ -140,53 +140,51 @@
 
 /* Status badges */
 .statusBadge {
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  padding: 0.25rem 1rem;
+  border-radius: 1.25rem;
   font-weight: 500;
   display: inline-block;
-  border: 1px solid var(--paper-primary);
-  box-shadow: 0 0 0 1px var(--paper-light);
+  color: #fff;
 }
 
 .statusDraft {
-  background-color: #e2e8f0;
-  color: #4a5568;
+  border-color: rgba(var(--paper-status-color-draft-rgb), 1);
+  background-color: rgba(var(--paper-status-color-draft-rgb), 1);
 }
 
 .statusPending {
-  background-color: #feebc8;
-  color: #c05621;
+  border-color: rgba(var(--paper-status-color-pending-rgb), 1);
+  background-color: rgba(var(--paper-status-color-pending-rgb), 1);
 }
 
 .statusReviewing {
-  background-color: #bee3f8;
-  color: #2b6cb0;
+  border-color: rgba(var(--paper-status-color-under-review-rgb), 1);
+  background-color: rgba(var(--paper-status-color-under-review-rgb), 1);
 }
 
 .statusRevision {
-  background-color: #fed7d7;
-  color: #c53030;
+  border-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
+  background-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
 }
 
 .statusAccepted {
-  background-color: #c6f6d5;
-  color: #276749;
+  border-color: rgba(var(--paper-status-color-accepted-rgb), 1);
+  background-color: rgba(var(--paper-status-color-accepted-rgb), 1);
 }
 
 .statusRejected {
-  background-color: #fed7d7;
-  color: #c53030;
+  border-color: rgba(var(--paper-status-color-rejected-rgb), 1);
+  background-color: rgba(var(--paper-status-color-rejected-rgb), 1);
 }
 
 .statusPublished {
-  background-color: #9ae6b4;
-  color: #22543d;
+  border-color: rgba(var(--paper-status-color-published-rgb), 1);
+  background-color: rgba(var(--paper-status-color-published-rgb), 1);
 }
 
 .statusWithdrawn {
-  background-color: #e2e8f0;
-  color: #718096;
+  border: 2px solid gold;
+  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
 }
 
 /* Container do Paper */
@@ -210,7 +208,7 @@
       background-color: transparent;
 
       & button {
-        min-width: 200px;
+        min-width: 125px;
         &:first-child {
           margin-inline-start: auto;
         }
@@ -357,6 +355,10 @@
     flex: 1;
     justify-content: center;
     min-width: 150px;
+  }
+
+  .statusBadge {
+    font-size: 0.75rem;
   }
 }
 
@@ -695,10 +697,6 @@
   }
   .statusContainer.desktopDisplay {
     display: none;
-  }
-  .statusBadge {
-    border: 1px solid var(--paper-light);
-    box-shadow: 0 0 0 1px var(--paper-primary);
   }
 
   .metaItem {

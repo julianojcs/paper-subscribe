@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaSitemap, FaAngleDown, FaAngleUp, FaFileAlt, FaCloudUploadAlt, FaSearch, FaExclamationCircle, FaInfoCircle, FaUser, FaEdit, FaCheckCircle, FaBan, FaFileUpload, FaTrashAlt,
-  FaCodeBranch } from 'react-icons/fa';
+import { FaSitemap, FaAngleDown, FaAngleUp, FaFileAlt, FaCloudUploadAlt, FaSearch, FaExclamationCircle, FaInfoCircle, FaUser, FaEdit, FaCheckCircle, FaBan, FaFileUpload, FaTrashAlt } from 'react-icons/fa';
 import PageContainer from '/app/components/layout/PageContainer';
 import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
 import LoadingSpinner from '/app/components/ui/LoadingSpinner';
@@ -61,11 +60,11 @@ export default function HelpPage() {
   const faqs = [
     {
       question: "Como faço para submeter um trabalho?",
-      answer: "Para submeter um trabalho, faça login na plataforma e clique no botão 'Enviar Trabalho' no menu superior. Preencha o formulário com os dados solicitados, faça upload do arquivo em formato PDF e confirme a submissão. Você receberá um email confirmando que sua submissão foi recebida com sucesso."
+      answer: "Para submeter um trabalho, faça login na plataforma e clique no botão 'Enviar Trabalho' no menu superior. Preencha o formulário com os dados solicitados, faça upload do arquivo em formato PDF (PDF opcional - apenas quando solicitado pelas regras do evento) e confirme a submissão. Você receberá um email confirmando que sua submissão foi recebida com sucesso."
     },
     {
       question: "Posso editar meu trabalho depois de submetido?",
-      answer: "Sim, você pode editar seu trabalho enquanto ele estiver nos status RASCUNHO ou PENDENTE. Uma vez que o trabalho entre em avaliação (EM REVISÃO), não será mais possível realizar alterações, a menos que os revisores solicitem revisões (REVISÃO necessária)."
+      answer: "Não, você pode editar seu trabalho enquanto ele estiver nos status RASCUNHO. Uma vez que o trabalho for submetido, não será mais possível realizar alterações, a menos que os revisores solicitem revisões (REVISÃO necessária)."
     },
     {
       question: "Como acompanho o status da minha submissão?",
@@ -73,11 +72,11 @@ export default function HelpPage() {
     },
     {
       question: "Como funciona o processo de revisão?",
-      answer: "Após a submissão, seu trabalho passa por uma triagem inicial e então é encaminhado para revisores especialistas no tema. Os revisores avaliam seu trabalho e podem recomendar aceitação, rejeição ou solicitar revisões. A decisão final é tomada pelos organizadores do evento com base nas recomendações dos revisores."
+      answer: "Após a submissão, seu trabalho passa por uma triagem inicial e então é encaminhado para revisores especialistas no tema. Os revisores avaliam seu trabalho e podem recomendar aceitação, rejeição ou solicitar revisões (opcional). A decisão final é tomada pelos organizadores do evento com base nas recomendações dos revisores."
     },
     {
       question: "Posso retirar meu trabalho depois de submetido?",
-      answer: "Sim, você pode retirar (withdraw) seu trabalho a qualquer momento antes da publicação final. Para isso, acesse a página do seu trabalho através da seção 'Meus Trabalhos' e clique no botão 'Retirar Trabalho'. Note que isso é irreversível e seu trabalho não será mais considerado para o evento."
+      answer: "Não, você pode retirar (excluir) apenas antes da submissão (estado de rascunho). Para isso, acesse a página do seu trabalho através da seção 'Meus Trabalhos' e clique no botão 'Retirar Trabalho'. Note que isso é irreversível e seu trabalho não será mais considerado para o evento."
     },
     {
       question: "O que acontece quando meu trabalho é aceito?",
@@ -99,16 +98,16 @@ export default function HelpPage() {
         "Não aparece para revisores ou organizadores do evento",
         "Permite ao autor trabalhar em seu documento sem comprometimento oficial"
       ],
-      nextStatus: "PENDENTE (quando submetido)"
+      nextStatus: "Submetido (quando enviado)"
     },
     {
       status: "PENDING",
       icon: <FaCloudUploadAlt />,
-      title: "Pendente",
+      title: "Submetido",
       description: "Trabalho oficialmente submetido aguardando triagem",
       details: [
         "Visível para autores e organizadores do evento",
-        "Editável com limitações; edições permitidas até designação de revisores",
+        "Bloqueado para edição pelo autor",
         "Entrou no pipeline de avaliação, mas ainda não foi distribuído aos revisores",
         "Aparece nas filas de trabalho pendentes para os organizadores",
         "Marca que o paper está completo e pronto para revisão na perspectiva do autor"
@@ -204,8 +203,6 @@ export default function HelpPage() {
     }
   ], []); // Empty dependency array ensures this is only created once
 
-  // Adicionando esta função para mapear statusConfigs para o formato de paperStatuses
-  // Adicionando esta função para mapear statusConfigs para o formato de paperStatuses
   const mapStatusConfigsToPaperStatuses = useCallback((eventData) => {
     // Verificar se temos configurações de status do evento
     const statusConfigs = eventData?.event?.statusConfigs || eventData?.statusConfigs;
@@ -544,7 +541,7 @@ export default function HelpPage() {
                       <div
                         className={styles.statusDot}
                         data-status="PENDING"
-                        data-label="Pendente"
+                        data-label="Submetido"
                         onClick={() => handleStatusDotClick("PENDING")}
                       >
                         <FaCloudUploadAlt className={styles.dotIcon} />
@@ -647,7 +644,7 @@ export default function HelpPage() {
                             </div>
                           </div>
                           <div className={styles.statusTitleWrapper}>
-                            <h3>{item.title}</h3>
+                            <h3>{item.title === "Pendente" ? "Submetido" : item.title}</h3>
                             <p>{item.description}</p>
                           </div>
                           <div className={styles.statusToggle}>

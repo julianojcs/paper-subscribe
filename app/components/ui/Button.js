@@ -16,7 +16,7 @@ const Button = ({
   // Criar classe composta baseada nas props
   const buttonClasses = [
     styles.button,
-    styles[variant],
+    variant==="submited" ? styles["pending"] : styles[variant],
     styles[size],
     fullWidth ? styles.fullWidth : '',
     loading ? styles.loading : '',
