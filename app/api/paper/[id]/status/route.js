@@ -71,7 +71,7 @@ export async function PUT(request, context ) {
       data: {
         status,
         // Se o status for WITHDRAWN, define deletedAt como a data atual
-        ...(status === 'WITHDRAWN' ? { deletedAt: new Date() } : {})
+        // ...(status === 'WITHDRAWN' ? { deletedAt: new Date() } : {})
       }
     });
 
