@@ -595,7 +595,16 @@ export default function PaperDetailPage() {
                 onClick={handleBack}
                 className={styles.actionButton}
               >
-                <FaArrowLeft className={styles.buttonIcon} /> Voltar
+                {submitting ? (
+                  <>
+                    <div className={styles.spinnerSmall}></div>
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <FaArrowLeft className={styles.buttonIcon} /> Voltar
+                  </>
+                )}
               </Button>
             </div>
 
@@ -606,7 +615,16 @@ export default function PaperDetailPage() {
                   onClick={() => router.push(`/paper/edit/${paper.id}`)}
                   className={styles.actionButton}
                 >
-                  <FaEdit className={styles.buttonIcon} /> Editar
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit className={styles.buttonIcon} /> Editar
+                    </>
+                  )}
                 </Button>
               )}
 
