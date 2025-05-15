@@ -46,6 +46,7 @@
     "@eslint/eslintrc": "^3",
     "eslint": "^9",
     "eslint-config-next": "15.2.5",
-    "prisma": "^6.7.0"
+    "prisma": "^6.7.0",
+    "prop-types": "^15.8.1"
   }
 }
