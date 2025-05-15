@@ -172,6 +172,15 @@ export default function EditPaperPage() {
     setEventFields(formFields);
   }, []);
 
+  const countKeywords = useCallback((keywordsString) => {
+    if (!keywordsString || typeof keywordsString !== 'string') return 0;
+    // Remove espaços extras e divide por vírgulas
+    return keywordsString
+      .trim()
+      .split(',')
+      .filter(keyword => keyword.trim().length > 0)
+      .length;
+  }, []);
 
   const fetchEventData = useCallback(async (eventId) => {
     try {
