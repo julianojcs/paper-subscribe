@@ -17,7 +17,7 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(true);
   const { eventData, setEventData, setTimelineData } = useDataContext();
   const [localEventData, setLocalEventData] = useState(null);
-  const [ isDataLoadinfFinished, setIsDataLoadinfFinished ] = useState(false);
+  const [ isDataLoadingFinished, setIsDataLoadingFinished ] = useState(false);
 
   // Estado para controlar a tab padrão
   const [defaultTab, setDefaultTab] = useState('login');
@@ -32,7 +32,7 @@ function LoginPageContent() {
         setLoading(true);
         // Obter dados do evento usando o serviço
         const result = await getEventData();
-        setIsDataLoadinfFinished(true);
+        setIsDataLoadingFinished(true);
 
         if (result.dataEvent) {
           // Se os dados vieram de um token, definir a tab de registro como padrão
@@ -54,7 +54,7 @@ function LoginPageContent() {
           }
         } else {
           console.log('Nenhum dado de evento encontrado');
-          setIsDataLoadinfFinished(true);
+          setIsDataLoadingFinished(true);
         }
       } catch (error) {
         console.error('Erro ao carregar dados do evento:', error);
@@ -67,9 +67,9 @@ function LoginPageContent() {
       }
     };
 
-    if (isDataLoadinfFinished) return; // Evita chamadas repetidas
+    if (isDataLoadingFinished) return; // Evita chamadas repetidas
     loadEventData();
-  }, [getEventData, isDataLoadinfFinished]);
+  }, [getEventData, isDataLoadingFinished]);
 
   // Manipulador para o carregamento da imagem
   const handleImageLoad = () => {
@@ -87,14 +87,16 @@ function LoginPageContent() {
   };
 
   // Componente de conteúdo principal
+  const logoUrl = "https://firebasestorage.googleapis.com/v0/b/paper-submission-10013.firebasestorage.app/o/Events%2FJMR-CIM2025%2Fjmr2025.png?alt=media&token=a0bfa920-fb56-46f5-a92c-b11a97ecd03b"
+  const name = "JMR & CIM 2025" ;
   const MainContent = () => (
     <div className={`${styles.card} ${imageReady || !eventData?.logoUrl ? styles.ready : ''}`}>
       {/* Exibe HeaderContentTitle se houver dados de evento */}
-      {(eventData?.logoUrl || localEventData?.logoUrl) ? (
+      {(eventData?.logoUrl || localEventData?.logoUrl || logoUrl) ? (
         <HeaderContentTitle
           eventData={{
-            eventLogoUrl: eventData.logoUrl || localEventData?.logoUrl,
-            eventName: eventData.name || localEventData?.name,
+            eventLogoUrl: eventData?.logoUrl || localEventData?.logoUrl || logoUrl,
+            eventName: eventData?.name || localEventData?.name || name,
           }}
           onImageLoad={handleImageLoad}
           subtitle="Sistema de Submissão de Trabalhos"
