@@ -18,12 +18,13 @@ import {
   FaBuilding,
   FaTimes,
   FaTable,
-  FaThLarge
+  FaThLarge,
+  FaEnvelope
 } from 'react-icons/fa';
 
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
-import Input from '../../../components/ui/Input';
+import SearchInput from '../../../components/ui/SearchInput';
 import Tooltip from '../../../components/ui/Tooltip';
 import UserRoleMenu from '../../../components/ui/UserRoleMenu';
 import PasswordConfirmModal from '../../../components/ui/PasswordConfirmModal';
@@ -48,7 +49,8 @@ export default function OrganizationUsersPage() {
   });
 
   // Filtros e ordenação
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');  // Renomeado de search para searchInput
+  const [search, setSearch] = useState('');            // Renomeado de appliedSearch para search
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [roleFilter, setRoleFilter] = useState('');
@@ -117,7 +119,7 @@ export default function OrganizationUsersPage() {
       const queryParams = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        search,
+        search: search,  // Atualizado de appliedSearch para search
         sortBy,
         sortOrder,
         ...(roleFilter && { role: roleFilter })
@@ -147,7 +149,7 @@ export default function OrganizationUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search, sortBy, sortOrder, roleFilter]);
+  }, [pagination.page, pagination.limit, search, sortBy, sortOrder, roleFilter]);  // Atualizada dependência
 
   // Carregar dados dos usuários
   useEffect(() => {
@@ -157,6 +159,8 @@ export default function OrganizationUsersPage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Aplicar o termo de busca atual quando o formulário for enviado
+    setSearch(searchInput);  // Atualizado de setAppliedSearch(search) para setSearch(searchInput)
     // Resetar para a página 1 ao realizar uma nova busca
     setPagination(prev => ({ ...prev, page: 1 }));
 
@@ -569,13 +573,23 @@ export default function OrganizationUsersPage() {
 
             <div className={`${styles.filtersContainer} ${filtersVisible ? styles.filtersVisible : styles.filtersHidden}`}>
               <form onSubmit={handleSearch} className={styles.searchForm}>
-                <Input
+                <SearchInput
                   type="text"
                   placeholder="Buscar por nome, email, CPF ou telefone"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  leftIcon={<FaSearch />}
+                  value={searchInput}  // Atualizado de search para searchInput
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className={styles.searchInput}
+                  id="search-input" // Adicione um ID estável
+                  autoFocus={true}
+                  autoCorrect="off"
+                  spellCheck="false"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch(e);
+                    }
+                  }}
+                  leftIcon={<FaSearch />}
                 />
                 <Button type="submit" variant="primary">
                   Buscar
@@ -626,10 +640,10 @@ export default function OrganizationUsersPage() {
             </div>
 
             {/* Resumo dos filtros aplicados - visível quando os filtros estão escondidos */}
-            {!filtersVisible && (search || roleFilter || sortBy !== 'name' || sortOrder !== 'asc') && (
+            {!filtersVisible && (searchInput || roleFilter || sortBy !== 'name' || sortOrder !== 'asc') && (
               <div className={styles.appliedFilters}>
                 <span>Filtros: </span>
-                {search && <span className={styles.filterTag}>Busca: &quot;{search}&quot;</span>}
+                {searchInput && <span className={styles.filterTag}>Busca: &quot;{searchInput}&quot;</span>}
                 {roleFilter && (
                   <span className={styles.filterTag}>
                     Papel: {roleOptions.find(o => o.id === roleFilter)?.name}
@@ -707,15 +721,17 @@ export default function OrganizationUsersPage() {
 
             {/* Visualização de cards para desktop (modo grid) */}
             {viewMode === 'card' && (
-              <div className={styles.desktopCardGrid}>
+              <>
                 {users.length > 0 ? (
-                  users.map(user => renderDesktopCard(user))
+                  <div className={styles.desktopCardGrid}>
+                    {users.map(user => renderDesktopCard(user))}
+                  </div>
                 ) : (
                   <div className={styles.emptyState}>
                     <p>Nenhum usuário encontrado com os filtros selecionados.</p>
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {/* Visualização compacta para mobile (sempre cards) */}
