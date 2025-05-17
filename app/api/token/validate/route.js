@@ -60,9 +60,14 @@ export async function POST(request) {
             id: true,
             name: true,
             logoUrl: true,
-            submissionStart: true,
-            submissionEnd: true,
-            isActive: true
+            shortName: true,
+            isActive: true,
+            timelines: {
+              select: {
+                type: true,
+                date: true
+              }
+            }
           }
         }
       }
@@ -84,36 +89,6 @@ export async function POST(request) {
       });
     }
 
-    // Se o token estiver associado a um evento, verificar se o evento está ativo
-    if (organizationToken.eventId && !organizationToken.event.isActive) {
-      return NextResponse.json({
-        valid: false,
-        message: `O evento ${organizationToken.event.name} associado a este token está inativo.`
-      });
-    }
-
-    // Verificar se o período de submissão está aberto (se for um token de evento)
-    if (organizationToken.eventId && organizationToken.event.submissionStart && organizationToken.event.submissionEnd) {
-      const now = new Date();
-      if (now < organizationToken.event.submissionStart) {
-        return NextResponse.json({
-          valid: true, // O token é válido, mas as submissões ainda não começaram
-          active: false,
-          message: "O período de submissões ainda não começou.",
-          submissionsStart: organizationToken.event.submissionStart
-        });
-      }
-
-      if (now > organizationToken.event.submissionEnd) {
-        return NextResponse.json({
-          valid: true, // O token é válido, mas as submissões já terminaram
-          active: false,
-          message: "O período de submissões já terminou.",
-          submissionsEnd: organizationToken.event.submissionEnd
-        });
-      }
-    }
-
     // Se chegou até aqui, o token é válido
     return NextResponse.json({
       valid: true,
@@ -127,8 +102,18 @@ export async function POST(request) {
         name: organizationToken.event.name,
         logoUrl: organizationToken.event.logoUrl,
         shortName: organizationToken.event.shortName,
-        submissionStart: organizationToken.event.submissionStart,
-        submissionEnd: organizationToken.event.submissionEnd
+        // Obter as datas da timeline
+        submissionStart: organizationToken.event.timelines?.find(t => t.type === 'SUBMISSION_START')?.date || null,
+        submissionEnd: organizationToken.event.timelines?.find(t => t.type === 'SUBMISSION_END')?.date || null,
+        reviewStart: organizationToken.event.timelines?.find(t => t.type === 'REVIEW_START')?.date || null,
+        reviewEnd: organizationToken.event.timelines?.find(t => t.type === 'REVIEW_END')?.date || null,
+        eventStart: organizationToken.event.timelines?.find(t => t.type === 'EVENT_START')?.date || null,
+        eventEnd: organizationToken.event.timelines?.find(t => t.type === 'EVENT_END')?.date || null,
+        // Incluir todas as datas da timeline para flexibilidade
+        timelines: organizationToken.event.timelines?.map(t => ({
+          type: t.type,
+          date: t.date
+        })) || []
       } : null,
       expiresAt: organizationToken.expiresAt
     });
