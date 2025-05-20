@@ -10,6 +10,7 @@ import Tooltip from '../components/ui/Tooltip';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import PageContainer from '../components/layout/PageContainer';
 import HeaderContentTitle from '../components/layout/HeaderContentTitle';
+import { isSubmissionPeriodClosed } from '../utils/submissionPeriodCheck'; // Importar a função de verificação
 
 export default function PaperPage({ searchParams }) {
   const { data: session, status } = useSession();
@@ -39,6 +40,20 @@ export default function PaperPage({ searchParams }) {
   });
   const eventLogoUrl = session?.user?.activeEventLogoUrl;
   const eventName = session?.user?.activeEventName;
+  const eventId = session?.user?.activeEventId;
+
+  const [submissionPeriodClosed, setSubmissionPeriodClosed] = useState(false);
+
+  useEffect(() => {
+    if (eventId) {
+      isSubmissionPeriodClosed(eventId)
+        .then(closed => setSubmissionPeriodClosed(closed))
+        .catch(err => {
+          console.error("Error checking submission period:", err);
+          setSubmissionPeriodClosed(false);
+        });
+    }
+  }, [eventId]);
 
   // Buscar submissões do usuário se estiver logado
   useEffect(() => {
@@ -233,15 +248,17 @@ export default function PaperPage({ searchParams }) {
               Acompanhe o status de seus trabalhos submetidos e envie novos artigos.
             </p>
           </div>
-          <div className={styles.newPaperButton}>
-            <Button
-              onClick={() => router.push('/paper/subscribe')}
-              variant="primary"
-              fullWidth={false}
-            >
-              Novo Trabalho
-            </Button>
-          </div>
+          {!submissionPeriodClosed && (
+            <div className={styles.newPaperButton}>
+              <Button
+                onClick={() => router.push('/paper/subscribe')}
+                variant="primary"
+                fullWidth={false}
+              >
+                Novo Trabalho
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className={styles.papersSection}>
