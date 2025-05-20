@@ -21,11 +21,11 @@
   --paper-primary-active: #001d6f;
   --paper-primary-dark: #001d6f;
 
-  --paper-secondary: #6c757d;
-  --paper-secondary-rgb: 108, 117, 125;
-  --paper-secondary-hover: #5a6268;
-  --paper-secondary-active: #4e555b;
-  --paper-secondary-dark: #343a40;
+  --paper-secondary: #64748b; /* Substituído de #6c757d para um tom azulado */
+  --paper-secondary-rgb: 100, 116, 139; /* Formato RGB do novo valor */
+  --paper-secondary-hover: #475569; /* Tom mais escuro para hover */
+  --paper-secondary-active: #334155; /* Tom ainda mais escuro para active */
+  --paper-secondary-dark: #1e293b; /* Versão dark */
 
   --paper-success: #198754;
   --paper-success-rgb: 25, 135, 84;
@@ -122,15 +122,15 @@
   --paper-primary-800: rgb(0, 19.2, 74);
   --paper-primary-900: rgb(0, 9.6, 37);
 
-  --paper-secondary-100: #e9ecef;
-  --paper-secondary-200: #dee2e6;
-  --paper-secondary-300: #ced4da;
-  --paper-secondary-400: #adb5bd;
-  --paper-secondary-500: #6c757d;
-  --paper-secondary-600: #495057;
-  --paper-secondary-700: #343a40;
-  --paper-secondary-800: #212529;
-  --paper-secondary-900: #1a1e21;
+  --paper-secondary-100: #f1f5f9; /* Azul mais claro */
+  --paper-secondary-200: #e2e8f0;
+  --paper-secondary-300: #cbd5e1;
+  --paper-secondary-400: #94a3b8;
+  --paper-secondary-500: #64748b; /* Cor base */
+  --paper-secondary-600: #475569;
+  --paper-secondary-700: #334155;
+  --paper-secondary-800: #1e293b;
+  --paper-secondary-900: #0f172a; /* Azul mais escuro */
 
   --paper-success-100: rgb(209, 231, 220.8);
   --paper-success-200: rgb(163, 207, 186.6);
@@ -161,6 +161,10 @@
   --paper-danger-700: rgb(142.2, 42.6, 52.8);
   --paper-danger-800: rgb(94.8, 28.8, 36);
   --paper-danger-900: rgb(47.4, 15, 19.2);
+
+  --border-disabled-color: #999999;
+  --background-disabled-color: #cccccc;
+  --text-disabled-color: #666666;
 }
 
 html,
@@ -303,9 +307,9 @@ main,
   }
 
   /* Inputs e Forms */
-  input, select, textarea, button {
+  /* input, select, textarea, button {
     font-size: 0.9rem !important;
-  }
+  } */
 
   /* Classes utilitárias */
   .mobile-full-width {

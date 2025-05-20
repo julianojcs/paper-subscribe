@@ -10,6 +10,7 @@
   border: 1px solid transparent;
   min-height: 2rem;
   position: relative;
+  user-select: none;
 }
 
 .button:focus {
@@ -18,8 +19,16 @@
 }
 
 .button:disabled {
-  opacity: 0.6;
+  opacity: .6;
+  border-color: var(--border-disabled-color);
   cursor: not-allowed;
+  background-color: var(--background-disabled-color);
+  color: var(--text-disabled-color);
+  box-shadow: 0 4px 12px #ccc;
+
+  &:hover {
+    transform: unset;
+  }
 }
 
 /* Variantes */

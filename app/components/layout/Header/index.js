@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { useDataContext } from '../../../../context/DataContext';
 import styles from './Header.module.css';
 import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaFileAlt, FaCloudUploadAlt,
          FaHome, FaUsers, FaCog, FaBuilding, FaCaretDown, FaCalendarAlt,
-         FaQuestionCircle } from 'react-icons/fa';
+         FaQuestionCircle, FaBan, FaLock } from 'react-icons/fa';
 
 const Header = () => {
   const { data: session } = useSession();
@@ -22,6 +23,34 @@ const Header = () => {
   const buttonRef = useRef(null);
   const dragStartRef = useRef(null);
   const isDraggingRef = useRef(false);
+
+  const { eventData } = useDataContext();
+  const [localEventData, setLocalEventData] = useState(null);
+
+  // Carregar dados do evento do localStorage se não estiverem disponíveis no contexto
+  useEffect(() => {
+    if (!eventData && typeof window !== 'undefined') {
+      try {
+        const storedEventData = localStorage.getItem('event_data');
+        if (storedEventData) {
+          const parsedData = JSON.parse(storedEventData);
+          setLocalEventData(parsedData);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do evento do localStorage:', error);
+      }
+    }
+  }, [eventData]);
+
+  // Determinar os dados atuais do evento para verificações
+  const currentEventData = eventData || localEventData;
+
+  // Verificar se as submissões estão encerradas
+  const isSubmissionClosed =
+    currentEventData?.isSubmissionClosed ||
+    currentEventData?.isReviewPhase ||
+    currentEventData?.isEventFinished ||
+    (currentEventData?.submissionEndDate && new Date(currentEventData.submissionEndDate) < new Date());
 
   const isAdmin = session?.user?.role === 'ADMIN' ||
     (session?.user?.organizationMemberships &&
@@ -250,13 +279,22 @@ const Header = () => {
                       <span>Meus Trabalhos</span>
                     </Link>
 
-                    <Link
-                      href="/paper/subscribe"
-                      className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
-                    >
-                      <FaCloudUploadAlt className={styles.navIcon} />
-                      <span>Enviar Trabalho</span>
-                    </Link>
+                    {isSubmissionClosed ? (
+                      <span className={`${styles.disabledLink}`}>
+                        <span className={`${styles.navIcon} ${styles.bannedIcon}`}>
+                          <FaCloudUploadAlt />
+                        </span>
+                        <span>Enviar Trabalho</span>
+                      </span>
+                    ) : (
+                      <Link
+                        href="/paper/subscribe"
+                        className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                      >
+                        <FaCloudUploadAlt className={styles.navIcon} />
+                        <span>Enviar Trabalho</span>
+                      </Link>
+                    )}
 
                     {/* Menu da Empresa para administradores */}
                     {isAdmin && (
@@ -380,13 +418,38 @@ const Header = () => {
                         <span>Meus Trabalhos</span>
                       </Link>
 
-                      <Link
+                      {isSubmissionClosed ? (
+                        <span className={`${styles.disabledLink}`}>
+                          <span className={`${styles.navIcon} ${styles.bannedIcon}`}>
+                            <FaCloudUploadAlt />
+                          </span>
+                          <span>Enviar Trabalho</span>
+                        </span>
+                      ) : (
+                        <span className={`${styles.disabledLink}`}>
+                          <span className={`${styles.navIcon} ${styles.bannedIcon}`}>
+                            <FaCloudUploadAlt />
+                          </span>
+                          <span>Enviar Trabalho</span>
+                        </span>
+                      )}
+                      {/* <Link
                         href="/paper/subscribe"
-                        className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''}`}
+                        className={`${styles.navLink} ${isActive('/paper/subscribe') ? styles.activeLink : ''} ${isSubmissionClosed ? styles.disabledLink : ''}`}
+                        onClick={(e) => {
+                          if (isSubmissionClosed) {
+                            e.preventDefault();
+                            alert("O período de submissão de trabalhos está encerrado.");
+                          }
+                        }}
                       >
-                        <FaCloudUploadAlt className={styles.navIcon} />
+                        {isSubmissionClosed ? (
+                          <FaLock className={styles.navIcon} />
+                        ) : (
+                          <FaCloudUploadAlt className={styles.navIcon} />
+                        )}
                         <span>Enviar Trabalho</span>
-                      </Link>
+                      </Link> */}
 
                       {/* Menu da Empresa para administradores */}
                       {isAdmin && (

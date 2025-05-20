@@ -49,32 +49,18 @@ const Home = () => {
 
     try {
       setLoading(true);
-      console.log("Carregando dados do evento...", { authStatus, hasSession: !!session });
 
       const storedData = localStorageService.getItem(EVENT_DATA_KEY);
       if (storedData && !force) {
-        console.log('Dados encontrados no localStorage:', storedData);
-
-        // Verificar a estrutura dos dados e adaptar se necessário
         let normalizedData = storedData;
 
         // Se os dados estiverem diretamente no objeto raiz (formato antigo de produção)
         if (!storedData.expires && storedData.event) {
-          console.log('Detectada estrutura de dados antiga, normalizando...');
-
-          // Não precisamos calcular a data de expiração manualmente,
-          // pois a função saveEventDataToLocalStorage já faz isso
-          console.log('Normalizando estrutura de dados usando saveEventDataToLocalStorage');
-
           // Usar a função utilitária existente para normalizar e salvar os dados
           normalizedData = saveEventDataToLocalStorage(storedData);
-
-          console.log('Dados de evento normalizados e salvos com expires:',
-            normalizedData.expires ? new Date(normalizedData.expires).toLocaleString() : 'indefinido');
         }
 
         const timelineData = normalizedData.timelines || [];
-        console.log(`Timeline encontrada no localStorage: ${timelineData.length} itens`);
 
         setLocalEventData(normalizedData);
         setLocalTimelineItems(timelineData);
@@ -87,7 +73,6 @@ const Home = () => {
       }
 
       const result = await getEventData();
-      console.log("Dados obtidos da API:", result);
 
       if (result?.dataEvent) {
         saveEventDataToLocalStorage(result.dataEvent);
@@ -119,7 +104,6 @@ const Home = () => {
     const checkStorageUpdates = () => {
       const storedData = localStorageService.getItem(EVENT_DATA_KEY);
       if (storedData && eventData && storedData.id !== eventData.id) {
-        console.log('Dados do evento atualizados em outra aba, recarregando...');
 
         setLocalEventData(storedData);
         setLocalTimelineItems(storedData.timelines || []);
@@ -156,7 +140,6 @@ const Home = () => {
 
   useEffect(() => {
     if (authStatus === 'authenticated' && isInitialized && !eventData) {
-      console.log('Usuário autenticado e sem dados do evento. Recarregando...');
       loadEventData(true);
     }
   }, [authStatus, loadEventData, isInitialized, eventData]);
@@ -172,14 +155,6 @@ const Home = () => {
       setLocalTimelineItems(contextTimelineItems);
     }
   }, [contextEventData, contextTimelineItems, eventData, timelineItems]);
-
-  useEffect(() => {
-    console.log('Estado atual da timeline:', {
-      timelineItems: timelineItems?.length || 0,
-      contextTimelineItems: contextTimelineItems?.length || 0,
-      currentTimelineItems: (timelineItems?.length > 0 ? timelineItems : contextTimelineItems)?.length || 0
-    });
-  }, [timelineItems, contextTimelineItems]);
 
   const SubmissionStatus = () => {
     const currentEventData = eventData || contextEventData;
@@ -233,26 +208,11 @@ const Home = () => {
 
   const MainContent = () => {
     const currentEventData = eventData || contextEventData;
-    console.log('Renderizando MainContent com dados:', currentEventData);
 
     // Garantir que os dados do evento estejam na estrutura esperada
-    let normalizedEventData = currentEventData;
-    let eventLogo, eventName;
-
-    if (currentEventData) {
-      // Determinar onde estão as informações relevantes
-      if (currentEventData.event) {
-        // Formato da produção
-        eventLogo = currentEventData.event.logoUrl;
-        eventName = currentEventData.event.name;
-        console.log('Usando estrutura de dados do formato de produção');
-      } else {
-        // Formato esperado pelo componente
-        eventLogo = currentEventData.logoUrl;
-        eventName = currentEventData.name;
-        console.log('Usando estrutura de dados padrão');
-      }
-    }
+    let normalizedEventData = currentEventData?.event || currentEventData;
+    let eventLogo = normalizedEventData?.logoUrl;
+    let eventName = normalizedEventData?.name;
 
     let currentTimelineItems = [];
 
@@ -260,10 +220,9 @@ const Home = () => {
       currentTimelineItems = timelineItems;
     } else if (contextTimelineItems && contextTimelineItems.length > 0) {
       currentTimelineItems = contextTimelineItems;
-    } else if (currentEventData) {
+    } else if (normalizedEventData) {
       // Verificar onde estão os itens da timeline
-      currentTimelineItems = currentEventData.timelines ||
-                            (currentEventData.event ? currentEventData.event.timelines : []);
+      currentTimelineItems = normalizedEventData.timelines || [];
     }
 
     return (
@@ -288,7 +247,7 @@ const Home = () => {
                   Bem-vindo, {session?.user?.name || 'Pesquisador'}
                 </h2>
                 <p className={styles.sectionDescription}>
-                  {currentEventData?.description || 'Bem-vindo ao sistema de submissão de trabalhos. Utilize o menu abaixo para enviar seus trabalhos ou consultar submissões anteriores.'}
+                  {normalizedEventData?.description || 'Bem-vindo ao sistema de submissão de trabalhos. Utilize o menu abaixo para enviar seus trabalhos ou consultar submissões anteriores.'}
                 </p>
               </div>
 
@@ -297,7 +256,7 @@ const Home = () => {
                   onClick={() => router.push('/paper/subscribe')}
                   className={styles.mainButton}
                   variant="primary"
-                  disabled={currentEventData?.isSubmissionClosed}
+                  disabled={normalizedEventData?.isSubmissionClosed || normalizedEventData?.isReviewPhase || normalizedEventData?.isEventFinished}
                 >
                   <FaPaperPlane className={styles.buttonIcon} />
                   <span className={styles.actionText}>Enviar Novo Trabalho</span>
@@ -321,17 +280,17 @@ const Home = () => {
           ) : (
             <div className={styles.unauthenticatedContent}>
               <h2 className={styles.sectionTitle}>
-                {currentEventData?.name ? `Participe do ${currentEventData.name}` : 'Submeta Seu Trabalho Científico'}
+                {normalizedEventData?.name ? `Participe do ${normalizedEventData.name}` : 'Submeta Seu Trabalho Científico'}
               </h2>
               <p className={styles.sectionDescription}>
-                {currentEventData?.description ||
+                {normalizedEventData?.description ||
                   'Junte-se à nossa plataforma para submeter seus trabalhos para revisão e publicação. Nossa plataforma oferece um processo de submissão simplificado e revisão especializada.'}
               </p>
               <div className={styles.authLinks}>
                 <Button
                   onClick={() => router.push('/login')}
                   className={styles.mainButton}
-                  disabled={currentEventData?.isEventFinished}
+                  disabled={normalizedEventData?.isEventFinished}
                 >
                   <FaSignInAlt className={styles.buttonIcon} /> Entrar / Cadastrar
                 </Button>
@@ -345,9 +304,9 @@ const Home = () => {
           )}
         </div>
 
-        {currentEventData?.website && (
+        {normalizedEventData?.website && (
           <footer className={styles.footer}>
-            <a href={currentEventData.website} target="_blank" rel="noopener noreferrer">
+            <a href={normalizedEventData.website} target="_blank" rel="noopener noreferrer">
               Visite o site oficial do evento
             </a>
           </footer>

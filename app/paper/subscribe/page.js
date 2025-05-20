@@ -17,6 +17,7 @@ import PageContainer from '/app/components/layout/PageContainer';
 import HeaderContentTitle from '/app/components/layout/HeaderContentTitle';
 import LoadingSpinner from '/app/components/ui/LoadingSpinner';
 import KeywordsField from '../../components/ui/KeywordsField';
+import SubmissionGuard from '../../components/hoc/SubmissionGuard';
 
 // Funções auxiliares para formatação de texto e contagem de palavras
 const getFieldHelperText = (fieldConfig) => {
@@ -115,7 +116,7 @@ const countKeywords = (keywordsStr) => {
 };
 
 // Componente principal que utiliza useSearchParams
-const SubmitPaperPage = () => {
+const PaperForm = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const fileInputRef = useRef(null);
@@ -1068,5 +1069,13 @@ const SubmitPaperPage = () => {
     </PageContainer>
   );
 }
+
+const SubmitPaperPage = () => {
+  return (
+    <SubmissionGuard>
+      <PaperForm />
+    </SubmissionGuard>
+  );
+};
 
 export default SubmitPaperPage;

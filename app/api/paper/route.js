@@ -258,6 +258,29 @@ export async function POST(request) {
       );
     }
 
+    // Verificar status do evento
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        name: true,
+        organizationId: true,
+        maxFiles: true,
+        maxFileSize: true,
+        isSubmissionClosed: true,
+        isReviewPhase: true,
+        isEventFinished: true,
+        submissionEndDate: true
+      }
+    });
+
+    if (event.isSubmissionClosed || event.isReviewPhase || event.isEventFinished ||
+        (event.submissionEndDate && new Date(event.submissionEndDate) < new Date())) {
+      return NextResponse.json({
+        success: false,
+        message: "O período de submissão de trabalhos está encerrado."
+      }, { status: 403 });
+    }
+
     // Verificar se o usuário logado está entre os autores
     const currentUserIsAuthor = authors.some(author => author.userId === session.user.id);
     if (!currentUserIsAuthor) {
@@ -266,18 +289,6 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-
-    // Obter o evento para verificar se precisa de arquivo
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      select: {
-        name: true,
-        organizationId: true,
-        maxFiles: true,
-        maxFileSize: true
-      }
-    });
-    const eventName = event?.name || 'Evento';
 
     // Dados do arquivo
     let fileData = {
@@ -352,7 +363,7 @@ export async function POST(request) {
     // Verificar se o arquivo é obrigatório mas não foi enviado
     if (event && event.maxFiles > 0 && (!file || !(file instanceof File))) {
       return NextResponse.json(
-        { error: `O evento "${eventName}" requer o upload de um arquivo PDF` },
+        { error: `O evento ${event.name ? `"${event.name}" ` : ''}requer o upload de um arquivo PDF` },
         { status: 400 }
       );
     }

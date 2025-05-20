@@ -42,20 +42,31 @@
   }
 }
 
+.disabledLink,
 .navLink {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 0 1rem;
   height: 100%;
-  color: #64748b;
   font-size: 0.9rem;
-  text-decoration: none;
-  transition: color 0.3s;
-  position: relative;
-  border-radius: 0.5rem;
+  user-select: none;
 }
 
-.navLink:hover:not(.activeLink) {
+.disabledLink {
+  color:rgba(100, 116, 139, 0.3);
+  transition: unset;
+  cursor: not-allowed;
+}
+
+.navLink {
+  color: #64748b;
+  transition: color 0.3s;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.navLink:hover:not(.activeLink):not(.disabledLink) {
   color: #0f172a;
   background-color: rgba(0, 0, 0, 0.05);
   border-block-end: 2px solid #0f172a;
@@ -260,7 +271,7 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
-  .navLink:hover:not(.activeLink) {
+  .navLink:hover:not(.activeLink):not(.disabledLink) {
     border-block-end: unset;
   }
 
@@ -574,7 +585,8 @@
 
 /* Links no menu móvel */
 .mobileNav .navLink,
-.mobileNav .signOutButton {
+.mobileNav .signOutButton,
+.mobileNav .disabledLink {
   padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
   font-size: 16px;
@@ -586,6 +598,14 @@
   border-left: none;
   border-right: none;
   border-top: none;
+}
+.mobileNav .disabledLink {
+  color: rgba(100, 116, 139, 0.3);
+  transition: unset;
+  cursor: not-allowed;
+}
+.mobileNav .navLink,
+.mobileNav .signOutButton {
   cursor: pointer;
 }
 
@@ -624,4 +644,35 @@
   to {
     opacity: 1;
   }
+}
+
+/* Estilo para o ícone desabilitado com símbolo de proibição */
+.bannedIcon {
+  position: relative;
+  display: inline-block;
+}
+
+/* Criar o círculo vermelho com uma linha atravessada */
+/* .bannedIcon::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  border-radius: 50%;
+  border: 2px solid var(--paper-error, #dc3545);
+  box-sizing: border-box;
+} */
+
+/* Criar a linha diagonal vermelha (símbolo de proibição) */
+.bannedIcon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: 2px;
+  background-color: var(--paper-error, #dc3545);
+  transform: translateY(-50%) rotate(-45deg);
 }
