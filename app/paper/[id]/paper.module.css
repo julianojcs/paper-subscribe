@@ -327,7 +327,22 @@
   gap: 0.5rem;
 }
 
-/* Responsividade para a seção de ações */
+/* Estilo para a mensagem de período encerrado */
+.submissionClosedMessage {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left: 4px solid var(--paper-error);
+  border-radius: 0.25rem;
+  text-align: center;
+}
+
+.submissionClosedMessage p {
+  margin: 0;
+  color: var(--paper-error);
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .actionsSection {
     flex-direction: column;
