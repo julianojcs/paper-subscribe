@@ -6,11 +6,11 @@
 export async function fetchEvents(activeOnly = true) {
   try {
     const response = await fetch(`/api/events?active=${activeOnly}`);
-    
+
     if (!response.ok) {
       throw new Error('Falha ao buscar eventos');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Erro ao buscar eventos:', error);
@@ -25,15 +25,15 @@ export async function fetchEvents(activeOnly = true) {
  */
 export async function fetchEventDetails(eventId) {
   try {
-    const response = await fetch(`/api/events/${eventId}`);
-    
+    const response = await fetch(`/api/organization/events/${eventId}`);
+
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error('Evento não encontrado');
       }
       throw new Error('Falha ao buscar detalhes do evento');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error(`Erro ao buscar detalhes do evento (ID: ${eventId}):`, error);
@@ -49,11 +49,11 @@ export async function fetchEventDetails(eventId) {
 export async function fetchCurrentEvents(includeUpcoming = true) {
   try {
     const response = await fetch(`/api/events/current?upcoming=${includeUpcoming}`);
-    
+
     if (!response.ok) {
       throw new Error('Falha ao buscar eventos atuais');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Erro ao buscar eventos atuais:', error);
