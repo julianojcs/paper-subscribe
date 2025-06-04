@@ -1,0 +1,162 @@
+.paperCard {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.paperCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+.paperHeader {
+  padding-block-end: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+  line-height: 1.4;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.paperMeta, .metaItem, .metaText {
+  max-width: 100%;
+}
+
+.paperEventRow {
+  Display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-block-end: 0.75rem;
+}
+
+.paperEvent {
+  display: flex;
+  align-items: center;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.metaIcon {
+  margin-right: 0.5rem;
+  color: #3498db;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.eventName {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.paperMeta {
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #64748b;
+  flex-grow: 1;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.metaText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  cursor: help;
+}
+
+.keywordsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.keywordTag {
+  background-color: #e2e8f0;
+  color: #4a5568;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.paperAbstract {
+  padding-block: 0.75rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  border-top: 1px solid #f1f5f9;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.cardActions {
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f1f5f9;
+}
+
+.actionButton {
+  font-size: 0.875rem;
+}
+
+.downloadLink {
+  display: flex;
+  align-items: center;
+  color: #3182ce;
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+.downloadIcon {
+  margin-right: 4px;
+}
+
+@media (max-width: 768px) {
+  .cardActions {
+    padding: 0.75rem 1rem;
+  }
+
+  .actionButton {
+    width: 100%;
+  }
+
+  .paperMeta {
+    padding: 0.75rem 1rem;
+  }
+
+  .paperAbstract {
+    padding: 0.75rem 1rem;
+  }
+}

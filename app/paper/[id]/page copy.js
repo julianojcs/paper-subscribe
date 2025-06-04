@@ -1,89 +1,38 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import Button from '../../components/ui/Button';
-import { useDataContext } from '../../../context/DataContext';
 import styles from './paper.module.css';
+import Button from '../../components/ui/Button';
 import { formatDate } from '../../utils/formatDate';
 import {
   FaFileAlt, FaCalendarAlt, FaUsers, FaHistory,
   FaFileDownload, FaBuilding, FaTags, FaEdit, FaStethoscope,
   FaFilePdf, FaArrowLeft, FaCloudUploadAlt, FaTrashAlt,
-  FaSuitcase, FaUser
+  FaSuitcase
 } from 'react-icons/fa';
 import ExpandableDescription from '../../components/ui/ExpandableDescription';
 import Tooltip from '../../components/ui/Tooltip';
 
-const PaperDetailPage = () => {
-  const { id } = useParams();
+export default function PaperDetailPage() {
+  // Obter params diretamente - não é necessário use()
+  const params = useParams();
+  const id = params.id; // Acesso direto é permitido
+
   const router = useRouter();
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
-
-  const adminMode = searchParams.get('adminMode') === 'true';
-  const [isAdmin, setIsAdmin] = useState(false);
-
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dynamicFields, setDynamicFields] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const { eventData } = useDataContext();
-  const [isSubmissionClosed, setIsSubmissionClosed] = useState(false);
-
   useEffect(() => {
-    if (session?.user) {
-      const userIsAdmin = ['ADMIN', 'MANAGER'].includes(session.user.role);
-      setIsAdmin(userIsAdmin);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    const checkSubmissionPeriod = () => {
-      let eventInfo = null;
-
-      if (!eventData || !eventData.name) {
-        try {
-          const storedEventData = localStorage.getItem('event_data');
-          if (storedEventData) {
-            eventInfo = JSON.parse(storedEventData);
-          }
-        } catch (e) {
-          console.error('Erro ao carregar dados do evento:', e);
-        }
-      } else {
-        eventInfo = eventData;
-      }
-
-      if (!eventInfo) return false;
-
-      const eventDetails = eventInfo.event || eventInfo;
-
-      const closed = eventDetails.isSubmissionClosed ||
-        eventDetails.isReviewPhase ||
-        eventDetails.isEventFinished ||
-        (eventDetails.submissionEndDate && new Date(eventDetails.submissionEndDate) < new Date());
-
-      setIsSubmissionClosed(closed);
-      return closed;
-    };
-
-    checkSubmissionPeriod();
-  }, [eventData]);
-
-  useEffect(() => {
-    if (id) {
+    if (status === 'authenticated' && id) {
       setLoading(true);
       console.log(`Carregando paper ID: ${id}`);
-
-      const adminQueryParam = isAdmin && adminMode ? '&adminAccess=true' : '';
-
-      fetch(`/api/paper/${id}?includeAll=true${adminQueryParam}`)
+      fetch(`/api/paper/${id}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(response.status === 404
@@ -95,25 +44,29 @@ const PaperDetailPage = () => {
         .then(data => {
           console.log('Dados recebidos:', data);
 
+          // Processar os campos dinâmicos aqui
           if (data.paper && data.paper.fieldValues) {
             const textareaFields = data.paper.fieldValues.filter(
               fv => fv.field && fv.field.fieldType === 'TEXTAREA'
             );
 
+            // Filtrar os campos TEXTAREA que não são resumos
             const nonAbstractFields = textareaFields.filter(
               fv => fv.field &&
               !(fv.field.label.toLowerCase().includes('resumo') ||
-                fv.field.label.toLowerCase().includes('abstract'))
+               fv.field.label.toLowerCase().includes('abstract'))
             );
 
+            // Definir os campos dinâmicos
             setDynamicFields(nonAbstractFields);
 
+            // Atualizar o paper com fields values sem TEXTAREA
             const updatedPaper = {
               ...data.paper,
               fieldValues: data.paper.fieldValues.filter(
                 fv => fv.field && fv.field.fieldType !== 'TEXTAREA'
               ),
-              originalFieldValues: data.paper.fieldValues
+              originalFieldValues: data.paper.fieldValues // Adicionar os valores originais
             };
 
             setPaper(updatedPaper);
@@ -131,41 +84,55 @@ const PaperDetailPage = () => {
           setLoading(false);
         });
     }
-  }, [id, isAdmin, adminMode]);
+  }, [id, status]);
 
+  // Função para baixar o arquivo
   const downloadPaper = () => {
     if (paper?.fileUrl) {
       window.open(paper.fileUrl, '_blank');
     }
   };
 
+  // Função para voltar à lista de papers
   const handleBack = () => {
-    if (adminMode && isAdmin) {
-      router.back();
-    } else {
-      router.push('/paper');
+    router.push('/paper');
+  };
+
+  // Função para submeter o trabalho
+  const handleSubmitPaper = async () => {
+    if (!paper?.id) return;
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/paper/${paper.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'PENDING',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao submeter trabalho');
+      }
+
+      // Redirecionar para a página de trabalhos
+      router.push('/paper?submitted=true'); // Parâmetro para mostrar mensagem de sucesso
+    } catch (error) {
+      console.error('Erro ao submeter trabalho:', error);
+      alert(`Erro ao submeter trabalho: ${error.message}`); // Feedback simples
+      setSubmitting(false);
     }
   };
 
-  const handleEdit = () => {
-    if (isSubmissionClosed && !adminMode) {
-      toast.error("O período de submissão está encerrado. Não é possível editar trabalhos.");
-      return;
-    }
+  // Função para retirar o trabalho
+  const handleWithdrawPaper = async () => {
+    if (!paper?.id) return;
 
-    const editUrl = adminMode && isAdmin
-      ? `/paper/edit/${id}?adminMode=true`
-      : `/paper/${id}/edit`;
-
-    router.push(editUrl);
-  };
-
-  const handleWithdraw = async () => {
-    if (isSubmissionClosed) {
-      toast.error("O período de submissão está encerrado. Não é possível retirar trabalhos.");
-      return;
-    }
-
+    // Confirmação antes de prosseguir
     const confirmed = window.confirm(
       'Tem certeza que deseja retirar este trabalho? Esta ação não pode ser desfeita.'
     );
@@ -190,6 +157,7 @@ const PaperDetailPage = () => {
         throw new Error(errorData.message || 'Erro ao retirar trabalho');
       }
 
+      // Redirecionar para a página de trabalhos
       router.push('/paper?withdrawn=true');
     } catch (error) {
       console.error('Erro ao retirar trabalho:', error);
@@ -198,39 +166,7 @@ const PaperDetailPage = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (isSubmissionClosed) {
-      toast.error("O período de submissão está encerrado. Não é possível submeter trabalhos.");
-      return;
-    }
-
-    if (!paper?.id) return;
-
-    try {
-      setSubmitting(true);
-      const response = await fetch(`/api/paper/${paper.id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'PENDING',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao submeter trabalho');
-      }
-
-      router.push('/paper?submitted=true');
-    } catch (error) {
-      console.error('Erro ao submeter trabalho:', error);
-      alert(`Erro ao submeter trabalho: ${error.message}`);
-      setSubmitting(false);
-    }
-  };
-
+  // Definição do status com cores
   const getStatusBadge = (status) => {
     if (!status) return null;
 
@@ -258,11 +194,13 @@ const PaperDetailPage = () => {
     );
   };
 
+  // Função para formatar lista de autores
   const formatAuthors = (authors) => {
     if (!authors || !Array.isArray(authors) || authors.length === 0) {
       return <span className={styles.noAuthors}>Nenhum autor registrado</span>;
     }
 
+    // Ordenar autores por authorOrder
     const sortedAuthors = [...authors].sort((a, b) => a.authorOrder - b.authorOrder);
 
     return (
@@ -270,15 +208,15 @@ const PaperDetailPage = () => {
         {sortedAuthors.map((author, index) => (
           <div key={author.id || index} className={styles.authorCard}>
             <div className={styles.authorNameContainer}>
-              <Tooltip
-                content={`${author.name}`}
-                position="top"
-                delay={300}
-              >
-                <span className={styles.authorName}>
-                  {author.name}
-                </span>
-              </Tooltip>
+            <Tooltip
+              content={`${author.name}`}
+              position="top"
+              delay={300}
+            >
+              <span className={styles.authorName}>
+                {author.name}
+              </span>
+            </Tooltip>
               <div className={styles.authorStatus}>
                 {(author.isMainAuthor || author.userId) &&
                   <Tooltip
@@ -287,7 +225,7 @@ const PaperDetailPage = () => {
                     position="top"
                     delay={300}
                   >
-                    <div className={styles.authorMainBadge}><span className={styles.visibleBadgeText}>Principal</span></div>
+                    <div className={styles.authorMainBadge}><span className={styles.visibleBadgeText}>Pricipal</span></div>
                   </Tooltip>
                 }
                 {(author.isPresenter) &&
@@ -314,10 +252,25 @@ const PaperDetailPage = () => {
     );
   };
 
+  // Função para recuperar o valor de um campo dinâmico
+  const getFieldValue = (fieldId) => {
+    if (!paper || !paper.fieldValues || !Array.isArray(paper.fieldValues)) {
+      return null;
+    }
+
+    const fieldValue = paper.fieldValues.find(fv => fv.fieldId === fieldId);
+    return fieldValue ? fieldValue.value : null;
+  };
+
+  // Função para exibir o resumo do paper - pode estar em campos dinâmicos ou no abstract
   const getAbstract = () => {
     if (!paper) return null;
 
+    // Tentar encontrar um campo TEXTAREA que geralmente é usado para resumos
     if (paper.fieldValues && Array.isArray(paper.fieldValues)) {
+      // Não filtrar os fieldValues aqui, isso já foi feito no useEffect
+
+      // Procurar campos de abstract entre os textareaFields que já estão em dynamicFields
       const allTextareaFields = paper.originalFieldValues?.filter(
         fv => fv.field && fv.field.fieldType === 'TEXTAREA'
       ) || [];
@@ -325,7 +278,7 @@ const PaperDetailPage = () => {
       const abstractField = allTextareaFields.find(
         fv => fv.field &&
         (fv.field.label.toLowerCase().includes('resumo') ||
-          fv.field.label.toLowerCase().includes('abstract'))
+         fv.field.label.toLowerCase().includes('abstract'))
       );
 
       if (abstractField) {
@@ -347,6 +300,7 @@ const PaperDetailPage = () => {
       }
     }
 
+    // Caso não encontremos campos dinâmicos, verificar se há um resumo direto
     if (paper.abstract) {
       return <p className={styles.abstractText}>{paper.abstract}</p>;
     }
@@ -373,141 +327,34 @@ const PaperDetailPage = () => {
     return dynamicFieldsReturn;
   };
 
-  const renderAuthorInfo = () => {
-    if (!adminMode || !paper?.user) return null;
+  if (status === 'loading') {
+    return <div className={styles.loadingContainer}>
+      <div className={styles.loadingSpinner}></div>
+      <p>Carregando...</p>
+    </div>;
+  }
 
+  if (status === 'unauthenticated') {
     return (
-      <section className={styles.authorInfoSection}>
-        <div className={styles.metaHeader}>
-          <FaUser className={styles.metaIcon} />
-          <span className={styles.metaLabel}>Autor Principal</span>
-        </div>
-        <div className={styles.authorInfoContent}>
-          <div className={styles.authorDetail}>
-            <strong>Nome:</strong> {paper.user.name}
-          </div>
-          <div className={styles.authorDetail}>
-            <strong>Email:</strong> {paper.user.email}
-          </div>
-          <div className={styles.authorDetail}>
-            <strong>Instituição:</strong> {paper.user.institution || "Não informada"}
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/admin/user-papers/${paper.user.id}`)}
-            className={styles.viewUserPapersButton}
-          >
-            <FaFileAlt className={styles.buttonIcon} /> Ver todos os trabalhos
-          </Button>
-        </div>
-      </section>
-    );
-  };
-
-  const renderActionButtons = () => {
-    if (adminMode && isAdmin) {
-      return (
-        <div className={styles.rightActions}>
+      <div className={styles.container}>
+        <div className={styles.authRequired}>
+          <FaFileAlt className={styles.authIcon} />
+          <h2>Acesso Restrito</h2>
+          <p>Por favor, faça login para visualizar este trabalho.</p>
           <Button
             variant="primary"
-            onClick={handleEdit}
-            className={styles.actionButton}
+            onClick={() => router.push('/login')}
           >
-            <FaEdit className={styles.buttonIcon} /> Editar como Admin
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={handleBack}
-            className={styles.actionButton}
-          >
-            <FaArrowLeft className={styles.buttonIcon} /> Voltar
+            Entrar / Cadastrar
           </Button>
         </div>
-      );
-    }
-
-    return (
-      <>
-        <div className={styles.leftActions}>
-          <Button
-            variant="secondary"
-            onClick={handleBack}
-            className={styles.actionButton}
-          >
-            <FaArrowLeft className={styles.buttonIcon} /> Voltar
-          </Button>
-        </div>
-
-        <div className={styles.rightActions}>
-          {!isSubmissionClosed && (
-            <>
-              {paper.status !== 'SUBMITTED' && (
-                <Button
-                  variant="pending"
-                  onClick={handleSubmit}
-                  className={styles.submitButton}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <div className={styles.spinnerSmall}></div>
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <FaCloudUploadAlt className={styles.buttonIcon} /> Submeter
-                    </>
-                  )}
-                </Button>
-              )}
-              {paper.status !== 'WITHDRAWN' && (
-                <Button
-                  variant="primary"
-                  onClick={handleEdit}
-                  className={styles.actionButton}
-                >
-                  {submitting ? (
-                    <>
-                      <div className={styles.spinnerSmall}></div>
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <FaEdit className={styles.buttonIcon} /> Editar
-                    </>
-                  )}
-                </Button>
-              )}
-              {paper.status !== 'WITHDRAWN' && (
-                <Button
-                  variant="danger"
-                  onClick={handleWithdraw}
-                  className={styles.withdrawButton}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <div className={styles.spinnerSmall}></div>
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <FaTrashAlt className={styles.buttonIcon} /> Retirar
-                    </>
-                  )}
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </>
+      </div>
     );
-  };
+  }
 
   if (loading) {
     return <div className={styles.loadingContainer}>
-      <LoadingSpinner />
+      <div className={styles.loadingSpinner}></div>
       <p>Carregando detalhes do trabalho...</p>
     </div>;
   }
@@ -547,6 +394,10 @@ const PaperDetailPage = () => {
     );
   }
 
+  // Determinar se o trabalho pode ser editado
+  const canEdit = ['DRAFT'].includes(paper.status);
+  // const canEdit = false; // ['DRAFT', 'PENDING'].includes(paper.status);
+
   return (
     <div className={styles.container}>
       <div className={styles.paperDetail}>
@@ -569,9 +420,9 @@ const PaperDetailPage = () => {
         </header>
 
         <div className={styles.paperContent}>
-          {adminMode && isAdmin && renderAuthorInfo()}
-
+          {/* Evento e área temática */}
           <section className={styles.eventAreaTypeSection}>
+            {/* Evento */}
             <div className={styles.eventInfoRow}>
               <div className={styles.infoContainer}>
                 <FaBuilding className={styles.metaIcon} />
@@ -585,6 +436,7 @@ const PaperDetailPage = () => {
               </div>
             </div>
 
+            {/* Área */}
             {paper.area && (
               <div className={styles.eventInfoRow}>
                 <div className={styles.infoContainer}>
@@ -606,6 +458,7 @@ const PaperDetailPage = () => {
               </div>
             )}
 
+            {/* Tipo de Paper */}
             {paper.paperType && (
               <div className={styles.eventInfoRow}>
                 <div className={styles.infoContainer}>
@@ -628,6 +481,7 @@ const PaperDetailPage = () => {
             )}
           </section>
 
+          {/* Autores */}
           <section className={styles.AuthorsSection}>
             <div className={`${styles.metaItem} ${styles.fullWidth}`}>
               <div className={styles.metaHeader}>
@@ -640,10 +494,13 @@ const PaperDetailPage = () => {
             </div>
           </section>
 
+          {/* Resumo */}
           {getAbstract()}
 
+          {/* Campos dinâmicos */}
           {getDynamicFields()}
 
+          {/* Palavras-chave */}
           <section className={styles.keywordsSection}>
             <div className={styles.metaHeader}>
               <FaTags className={styles.metaIcon} />
@@ -658,6 +515,7 @@ const PaperDetailPage = () => {
             </div>
           </section>
 
+          {/* Arquivo */}
           {paper.fileUrl && paper.fileName && paper.fileStoragePath && paper.fileSize && (
             <section className={styles.fileSection}>
               <div className={styles.fileInfo}>
@@ -680,6 +538,7 @@ const PaperDetailPage = () => {
             </section>
           )}
 
+          {/* Datas */}
           <section className={styles.DatesSection}>
             <div className={styles.metaItem}>
               <div className={styles.metaHeader}>
@@ -704,6 +563,7 @@ const PaperDetailPage = () => {
             )}
           </section>
 
+          {/* Histórico */}
           {paper.history && paper.history.length > 0 && (
             <section className={styles.historySection}>
               <h2 className={styles.sectionTitle}>Histórico</h2>
@@ -727,19 +587,91 @@ const PaperDetailPage = () => {
             </section>
           )}
 
+          {/* Botões de ação */}
           <section className={styles.actionsSection}>
-            {renderActionButtons()}
-          </section>
-
-          {isSubmissionClosed && !adminMode && (
-            <div className={styles.submissionClosedMessage}>
-              <p>O período de submissão, edição e remoção de trabalhos está encerrado.</p>
+            <div className={styles.leftActions}>
+              <Button
+                variant="secondary"
+                onClick={handleBack}
+                className={styles.actionButton}
+              >
+                {submitting ? (
+                  <>
+                    <div className={styles.spinnerSmall}></div>
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <FaArrowLeft className={styles.buttonIcon} /> Voltar
+                  </>
+                )}
+              </Button>
             </div>
-          )}
+
+            <div className={styles.rightActions}>
+              {canEdit && (
+                <Button
+                  variant="primary"
+                  onClick={() => router.push(`/paper/edit/${paper.id}`)}
+                  className={styles.actionButton}
+                >
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit className={styles.buttonIcon} /> Editar
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {/* Botão para retirar o trabalho  */}
+              {paper.status !== 'WITHDRAWN' && (
+                <Button
+                  variant="danger"
+                  onClick={handleWithdrawPaper}
+                  className={styles.withdrawButton}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <FaTrashAlt className={styles.buttonIcon} /> Retirar
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {paper.status === 'DRAFT' && (
+                <Button
+                  variant="pending"
+                  onClick={handleSubmitPaper}
+                  className={styles.submitButton}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className={styles.spinnerSmall}></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt className={styles.buttonIcon} /> Submeter
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </div>
   );
-};
-
-export default PaperDetailPage;
+}

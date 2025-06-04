@@ -1,0 +1,232 @@
+.paperContainer {
+  background-color: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.actionsHeader {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.errorBox {
+  background-color: #fff0f0;
+  padding: 2rem;
+  border: 2px solid #f8d7da;
+  border-radius: 8px;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.errorText {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.notFound {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.headerSection {
+  border-bottom: 1px solid #e3e3e3;
+  padding-bottom: 1rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  color: #34495e;
+  font-size: 1.4rem;
+}
+
+.paperTitle {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #222;
+}
+
+.subtitleRow {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statusLabel {
+  font-weight: 500;
+  color: #666;
+}
+
+.statusValue {
+  font-weight: bold;
+  margin-left: 0.25rem;
+  text-transform: uppercase;
+}
+
+.statusValue.submitted {
+  color: #007bff;
+}
+
+.statusValue.approved {
+  color: #28a745;
+}
+
+.statusValue.rejected {
+  color: #dc3545;
+}
+
+.dateInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.updatedAt {
+  margin-left: 10px;
+  font-style: italic;
+}
+
+.iconLeft {
+  margin-right: 0.4rem;
+}
+
+.mainSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+  border-bottom: 1px solid #e3e3e3;
+  padding-bottom: 1rem;
+}
+
+.infoBlock {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.infoBlock h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.authorsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.authorsList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.authorInstit {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.badge {
+  display: inline-block;
+  background: #eaeaea;
+  color: #555;
+  font-size: 0.75rem;
+  margin-left: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.keywords {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f7f7f7;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.keywordsList {
+  padding-inline-start: 2rem;
+}
+
+.eventInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.orgName {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.authorEmail {
+  font-size: 0.85rem;
+  color: #666;
+  margin-left: 5px;
+}
+
+.footerSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.fieldValuesList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+
+.fieldValuesList li {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.actionsArea {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.deleteButton {
+  background-color: #fff0f0;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.deleteButton:hover {
+  background-color: #ffe5e5;
+}
+
+@media (max-width: 768px) {
+  .mainSection {
+    grid-template-columns: 1fr;
+  }
+  .fieldValuesList {
+    grid-template-columns: 1fr;
+  }
+}

@@ -17,3 +17,16 @@ export function formatDate(dateString) {
     minute: '2-digit'
   }).format(date).replace(',', ' às');
 }
+
+export function formatShortDate(dateString) {
+  if (!dateString) return 'Data não informada';
+
+  const date = new Date(dateString);
+
+  // Formata a data para o padrão brasileiro: DD/MM/YYYY
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+}

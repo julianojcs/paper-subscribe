@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   FaExclamationTriangle,
@@ -27,9 +27,14 @@ import styles from './edit.module.css';
 export default function EditPaperPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id } = params;
   const { data: session, status } = useSession();
   const { eventData } = useDataContext();
+
+  // Verificar se está em modo admin
+  const adminMode = searchParams.get('adminMode') === 'true';
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Refs
   const fileInputRef = useRef(null);
@@ -68,6 +73,14 @@ export default function EditPaperPage() {
   const [formChanged, setFormChanged] = useState(false);
 
   const { states: brazilianStates, isLoading: statesLoading } = useBrazilianStates();
+
+  // Verificar se o usuário é admin ou manager
+  useEffect(() => {
+    if (session?.user) {
+      const userIsAdmin = ['ADMIN', 'MANAGER'].includes(session.user.role);
+      setIsAdmin(userIsAdmin);
+    }
+  }, [session]);
 
   // Verificar se os dados foram alterados
   useEffect(() => {
@@ -286,7 +299,13 @@ export default function EditPaperPage() {
   const fetchPaperData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/paper/${id}?includeEvent=true&includeAuthors=true&includeFieldValues=true`);
+
+      // Adicionar query parameter para indicar acesso administrativo
+      const adminQueryParam = isAdmin && adminMode ? '&adminAccess=true' : '';
+
+      const response = await fetch(
+        `/api/paper/${id}?includeEvent=true&includeAuthors=true&includeFieldValues=true${adminQueryParam}`
+      );
 
       if (!response.ok) {
         throw new Error(response.status === 404
@@ -387,7 +406,7 @@ export default function EditPaperPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, fetchEventData, session?.user?.id, session?.user?.name, brazilianStates]);
+  }, [id, isAdmin, adminMode, fetchEventData, session?.user?.id, session?.user?.name, brazilianStates]);
 
   useEffect(() => {
     if (status === 'authenticated' && id) {
@@ -684,8 +703,11 @@ export default function EditPaperPage() {
           value: dynamicFieldValues[fieldId]
         }));
 
+      // Adicionar indicação de edição admin
+      const adminParam = isAdmin && adminMode ? '?adminEdit=true' : '';
+
       // Primeiro, atualizar os dados principais do paper via JSON
-      const updateResponse = await fetch(`/api/paper/${id}`, {
+      const updateResponse = await fetch(`/api/paper/${id}${adminParam}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -708,7 +730,9 @@ export default function EditPaperPage() {
             authorOrder: author.authorOrder
           })),
           // Incluir os valores dos campos personalizados
-          fieldValues: fieldValues
+          fieldValues: fieldValues,
+          // Incluir flag para indicar edição administrativa
+          adminEdit: isAdmin && adminMode
         }),
       });
 
@@ -748,7 +772,11 @@ export default function EditPaperPage() {
 
       // Redirecionar após sucesso
       setTimeout(() => {
-        router.push(`/paper/${id}`);
+        if (adminMode && isAdmin) {
+          router.push(`/paper/${id}?adminMode=true`);
+        } else {
+          router.push(`/paper/${id}`);
+        }
       }, 1500);
 
     } catch (err) {
@@ -764,8 +792,12 @@ export default function EditPaperPage() {
   };
 
   const handleCancel = useCallback(() => {
-    router.push(`/paper/${id}`);
-  }, [router, id]);
+    if (adminMode && isAdmin) {
+      router.push(`/paper/${id}?adminMode=true`);
+    } else {
+      router.push(`/paper/${id}`);
+    }
+  }, [router, id, adminMode, isAdmin]);
 
   // Funções auxiliares para formatação de texto e contagem de palavras
   const getFieldHelperText = useCallback((fieldConfig) => {
@@ -1172,6 +1204,25 @@ export default function EditPaperPage() {
     );
   }
 
+  if (status === 'unauthenticated') {
+    router.push('/login');
+    return <div>Redirecionando para login...</div>;
+  }
+
+  // Verificar permissões para edição administrativa
+  if (adminMode && !isAdmin) {
+    return (
+      <div className={styles.errorContainer}>
+        <FaExclamationTriangle className={styles.errorIcon} />
+        <h2>Acesso Negado</h2>
+        <p>Você não tem permissões para editar este trabalho como administrador.</p>
+        <Button onClick={() => router.push('/paper')} variant="secondary">
+          Voltar para Meus Trabalhos
+        </Button>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -1211,7 +1262,9 @@ export default function EditPaperPage() {
             >
               <FaArrowLeft className={styles.backIcon} /> Voltar
             </Button>
-            <h1 className={styles.title}>Editar Trabalho</h1>
+            <h1 className={styles.title}>
+              {adminMode && isAdmin ? 'Editar Trabalho (Modo Administrador)' : 'Editar Trabalho'}
+            </h1>
           </div>
         </header>
 
@@ -1263,12 +1316,6 @@ export default function EditPaperPage() {
                     {fieldErrors.authors && (
                       <span className={styles.fieldError}>{fieldErrors.authors}</span>
                     )}
-                    {/* {maxAuthors > 0 && (
-                      <div className={styles.authorsLimit}>
-                        <FaInfoCircle className={styles.infoIcon} />
-                        <span>Limite máximo de {maxAuthors} autor{maxAuthors !== 1 ? 'es' : ''}</span>
-                      </div>
-                    )} */}
                   </div>
                 </div>
 

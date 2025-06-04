@@ -434,8 +434,21 @@ export default function OrganizationUsersPage() {
               <div className={styles.timeValue}>{formatTime(user.createdAt)}</div>
             </div>
             <div className={styles.papersCount}>
-              <FaFileAlt className={styles.paperIcon} />
-              <span>{user.papersCount}</span>
+              {user.papersCount > 0 ? (
+                <button
+                  onClick={() => router.push(`/admin/organization/users/${user.id}/papers`)}
+                  className={styles.paperCountLink}
+                  aria-label={`Ver ${user.papersCount} trabalho(s) de ${user.name}`}
+                >
+                  <FaFileAlt className={styles.paperIcon} />
+                  <span>{user.papersCount}</span>
+                </button>
+              ) : (
+                <div className={styles.emptyPapersCount}>
+                  <FaFileAlt className={styles.paperIcon} />
+                  <span>{user.papersCount}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -481,8 +494,21 @@ export default function OrganizationUsersPage() {
         </div>
         <div className={styles.cardFooter}>
           <div className={styles.papersCount}>
-            <FaFileAlt className={styles.paperIcon} />
-            <span>{user.papersCount} trabalho{user.papersCount !== 1 ? 's' : ''}</span>
+            {user.papersCount > 0 ? (
+              <button
+                onClick={() => router.push(`/admin/organization/users/${user.id}/papers`)}
+                className={styles.paperCountLink}
+                aria-label={`Ver ${user.papersCount} trabalho(s) de ${user.name}`}
+              >
+                <FaFileAlt className={styles.paperIcon} />
+                <span>{user.papersCount} trabalho{user.papersCount !== 1 ? 's' : ''}</span>
+              </button>
+            ) : (
+              <div className={styles.emptyPapersCount}>
+                <FaFileAlt className={styles.paperIcon} />
+                <span>{user.papersCount} trabalho{user.papersCount !== 1 ? 's' : ''}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -701,8 +727,21 @@ export default function OrganizationUsersPage() {
                           </td>
                           <td>
                             <div className={styles.papersCount}>
-                              <FaFileAlt className={styles.paperIcon} />
-                              <span>{user.papersCount}</span>
+                              {user.papersCount > 0 ? (
+                                <button
+                                  onClick={() => router.push(`/admin/organization/users/${user.id}/papers`)}
+                                  className={styles.paperCountLink}
+                                  aria-label={`Ver ${user.papersCount} trabalho(s) de ${user.name}`}
+                                >
+                                  <FaFileAlt className={styles.paperIcon} />
+                                  <span>{user.papersCount}</span>
+                                </button>
+                              ) : (
+                                <div className={styles.emptyPapersCount}>
+                                  <FaFileAlt className={styles.paperIcon} />
+                                  <span>{user.papersCount}</span>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>

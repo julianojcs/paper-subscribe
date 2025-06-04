@@ -45,3 +45,4 @@ backup_*.sql
 *_backup.*
 copy*.*
 *.old
+/docs

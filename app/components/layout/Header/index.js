@@ -333,6 +333,14 @@ const Header = () => {
                             <FaCalendarAlt className={styles.submenuIcon} />
                             <span>Eventos</span>
                           </Link>
+
+                          <Link
+                            href="/admin/organization/papers"
+                            className={`${styles.submenuLink} ${isActive('/admin/organization/papers') ? styles.activeSubmenuLink : ''}`}
+                          >
+                            <FaFileAlt className={styles.submenuIcon} />
+                            <span>Trabalhos</span>
+                          </Link>
                         </div>
                       </div>
                     )}

@@ -72,17 +72,26 @@
 }
 
 .welcomeSection {
-  flex: 1;
-  min-width: 0; /* Importante para evitar overflow */
-  margin-right: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr;
+  gap: 1rem;
+  margin-block-end: 1rem;
+  width: 100%;
 }
 
 .sectionTitle {
   font-size: 1.5rem;
   font-weight: 600;
   color: #334155;
-  margin-top: 0;
-  margin-bottom: 0.5rem;
+  margin-block: auto;
+  grid-column: 1;
+}
+
+.backButton {
+  grid-column: 2;
+  width: fit-content;
+  margin-inline-start: auto;
 }
 
 .sectionDescription {
@@ -93,20 +102,57 @@
 }
 
 .subsectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.2rem;
   font-weight: 500;
   color: #334155;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
-.newPaperButton {
+.authorSection {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+
+.authorData {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.authorField {
+  display: flex;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.authorDataText {
+  font-weight: 400;
+  color: #334155;
+}
+
+
+.metaIcon {
+  font-size: 1.1rem;
+  color: #3498db;
+  flex-shrink: 0;
+}
+
+.backButton {
   flex-shrink: 0;
 }
 
 /* Lista de submissões */
 .papersSection {
+  margin-block-start: 1.5rem;
   flex: 1;
 }
 
@@ -237,21 +283,22 @@
   }
 
   .welcomeSection {
-    margin-right: 0;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-
-  .newPaperButton {
-    width: 100%;
-  }
-
-  .newPaperButton button {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
     width: 100%;
   }
 
   .sectionTitle {
+    grid-row: 2;
+    grid-column: 1;
     font-size: 1.3rem;
+    margin: auto;
+  }
+
+  .backButton {
+    grid-row: 1;
+    grid-column: 1;
+    width: 100%;
   }
 
   .sectionDescription {

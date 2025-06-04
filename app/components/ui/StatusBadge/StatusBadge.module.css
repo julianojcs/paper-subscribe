@@ -1,0 +1,52 @@
+
+.statusBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Estilos para os status */
+.statusDraft,
+.statusPending,
+.statusRevisionRequired,
+.statusAccepted,
+.statusRejected,
+.statusPublished,
+.statusWithdrawn {
+  color: white;
+}
+.statusDraft {
+  background-color: var(--paper-status-color-draft, #6c757d);
+}
+.statusPending {
+  background-color: var(--paper-status-color-pending, #f59e0b);
+}
+.statusUnderReview {
+  background-color: var(--paper-status-color-under-review, #3b82f6);
+}
+.statusRevisionRequired {
+  background-color: var(--paper-status-color-revision-required, #8b5cf6);
+}
+.statusAccepted {
+  background-color: var(--paper-status-color-accepted, #4ade80);
+}
+.statusRejected {
+  background-color: var(--paper-status-color-rejected, #ef4444);
+}
+.statusPublished {
+  background-color: var(--paper-status-color-publisher, #14b8a6);
+}
+.statusWithdrawn {
+  background-color: var(--paper-status-color-withdrawn, #000000);
+  border: 2px solid gold;
+}
+
+@media (max-width: 768px) {
+  .statusBadge {
+    align-self: flex-start;
+  }
+}
