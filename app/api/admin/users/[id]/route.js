@@ -18,7 +18,11 @@ export async function GET(request, context) {
     }
 
     // Obter ID do usuário da URL
-    const userId = context.params.id;
+    const params = await context.params;
+    if (!params || !params.id) {
+      return NextResponse.json({ error: "ID do usuário é obrigatório" }, { status: 400 });
+    }
+    const userId = params?.id;
 
     // Buscar o usuário no banco de dados
     const user = await prisma.user.findUnique({

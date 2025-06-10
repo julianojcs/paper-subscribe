@@ -7,10 +7,10 @@ export async function GET(request) {
   try {
     // Verificar autenticação
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
-        { error: "Não autorizado. É necessário estar logado." }, 
+        { error: "Não autorizado. É necessário estar logado." },
         { status: 401 }
       );
     }
@@ -18,14 +18,14 @@ export async function GET(request) {
     // Pegar query parameters
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get("activeOnly") !== "false"; // padrão é true
-    
+
     // Construir a query base
     let whereClause = {};
-    
+
     // Filtrar eventos ativos se especificado
     if (activeOnly) {
       whereClause.isActive = true;
-      
+
       // Adicionar lógica para considerar apenas eventos com data de término após hoje
       const today = new Date();
       whereClause.OR = [
@@ -39,7 +39,7 @@ export async function GET(request) {
         }
       ];
     }
-    
+
     // Buscar eventos ativos do usuário logado
     const events = await prisma.event.findMany({
       where: whereClause,
@@ -68,11 +68,11 @@ export async function GET(request) {
         }
       }
     });
-    
+
     // Transformar dados para o formato da resposta
     const formattedEvents = events.map(event => {
       const userMembership = event.organization?.members?.[0];
-      
+
       return {
         id: event.id,
         name: event.name,
@@ -97,13 +97,13 @@ export async function GET(request) {
         isMember: !!userMembership
       };
     });
-    
+
     return NextResponse.json({ events: formattedEvents });
-    
+
   } catch (error) {
     console.error("Erro ao buscar eventos:", error);
     return NextResponse.json(
-      { error: "Erro ao buscar eventos", details: error.message }, 
+      { error: "Erro ao buscar eventos", details: error.message },
       { status: 500 }
     );
   }

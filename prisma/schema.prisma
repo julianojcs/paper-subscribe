@@ -65,6 +65,7 @@ model User {
   sessions                Session[]
   state                   State?                @relation(fields: [stateId], references: [id])
   passwordResets          PasswordReset[]
+  certificates            Certificate[]
 
   @@index([stateId]) // Adicionar índice para melhorar performance de consultas
 }
@@ -376,6 +377,14 @@ model State {
   flag String
 
   users User[] // Relacionamento reverso
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {

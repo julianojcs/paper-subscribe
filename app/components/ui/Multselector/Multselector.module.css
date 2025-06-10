@@ -1,0 +1,27 @@
+.optionLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 0;
+}
+
+.optionLabel:hover {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.optionLabel[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: normal;
+  max-width: 300px;
+  word-wrap: break-word;
+}

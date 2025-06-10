@@ -17,34 +17,40 @@ export async function GET(request, context) {
       return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
     }
 
-    // Obter ID do usuário da URL
-    const userId = context.params.id;
+    const params = await context.params;
+    if (!params || !params.id) {
+      return NextResponse.json({ error: "ID do usuário é obrigatório" }, { status: 400 });
+    }
+    const userId = params?.id;
 
-    // Obter parâmetros de paginação
+    // Obter parâmetros de paginação e filtros
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1', 10);
-    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-    const skip = (page - 1) * limit;
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+    const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit') || '10', 10)));
+    const skip = Math.max(0, (page - 1) * limit);
+    const status = url.searchParams.get('status'); // Parâmetro opcional para filtrar por status
+
+    // Construir filtro base
+    const baseWhere = {
+      OR: [
+        { userId },
+        { authors: { some: { userId } } }
+      ]
+    };
+
+    // Adicionar filtro de status se especificado
+    if (status) {
+      baseWhere.status = status;
+    }
 
     // Contar total de trabalhos do usuário
     const total = await prisma.paper.count({
-      where: {
-        OR: [
-          { userId },
-          { authors: { some: { userId } } }
-        ]
-      }
+      where: baseWhere
     });
 
     // Buscar trabalhos do usuário (como autor principal ou colaborador)
-    const papers = await prisma.paper.findMany({
-      where: {
-        status: 'PENDING',
-        OR: [
-          { userId },
-          { authors: { some: { userId } } }
-        ]
-      },
+    const queryOptions = {
+      where: baseWhere,
       include: {
         user: {
           select: {
@@ -111,7 +117,9 @@ export async function GET(request, context) {
       ],
       skip,
       take: limit,
-    });
+    };
+
+    const papers = await prisma.paper.findMany(queryOptions);
 
     // Formatar datas para ISO string
     const formattedPapers = papers.map(paper => ({

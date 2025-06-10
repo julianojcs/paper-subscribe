@@ -8,7 +8,7 @@ import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaTags, FaEdit, FaTrash, FaArrowLeft, FaFileAlt } from 'react-icons/fa';
-import styles from './paperDetails.module.css';
+import styles from '../../../paper/paper.module.css';
 import HeaderContentTitle from '../../../components/layout/HeaderContentTitle'
 import { useToast } from '../../../../context/ToastContext';
 import { ToastType } from '../../../components/ui/Toast';
@@ -94,9 +94,11 @@ export default function PaperAdminPage() {
   if (error) {
     return (
       <PageContainer>
-        <div className={styles.errorBox}>
-          <p className={styles.errorText}>{error}</p>
-          <Button variant="outline" onClick={() => router.push('/admin/papers')}>
+        <div className={styles.content}>
+          <div className={styles.errorMessage}>
+            <span>{error}</span>
+          </div>
+          <Button variant="outline" onClick={() => router.push('/admin/organization/papers')}>
             <FaArrowLeft className={styles.iconLeft} /> Voltar
           </Button>
         </div>
@@ -107,11 +109,14 @@ export default function PaperAdminPage() {
   if (!paper) {
     return (
       <PageContainer>
-        <div className={styles.notFound}>
-          <h2>Trabalho não encontrado</h2>
-          <Button variant="outline" onClick={() => router.push('/admin/papers')}>
-            <FaArrowLeft /> Voltar
-          </Button>
+        <div className={styles.content}>
+          <div className={styles.emptyState}>
+            <FaFileAlt className={styles.emptyStateIcon} />
+            <h2>Trabalho não encontrado</h2>
+            <Button variant="outline" onClick={() => router.push('/admin/organization/papers')}>
+              <FaArrowLeft /> Voltar
+            </Button>
+          </div>
         </div>
       </PageContainer>
     );
@@ -149,137 +154,202 @@ console.log("Authors", authors);
       <HeaderContentTitle
         eventData={{eventLogoUrl, eventName}}
         onImageLoad={() => {}}
-        subtitle={`${"Autor: " + user?.name || "Trabalhos Científicos"}`}
+        subtitle={`Detalhes do Trabalho`}
         fallbackTitle="Sistema de Submissão de Trabalhos Científicos"
-        background="linear-gradient(135deg, rgba(var(--paper-success-rgb), 1) 0%, var(--paper-success-dark) 100%)"
       />
-      <div className={styles.actionsHeader}>
-        <Button variant="outline" onClick={() => router.back()}>
-          <FaArrowLeft className={styles.iconLeft} /> Voltar
-        </Button>
-      </div>
 
-      <div className={styles.paperContainer}>
-        <section className={styles.headerSection}>
-          <div className={styles.titleRow}>
-            <h1 className={styles.paperTitle}>{title}</h1>
+      <div className={styles.content}>
+        {/* Botão Voltar */}
+        <div className={styles.paperControls}>
+          <Button variant="outline" onClick={() => router.back()}>
+            <FaArrowLeft className={styles.iconLeft} /> Voltar
+          </Button>
+        </div>
+
+        {/* Título do Paper */}
+        <div className={styles.welcomeSection}>
+          <h1 className={styles.sectionTitle}>{title}</h1>
+          <div className={styles.sectionDescription}>
+            <StatusBadge status={paper.status} />
+            <span style={{ marginLeft: '1rem', color: '#64748b' }}>
+              <FaCalendarAlt style={{ marginRight: '0.5rem' }} />
+              Criado em {formatDate(createdAt)}
+              {updatedAt && ` • Atualizado em ${formatDate(updatedAt)}`}
+            </span>
           </div>
-          <div className={styles.subtitleRow}>
-            <div className={styles.statusLabel}>
-              Status: <StatusBadge status={paper.status} />
+        </div>
+
+        {/* Informações do Paper */}
+        <div className={styles.papersSection}>
+
+          {/* Autores */}
+          <div className={styles.paperEventRow}>
+            <h3 className={styles.subsectionTitle}>
+              <FaUser style={{ marginRight: '0.5rem' }} />
+              Autores
+            </h3>
+          </div>
+          {authors && authors.length > 0 ? (
+            <div style={{ marginBottom: '2rem' }}>
+              {authors.map((author, index) => (
+                <div key={author.id} style={{
+                  padding: '1rem',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: '8px',
+                  marginBottom: '0.5rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ fontWeight: '600', color: '#334155' }}>
+                    {author.name}
+                    {author.isMainAuthor && (
+                      <span style={{
+                        marginLeft: '0.5rem',
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem'
+                      }}>
+                        Autor Principal
+                      </span>
+                    )}
+                    {author.isPresenter && (
+                      <span style={{
+                        marginLeft: '0.5rem',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem'
+                      }}>
+                        Apresentador
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    {author.institution}{author.city ? ` - ${author.city}` : ''}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className={styles.dateInfo}>
-              <FaCalendarAlt className={styles.iconLeft} />
-              <span>Criado em {formatDate(createdAt)}</span>
-              {updatedAt && (
-                <span className={styles.updatedAt}>• Atualizado em {formatDate(updatedAt)}</span>
-              )}
-            </div>
-          </div>
-        </section>
+          ) : (
+            <p style={{ color: '#64748b', marginBottom: '2rem' }}>Nenhum autor encontrado.</p>
+          )}
 
-        <section className={styles.mainSection}>
-          <div className={styles.infoBlock}>
-            <h3><FaUser className={styles.iconLeft} />Autores</h3>
-            {authors && authors.length > 0 ? (
-              <ul className={styles.authorsList}>
-                {authors.map((author) => (
-                  <li key={author.id}>
-                    <div>
-                      {author.name}
-                      <div className={styles.authorInstit}>
-                        {author.institution}{author.city ? ` - ${author.city}` : ''}
-                      </div>
-                      {author.isMainAuthor && <span className={styles.badge}>Autor Principal</span>}
-                      {author.isPresenter && <span className={styles.badge}>Apresentador</span>}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Nenhum autor encontrado.</p>
-            )}
+          {/* Área Acadêmica */}
+          <div className={styles.paperEventRow}>
+            <h3 className={styles.subsectionTitle}>Área Acadêmica</h3>
+          </div>
+          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+            {area ? <p style={{ margin: 0, color: '#334155' }}>{area.name}</p> : <p style={{ margin: 0, color: '#64748b' }}>N/A</p>}
           </div>
 
-          <div className={styles.infoBlock}>
-            <h3>Área Acadêmica</h3>
-            {area ? <p>{area.name}</p> : <p>N/A</p>}
+          {/* Tipo de Trabalho */}
+          <div className={styles.paperEventRow}>
+            <h3 className={styles.subsectionTitle}>Tipo de Trabalho</h3>
+          </div>
+          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+            {paperType ? <p style={{ margin: 0, color: '#334155' }}>{paperType.name}</p> : <p style={{ margin: 0, color: '#64748b' }}>N/A</p>}
           </div>
 
-          <div className={styles.infoBlock}>
-            <h3>Tipo de Trabalho</h3>
-            {paperType ? <p>{paperType.name}</p> : <p>N/A</p>}
+          {/* Palavras-chave */}
+          <div className={styles.paperEventRow}>
+            <h3 className={styles.subsectionTitle}>
+              <FaTags style={{ marginRight: '0.5rem' }} />
+              Palavras-Chave
+            </h3>
           </div>
-
-          <div className={styles.infoBlock}>
-            <h3><FaTags className={styles.iconLeft} /> Palavras-Chave</h3>
+          <div style={{ marginBottom: '2rem' }}>
             {keywords ? (
-              <ul className={styles.keywordsList}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {keywords.split(",").map((keyword, index) => (
-                  <li key={index} className={styles.keywordItem}>
-                    {keyword}
-                  </li>
+                  <span key={index} style={{
+                    backgroundColor: '#e2e8f0',
+                    color: '#475569',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '20px',
+                    fontSize: '0.875rem'
+                  }}>
+                    {keyword.trim()}
+                  </span>
                 ))}
-              </ul>
+              </div>
             ) : (
-              <p>Nenhuma palavra-chave.</p>
+              <p style={{ color: '#64748b' }}>Nenhuma palavra-chave.</p>
             )}
           </div>
 
-          <div className={styles.infoBlock}>
-            <h3>Evento</h3>
+          {/* Evento */}
+          <div className={styles.paperEventRow}>
+            <h3 className={styles.subsectionTitle}>Evento</h3>
+          </div>
+          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
             {event ? (
-              <div className={styles.eventInfo}>
-                <strong>{event.name}</strong>
+              <div>
+                <div style={{ fontWeight: '600', color: '#334155' }}>{event.name}</div>
                 {event.organization && (
-                  <p className={styles.orgName}>{event.organization.name}</p>
+                  <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    {event.organization.name}
+                  </div>
                 )}
               </div>
             ) : (
-              <p>Não vinculado a evento.</p>
+              <p style={{ margin: 0, color: '#64748b' }}>Não vinculado a evento.</p>
             )}
           </div>
 
-          <div className={styles.infoBlock}>
-            <h3>Autor Principal</h3>
-            {user ? (
-              <p>
-                {user.name}
-              </p>
-            ) : (
-              <p>Sem dados do usuário principal.</p>
-            )}
+          {/* Informações Adicionais */}
+          {fieldValues && fieldValues.length > 0 && (
+            <>
+              <div className={styles.paperEventRow}>
+                <h3 className={styles.subsectionTitle}>Informações Adicionais</h3>
+              </div>
+              <div style={{ marginBottom: '2rem' }}>
+                {fieldValues.map((fv) => (
+                  <div key={fv.id} style={{
+                    padding: '1rem',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    marginBottom: '0.5rem',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <div style={{ fontWeight: '600', color: '#334155', marginBottom: '0.5rem' }}>
+                      {fv.field?.label || `Campo ${fv.fieldId}`}
+                    </div>
+                    <div style={{ color: '#64748b', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                      {fv.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Ações */}
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'flex-end',
+            marginTop: '2rem',
+            paddingTop: '2rem',
+            borderTop: '1px solid #e2e8f0'
+          }}>
+            <Button
+              variant="outline"
+              onClick={handleDelete}
+              style={{ color: '#dc2626', borderColor: '#dc2626' }}
+            >
+              <FaTrash style={{ marginRight: '0.5rem' }} />
+              Remover
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => router.push(`/admin/papers/${paperId}/edit`)}
+            >
+              <FaEdit style={{ marginRight: '0.5rem' }} />
+              Editar
+            </Button>
           </div>
-        </section>
-
-        {fieldValues && fieldValues.length > 0 && (
-          <section className={styles.footerSection}>
-            <h3>Informações Adicionais</h3>
-            <ul className={styles.fieldValuesList}>
-              {fieldValues.map((fv) => (
-                <li key={fv.id}>
-                  <strong>{fv.field?.label || `Campo ${fv.fieldId}`}: </strong>
-                  <span>{fv.value}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <div className={styles.actionsArea}>
-          <Button
-            variant="outline"
-            onClick={handleDelete}
-            className={styles.deleteButton}
-          >
-            <FaTrash className={styles.iconLeft} /> Remover
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => router.push(`/admin/papers/${paperId}/edit`)}
-          >
-            <FaEdit className={styles.iconLeft} /> Editar
-          </Button>
         </div>
       </div>
     </PageContainer>

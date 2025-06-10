@@ -228,6 +228,9 @@ export default function UserPapersPage({ searchParams }) {
 
         <div className={styles.papersSection}>
 
+          {console.log('Papers:', papers)}
+          {console.log('userId:', userId)}
+
           {papers.length > 0 && (
             <>
               <div className={styles.papersList}>

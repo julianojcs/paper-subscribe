@@ -34,7 +34,7 @@ const allowedRemotePatterns = [
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: allowedImageDomains,
+    // domains: allowedImageDomains,
     remotePatterns: allowedRemotePatterns,
   },
 };

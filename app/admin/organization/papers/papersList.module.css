@@ -7,10 +7,91 @@
 }
 
 .filters {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 280px; /* Largura mínima para evitar deformação */
+}
+
+.filterGroup label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.filterActions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.clearButton {
+  padding: 0.75rem 1.5rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: fit-content;
+}
+
+.clearButton:hover {
+  background: #4b5563;
+}
+
+.clearButton:active {
+  background: #374151;
+}
+
+/* Estilo para o campo de filtro de título */
+.titleFilterInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: white;
+}
+
+.titleFilterInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.titleFilterInput::placeholder {
+  color: #9ca3af;
+}
+
+.resultsInfo {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+.resultsInfo p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 500;
 }
 
 .tableWrapper {
@@ -40,22 +121,552 @@
   border-bottom: none;
 }
 
-.actions {
+/* Status Badge Styles */
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap; /* Badge em uma linha apenas */
+}
+
+/* Sortable table headers */
+.sortButton {
+  background: none;
+  border: none;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin: 1.5rem 0 0 0;
+  gap: 0.5rem;
+  padding: 0;
+  font-size: inherit;
+  width: 100%;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.sortButton:hover {
+  color: #1f2937;
+}
+
+.sortIcon {
+  font-size: 0.875rem;
+  font-weight: bold;
+  min-width: 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* gap: 2px; */
+  line-height: 1;
+}
+
+/* Ícone para coluna ativa (sendo ordenada) */
+.sortIconActive {
+  color: #1e40af;
+}
+
+/* Ícone para colunas inativas */
+.sortIconInactive {
+  color: #d1d5db;
+}
+
+/* Sort arrow opacity states */
+.sortArrowActive {
+  opacity: 1;
+}
+
+.sortArrowInactive {
+  opacity: 0.4;
+}
+
+/* Checkbox styles */
+.selectAllCheckbox,
+.rowCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* Export section */
+.exportSection {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.exportTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.exportOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exportCheckboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.checkboxText {
+  user-select: none;
+}
+
+.exportInfo {
+  padding: 0.75rem 1rem;
+  background: #e0f2fe;
+  border-radius: 6px;
+  border-left: 4px solid #0ea5e9;
+}
+
+.selectionInfo {
+  font-size: 0.875rem;
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.exportButton {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.exportButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.exportButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.exportButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Botões de exportação */
+.exportButtons {
+  display: flex;
+  gap: 12px;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.exportButtonExcel {
+  background-color:hsl(147, 55.40%, 29.00%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.exportButtonExcel:hover:not(:disabled) {
+  background-color: #1e6b41;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.exportButtonWord {
+  background-color: #2B5797;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.exportButtonWord:hover:not(:disabled) {
+  background-color: #1e4a7a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.exportButtonExcel:disabled,
+.exportButtonWord:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.exportButtonExcel:disabled:hover,
+.exportButtonWord:disabled:hover {
+  background-color: #6c757d;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.exportButtonExcel svg,
+.exportButtonWord svg {
+  width: 24px;
+  height: 24px;
+}
+
+.exportButtonText {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive para mobile */
+@media (max-width: 768px) {
+  .exportButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .exportButtonExcel,
+  .exportButtonWord {
+    padding: 10px 16px;
+  }
+
+  .exportButtonText {
+    font-size: 13px;
+  }
+}
+
+/* Status change button */
+.statusButton {
+  padding: 0.75rem 1.5rem;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+}
+
+.statusButton:hover {
+  background: #047857;
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.modalCloseButton:hover {
+  background: #f3f4f6;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.modalBody p {
+  margin: 0 0 1.5rem 0;
+  color: #374151;
+}
+
+.modalField {
+  margin-bottom: 1rem;
+}
+
+.modalField label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.modalSelect,
+.modalInput,
+.modalTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+}
+
+.modalSelect:focus,
+.modalInput:focus,
+.modalTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modalTextarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  justify-content: flex-end;
+}
+
+.modalCancelButton {
+  padding: 0.75rem 1.5rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modalCancelButton:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.modalConfirmButton {
+  padding: 0.75rem 1.5rem;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modalConfirmButton:hover:not(:disabled) {
+  background: #047857;
+}
+
+.modalConfirmButton:disabled,
+.modalCancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status-specific colors */
+
+.statusDRAFT {
+  border-color: rgba(var(--paper-status-color-draft-rgb), 1);
+  background-color: rgba(var(--paper-status-color-draft-rgb), 1);
+}
+
+.statusSUBMITTED {
+  border-color: rgba(var(--paper-status-color-pending-rgb), 1);
+  background-color: rgba(var(--paper-status-color-pending-rgb), 1);
+}
+
+.statusUNDER_REVIEW {
+  border-color: rgba(var(--paper-status-color-under-review-rgb), 1);
+  background-color: rgba(var(--paper-status-color-under-review-rgb), 1);
+}
+
+.statusREVISION_REQUIRED {
+  border-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
+  background-color: rgba(var(--paper-status-color-revision-required-rgb), 1);
+}
+
+.statusACCEPTED {
+  border-color: rgba(var(--paper-status-color-accepted-rgb), 1);
+  background-color: rgba(var(--paper-status-color-accepted-rgb), 1);
+}
+
+.statusREJECTED {
+  border-color: rgba(var(--paper-status-color-rejected-rgb), 1);
+  background-color: rgba(var(--paper-status-color-rejected-rgb), 1);
+}
+
+.statusPUBLISHED {
+  border-color: rgba(var(--paper-status-color-published-rgb), 1);
+  background-color: rgba(var(--paper-status-color-published-rgb), 1);
+}
+
+.statusWITHDRAWN {
+  border-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
+  background-color: rgba(var(--paper-status-color-withdrawn-rgb), 1);
+}
+
+/* Estilo para a coluna de ações */
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.actionButton {
+  padding: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.actionButton:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.actionButton:active {
+  transform: translateY(0);
+}
+
+.actionButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 @media (max-width: 700px) {
   .container {
     padding: 0.5rem;
   }
+
   .filters {
-    flex-direction: column;
-    gap: 0.5rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
   }
+
+  .filterGroup {
+    min-width: unset;
+  }
+
   .th, .td {
     padding: 0.5rem 0.5rem;
+  }
+
+  .exportOptions {
+    gap: 0.75rem;
+  }
+
+  .exportCheckboxGroup {
+    gap: 0.5rem;
+  }
+
+  .exportButton {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .sortButton {
+    font-size: 0.8rem;
+  }
+
+  .statusBadge {
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .selectAllCheckbox,
+  .rowCheckbox {
+    width: 14px;
+    height: 14px;
   }
 }
