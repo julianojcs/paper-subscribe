@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import styles from './papersList.module.css';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun, PageBreak, Header, Footer, AlignmentType } from 'docx';
@@ -118,6 +119,7 @@ export default function PapersListPage({ params }) {
   // Estados para exportação
   const [exportAuthorsOnly, setExportAuthorsOnly] = useState(false);
   const [includePaperId, setIncludePaperId] = useState(false);
+  const [isExportSectionExpanded, setIsExportSectionExpanded] = useState(false);
 
   // Estados para alteração de status em lote
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -139,32 +141,32 @@ export default function PapersListPage({ params }) {
   // Função para gerar nome do arquivo baseado nos filtros
   const generateFileName = (extension) => {
     const parts = [];
-    
+
     // Adicionar status selecionados
     if (selectedStatuses.length > 0) {
-      const statusNames = selectedStatuses.map(status => 
+      const statusNames = selectedStatuses.map(status =>
         statuses.find(s => s.status === status.value)?.statusPtBR || status.value
       ).join('_');
       parts.push(`status_${statusNames.toLowerCase().replace(/\s+/g, '_')}`);
     }
-    
+
     // Adicionar áreas selecionadas
     if (selectedAreas.length > 0) {
       const areaNames = selectedAreas.map(area => area.label).join('_');
       parts.push(`area_${areaNames.toLowerCase().replace(/\s+/g, '_')}`);
     }
-    
+
     // Adicionar tipos selecionados
     if (selectedTypes.length > 0) {
       const typeNames = selectedTypes.map(type => type.label).join('_');
       parts.push(`tipo_${typeNames.toLowerCase().replace(/\s+/g, '_')}`);
     }
-    
+
     // Adicionar filtro de título se existir
     if (titleFilter) {
       parts.push(`titulo_${titleFilter.toLowerCase().replace(/\s+/g, '_').substring(0, 20)}`);
     }
-    
+
     // Nome base
     let baseName = 'trabalhos';
     if (parts.length > 0) {
@@ -172,12 +174,12 @@ export default function PapersListPage({ params }) {
     } else {
       baseName += '_todos';
     }
-    
+
     // Adicionar contagem se há seleção específica
     if (selectedPapers.size > 0) {
       baseName += `_selecionados_${selectedPapers.size}`;
     }
-    
+
     return `${baseName}.${extension}`;
   };
 
@@ -621,8 +623,8 @@ export default function PapersListPage({ params }) {
     paper.title.toLowerCase().includes(titleFilter.toLowerCase())
   );  return (
     <div className={styles.container}>
-      <h1>Trabalhos Submetidos</h1>
-      <div className={styles.filters}>
+      <h1 className={styles.title}>Trabalhos Submetidos</h1>
+      <section className={`${styles.filters} ${styles.section}`}>
         <div className={styles.filterGroup}>
           <label>Áreas:</label>
           <Multselector
@@ -679,16 +681,24 @@ export default function PapersListPage({ params }) {
             Limpar Filtros
           </button>
         </div>
-      </div>
+      </section>
 
       <div className={styles.resultsInfo}>
         <p>
           {loading ? 'Carregando...' : `${filteredPapers.length} trabalho${filteredPapers.length === 1 ? '' : 's'} encontrado${filteredPapers.length === 1 ? '' : 's'}`}
         </p>
       </div>
-      <div className={styles.exportSection}>
-        <h3 className={styles.exportTitle}>Exportação</h3>
-        <div className={styles.exportOptions}>
+      <section className={`${styles.exportSection} ${styles.section}`}>
+        <div
+          className={`${styles.exportHeader}`}
+          onClick={() => setIsExportSectionExpanded(!isExportSectionExpanded)}
+        >
+          <h3 className={styles.exportTitle}>Exportação</h3>
+          {isExportSectionExpanded ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+
+        {isExportSectionExpanded && (
+          <div className={styles.exportOptions}>
           <div className={styles.exportCheckboxGroup}>
             <label className={styles.checkboxLabel}>
               <input
@@ -757,11 +767,12 @@ export default function PapersListPage({ params }) {
               Alterar Status ({selectedPapers.size})
             </button>
           )}
-        </div>
-      </div>
-      <div className={styles.tableWrapper}>
+          </div>
+        )}
+      </section>
+      <section className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
+          <thead className={styles.thead}>
             <tr className={styles.tr}>
               <th className={styles.th}>
                 <input
@@ -858,7 +869,7 @@ export default function PapersListPage({ params }) {
               <th className={styles.th}>Ações</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className={styles.tbody}>
             {loading ? (
               <tr><td colSpan={9}>Carregando...</td></tr>
             ) : filteredPapers.length === 0 ? (
@@ -916,7 +927,7 @@ export default function PapersListPage({ params }) {
             )}
           </tbody>
         </table>
-      </div>
+      </section>
 
       {/* Modal de alteração de status */}
       {showStatusModal && (

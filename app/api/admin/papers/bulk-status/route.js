@@ -84,7 +84,7 @@ export async function PUT(request) {
         paperId,
         status: newStatus,
         userId: session.user.id,
-        comment: comment || `Status alterado em lote para ${statusPtBR} pelo administrador`,
+        comment: comment || `Status alterado para ${statusPtBR} pelo administrador`,
         createdAt: historyDate ? new Date(historyDate) : new Date()
       }));
 
